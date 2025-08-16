@@ -1,182 +1,261 @@
 <!doctype html>
 <html lang="ru">
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, viewport-fit=cover"
-    />
-    <meta name="theme-color" content="#ffffff" />
-    <title>eMigrant • Mini App</title>
+<head>
+  <meta charset="UTF-8" />
+  <title>eMigrant — Miniapp MVP</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Telegram Web Apps SDK (безопасно подключать; в обычном браузере просто не используется) -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root{--bg:#0f1115;--card:#171a21;--text:#e7eaf0;--muted:#9aa3b2;--accent:#7cdfff;--line:#242936;--ok:#33d69e;--warn:#ffb84d;}
+    *{box-sizing:border-box} html,body{height:100%} body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+    .wrap{max-width:920px;margin:0 auto;padding:16px 16px 86px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px}
+    h1,h2,h3{margin:0 0 10px} .small{color:var(--muted);font-size:13px}
+    input,select,button,textarea{width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:#0c0f14;color:var(--text);margin-top:6px}
+    button{cursor:pointer} button.primary{background:#2a73ff;border-color:#2a73ff}
+    .row{display:flex;gap:8px;align-items:center} .row> *{flex:1}
+    .progress{height:10px;background:#0c0f14;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+    .progress>span{display:block;height:100%;background:#2a73ff}
+    .badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;border:1px solid var(--line);color:var(--muted)}
+    .ok{color:var(--ok);border-color:var(--ok)} .warn{color:var(--warn);border-color:var(--warn)}
+    .bottom{position:fixed;left:0;right:0;bottom:0;background:#0c0f14;border-top:1px solid var(--line);display:flex;gap:6px;padding:8px}
+    .bottom button{flex:1}
+    header{position:sticky;top:0;background:linear-gradient(180deg,#0f1115,rgba(15,17,21,0.6));backdrop-filter:blur(6px);z-index:2;border-bottom:1px solid var(--line);padding:12px}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header><h2 id="title">eMigrant · Онбординг</h2></header>
 
-    <!-- Telegram Mini Apps SDK -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Онбординг -->
+  <div id="onb" class="card">
+    <div class="badge">Шаг <span id="step">1</span>/2</div>
+    <div id="onb1">
+      <h3>Intro & Disclaimer</h3>
+      <p class="small">Мы помогаем собрать пакет документов и пройти шаги подачи. Это не юридическая консультация. Слот в ужонде не гарантируем.</p>
+      <button class="primary" onclick="nextOnb()">Далее</button>
+    </div>
+    <div id="onb2" style="display:none">
+      <h3>Выберите трек</h3>
+      <select id="track">
+        <option value="work">Работа</option>
+        <option value="study">Учёба</option>
+        <option value="family">Семья</option>
+        <option value="business">Бизнес</option>
+      </select>
+      <div class="row" style="margin-top:10px">
+        <button onclick="prevOnb()">Назад</button>
+        <button class="primary" onclick="finishOnb()">Завершить</button>
+      </div>
+    </div>
+  </div>
 
-    <!-- App config (read in your app code at startup) -->
-    <script>
-      // === eMigrant global config ===
-      // Frontend should read this on boot and adjust flows accordingly.
-      window.__EMIGRANT_CONFIG = {
-        questionnaire: {
-          // VERY IMPORTANT: "Continue" must NOT generate PDF or trigger AI.
-          // It only navigates back to the Checklist (homepage).
-          continueAction: "toChecklist",
-          // Enable inline ✎ edit on each field in the final Preview.
-          // Clicking it must jump to the corresponding step/field
-          // and return to Preview after saving.
-          previewInlineEdit: true
-        },
-        ui: {
-          // Keep a bit of bottom padding so the TabBar never overlaps content.
-          tabbarHeight: 64
-        }
-      };
-    </script>
+  <!-- Чеклист -->
+  <div id="home" style="display:none">
+    <div class="card">
+      <h3>Прогресс</h3>
+      <div class="progress"><span id="progressBar" style="width:0%"></span></div>
+      <div class="small" style="margin-top:6px">Готово: <span id="doneCount">0</span>/<span id="totalCount">0</span></div>
+    </div>
 
-    <style>
-      /* Basic, safe default styles for a clean TMA container */
-      html, body, #root {
-        height: 100%;
-        margin: 0;
-        padding: 0;
+    <div id="tasks"></div>
+  </div>
+</div>
+
+<!-- Нижнее меню -->
+<div class="bottom">
+  <button onclick="openChecklist()">Checklist</button>
+  <button onclick="openModule('aiTranslator')">AI Translator</button>
+  <button onclick="openModule('findSlot')">Book a slot</button>
+  <button onclick="openModule('bookAssistant')">Start a chat</button>
+</div>
+
+<script>
+  // ===== ИНИЦ Telegram WebApp (мягко, чтобы работало и в браузере)
+  const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+  try { tg && tg.ready(); tg && tg.expand(); } catch(e) {}
+
+  // ===== ПРОСТЕЙШЕЕ СОСТОЯНИЕ (localStorage)
+  const st = {
+    track: localStorage.getItem('track') || null,
+    tasks: JSON.parse(localStorage.getItem('tasks')||'[]')
+  };
+
+  // Базовые задачи по треку (упрощённо под твои правила)
+  function baseTasks(track){
+    const common = [
+      {id:'wniosek', title:'Wniosek (PDF)', status:'todo', requiresAI:true, kind:'wniosek'},
+      {id:'photos', title:'Фотографии', status:'todo', requiresAI:false, kind:'photos'},
+      {id:'skarb', title:'Opłata skarbowa', status:'todo', requiresAI:false, kind:'skarb'},
+      {id:'rent', title:'Umowa najmu / Meldunek', status:'todo', requiresAI:true, kind:'rent'},
+      {id:'ins', title:'Ubezpieczenie', status:'todo', requiresAI:true, kind:'insurance'},
+      {id:'slot', title:'Find a slot', status:'todo', requiresAI:false, kind:'slot'},
+      {id:'ai', title:'AI Translator', status:'todo', requiresAI:false, kind:'aiTranslator'},
+      {id:'assist', title:'Book an assistant', status:'todo', requiresAI:false, kind:'bookAssistant'}
+    ];
+    if(track==='work'||track==='business'){
+      common.splice(2,0,{id:'contract', title:'Контракт / Основание', status:'todo', requiresAI:true, kind:'contract'});
+      common.splice(3,0,{id:'hr', title:'Załącznik od pracodawcy', status:'todo', requiresAI:true, kind:'attachmentHR'});
+    }
+    if(track==='study'){
+      common.splice(2,0,{id:'uni', title:'Справка из вуза', status:'todo', requiresAI:true, kind:'university'});
+      common.splice(3,0,{id:'funds', title:'Информация о средствах', status:'todo', requiresAI:true, kind:'funds'});
+    }
+    return common;
+  }
+
+  // Рендер прогресса и задач
+  function renderChecklist(){
+    document.getElementById('title').innerText = 'eMigrant · Чеклист';
+    const tasksDiv = document.getElementById('tasks');
+    tasksDiv.innerHTML = '';
+    const done = st.tasks.filter(t=>t.status==='done').length;
+    const total = st.tasks.length || 1;
+    document.getElementById('doneCount').innerText = done;
+    document.getElementById('totalCount').innerText = total;
+    document.getElementById('progressBar').style.width = Math.round(done/total*100)+'%';
+
+    st.tasks.forEach(t=>{
+      const card = document.createElement('div');
+      card.className='card';
+      const badgeClass = t.status==='done'?'ok':(t.status==='inreview'?'warn':'');
+      card.innerHTML = `
+        <div class="row" style="align-items:center">
+          <div style="flex:3">
+            <h3 style="margin:0 0 6px">${t.title}</h3>
+            <span class="badge ${badgeClass}">${t.status==='todo'?'To do':t.status==='inreview'?'In review':'Done'}</span>
+            ${t.requiresAI?'<span class="small" style="margin-left:8px">Рекомендуется AI-проверка</span>':''}
+          </div>
+          <div style="flex:2">
+            <div class="row">
+              <button class="primary" onclick="openModule('${t.kind}')">Открыть</button>
+              ${t.status!=='done'?'<button onclick="markDone(\''+t.id+'\')">Сделано</button>':''}
+            </div>
+          </div>
+        </div>
+      `;
+      tasksDiv.appendChild(card);
+    });
+  }
+
+  function markDone(id){
+    st.tasks = st.tasks.map(t=> t.id===id ? {...t, status:'done'} : t);
+    localStorage.setItem('tasks', JSON.stringify(st.tasks));
+    renderChecklist();
+  }
+
+  // ===== Навигация
+  function openChecklist(){
+    document.getElementById('onb').style.display = 'none';
+    document.getElementById('home').style.display = 'block';
+    renderChecklist();
+  }
+
+  function openModule(kind){
+    // Для простоты показываем попапы и быстрые действия,
+    // без сложной логики — достаточно для MVP проверки.
+    if(kind==='aiTranslator'){
+      alert('AI Translator: Загрузите письмо/документ → получаете перевод и краткое резюме. (В MVP-заглушке загрузка опущена)');
+      return;
+    }
+    if(kind==='findSlot'){
+      const dates = prompt('Укажите даты/дни, когда вы доступны (например: Пн/Ср/Пт или 20-25 августа). Мы мониторим, но слот не гарантирован.');
+      alert('Спасибо! Подписка на обновления оформлена.\nВаши доступные дни: '+(dates||'не указано')+'\nПодтверждение визита — вручную.');
+      return;
+    }
+    if(kind==='bookAssistant'){
+      const text = prompt('Коротко опишите, о чём поговорить. Заявка уйдёт в отдельный чат-аккаунт.');
+      alert('Заявка отправлена. Нажмите ОК, чтобы открыть чат с ассистентом.');
+      if(tg && tg.openTelegramLink) tg.openTelegramLink('https://t.me/'+(tg.initDataUnsafe?.user?.username||''));
+      return;
+    }
+    if(kind==='photos'){
+      alert('Фото: смотрите гайд по размеру/фону. Загрузите фото (AI-проверка качества отключена в MVP).');
+      return;
+    }
+    if(kind==='insurance'){
+      const has = confirm('Есть действующая страховка? Нажмите OK если да, Отмена если пока нет.');
+      if(!has){
+        alert('Нажмите «Написать в чат», чтобы обсудить, как оформить страховку.');
+        if(tg && tg.openTelegramLink) tg.openTelegramLink('https://t.me/'+(tg.initDataUnsafe?.user?.username||'')); // заглушка
+      } else {
+        alert('Загрузите полис. AI-проверка: срок действия и реквизиты.');
       }
-      body {
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-        background: #ffffff;
-        color: #111;
+      return;
+    }
+    if(kind==='wniosek'){
+      const path = confirm('У вас уже есть готовый скан внеска? (OK — загрузить скан; Отмена — пройти анкету и сгенерировать PDF)');
+      if(path){
+        alert('Загрузите скан. AI-проверка: подпись, даты, совпадение ФИО.');
+      } else {
+        alert('Откроется анкета внеска → затем можно сгенерировать PDF и распечатать.');
       }
-
-      /* Respect iOS safe areas */
-      :root {
-        --safe-bottom: env(safe-area-inset-bottom, 0px);
-        --safe-top: env(safe-area-inset-top, 0px);
-        --tabbar-h: 64px;
+      return;
+    }
+    if(kind==='contract'){
+      alert('Загрузите договор (UoP/UoD/B2B). AI-проверка: NIP, даты, подписи. Можно завершить вручную.');
+      return;
+    }
+    if(kind==='attachmentHR'){
+      alert('Скачайте шаблон, отдайте HR. Затем загрузите подписанный/с печатью документ (AI-проверка).');
+      return;
+    }
+    if(kind==='rent'){
+      alert('Загрузите договор аренды или meldunek. AI-проверка: адрес, сроки, подписи. Если нет — покажем инструкцию.');
+      return;
+    }
+    if(kind==='university'){
+      alert('Справка из вуза: Загрузка → AI-проверка. Если нет — инструкция, где получить.');
+      return;
+    }
+    if(kind==='funds'){
+      alert('Информация о средствах: Загрузите банковскую справку. AI-проверка — сумма/дата/реквизиты.');
+      return;
+    }
+    if(kind==='skarb'){
+      const paid = confirm('Оплатили госпошлину? (OK — да; Отмена — нет)');
+      if(paid){
+        alert('Отметили как выполнено. (Можно прикрепить чек — опционально в MVP)');
+      } else {
+        alert('Покажем реквизиты и короткую инструкцию по оплате.');
       }
+      return;
+    }
+  }
 
-      /* Utility to ensure main views are not covered by the tab bar */
-      .app-container {
-        min-height: 100%;
-        box-sizing: border-box;
-        padding-bottom: calc(var(--tabbar-h) + var(--safe-bottom));
-        padding-top: var(--safe-top);
-      }
+  // ===== Онбординг
+  function nextOnb(){
+    document.getElementById('step').innerText = '2';
+    document.getElementById('onb1').style.display='none';
+    document.getElementById('onb2').style.display='';
+  }
+  function prevOnb(){
+    document.getElementById('step').innerText = '1';
+    document.getElementById('onb1').style.display='';
+    document.getElementById('onb2').style.display='none';
+  }
+  function finishOnb(){
+    const tr = document.getElementById('track').value;
+    st.track = tr;
+    st.tasks = baseTasks(tr);
+    localStorage.setItem('track', tr);
+    localStorage.setItem('tasks', JSON.stringify(st.tasks));
+    document.getElementById('onb').style.display='none';
+    document.getElementById('home').style.display='';
+    document.getElementById('title').innerText = 'eMigrant · Чеклист';
+    renderChecklist();
+  }
 
-      /* Optional base styles for the persistent TabBar */
-      .tabbar {
-        position: fixed;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        height: var(--tabbar-h);
-        padding-bottom: var(--safe-bottom);
-        border-top: 1px solid rgba(0,0,0,0.06);
-        background: #fff;
-        display: flex;
-        align-items: stretch;
-        gap: 8px;
-        padding: 8px;
-        box-sizing: border-box;
-      }
-      .tabbar a, .tabbar button {
-        flex: 1 1 0;
-        border: none;
-        background: transparent;
-        font: inherit;
-        cursor: pointer;
-        border-radius: 10px;
-        padding: 10px 8px;
-      }
-      .tabbar .active {
-        background: rgba(0,0,0,0.06);
-        font-weight: 600;
-      }
-
-      /* Small, accessible inline edit button (✎) you can reuse in Preview UI */
-      .edit-btn {
-        border: none;
-        background: transparent;
-        cursor: pointer;
-        padding: 6px;
-        line-height: 1;
-        border-radius: 8px;
-      }
-      .edit-btn:focus-visible {
-        outline: 2px solid #2684ff;
-        outline-offset: 2px;
-      }
-
-      /* Main CTA buttons baseline */
-      .btn {
-        border: none;
-        border-radius: 10px;
-        padding: 12px 14px;
-        font: inherit;
-        cursor: pointer;
-      }
-      .btn-primary {
-        background: #111;
-        color: #fff;
-      }
-      .btn-secondary {
-        background: #f2f2f2;
-        color: #111;
-      }
-
-      /* Minimal noscript message */
-      noscript {
-        display: block;
-        padding: 16px;
-        background: #fff3cd;
-        color: #533f03;
-        border: 1px solid #ffeeba;
-        margin: 12px;
-        border-radius: 8px;
-      }
-    </style>
-  </head>
-
-  <body>
-    <noscript>Для работы приложения требуется JavaScript.</noscript>
-
-    <!--
-      The app should mount into #root.
-      Apply the .app-container class at your root layout so content
-      never overlaps with the bottom TabBar.
-    -->
-    <div id="root" class="app-container"></div>
-
-    <script>
-      // Telegram WebApp minimal init
-      (function initTelegram() {
-        if (window.Telegram && window.Telegram.WebApp) {
-          const WebApp = window.Telegram.WebApp;
-          try {
-            WebApp.expand();
-            WebApp.ready();
-
-            // Optional: react to theme changes (dark/light)
-            WebApp.onEvent("themeChanged", function () {
-              // You can read colors from WebApp.themeParams in your app code.
-              // index.html keeps styling neutral.
-            });
-          } catch (e) {
-            console.warn("TWA init warning:", e);
-          }
-        }
-      })();
-
-      // Expose a simple guard so the app can confirm config is present.
-      window.__getEmigrantConfig = function () {
-        return window.__EMIGRANT_CONFIG || {};
-      };
-    </script>
-
-    <!--
-      Vite/React entry.
-      If your project is not Vite-based, replace the path below with your bundler entry.
-    -->
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+  // Автозагрузка
+  (function init(){
+    if(st.track){
+      document.getElementById('onb').style.display='none';
+      document.getElementById('home').style.display='';
+      document.getElementById('title').innerText = 'eMigrant · Чеклист';
+      renderChecklist();
+    }
+  })();
+</script>
+</body>
 </html>
