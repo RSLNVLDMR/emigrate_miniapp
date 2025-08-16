@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>eMigrant — Miniapp MVP</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- Telegram Web Apps SDK (безопасно подключать; в обычном браузере просто не используется) -->
+  <!-- Telegram Web Apps SDK (в браузере без Telegram — просто игнорируется) -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root{--bg:#0f1115;--card:#171a21;--text:#e7eaf0;--muted:#9aa3b2;--accent:#7cdfff;--line:#242936;--ok:#33d69e;--warn:#ffb84d;}
@@ -22,6 +22,7 @@
     .bottom{position:fixed;left:0;right:0;bottom:0;background:#0c0f14;border-top:1px solid var(--line);display:flex;gap:6px;padding:8px}
     .bottom button{flex:1}
     header{position:sticky;top:0;background:linear-gradient(180deg,#0f1115,rgba(15,17,21,0.6));backdrop-filter:blur(6px);z-index:2;border-bottom:1px solid var(--line);padding:12px}
+    a{color:var(--accent)}
   </style>
 </head>
 <body>
@@ -72,17 +73,14 @@
 </div>
 
 <script>
-  // ===== ИНИЦ Telegram WebApp (мягко, чтобы работало и в браузере)
   const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
   try { tg && tg.ready(); tg && tg.expand(); } catch(e) {}
 
-  // ===== ПРОСТЕЙШЕЕ СОСТОЯНИЕ (localStorage)
   const st = {
     track: localStorage.getItem('track') || null,
     tasks: JSON.parse(localStorage.getItem('tasks')||'[]')
   };
 
-  // Базовые задачи по треку (упрощённо под твои правила)
   function baseTasks(track){
     const common = [
       {id:'wniosek', title:'Wniosek (PDF)', status:'todo', requiresAI:true, kind:'wniosek'},
@@ -105,7 +103,6 @@
     return common;
   }
 
-  // Рендер прогресса и задач
   function renderChecklist(){
     document.getElementById('title').innerText = 'eMigrant · Чеклист';
     const tasksDiv = document.getElementById('tasks');
@@ -145,7 +142,6 @@
     renderChecklist();
   }
 
-  // ===== Навигация
   function openChecklist(){
     document.getElementById('onb').style.display = 'none';
     document.getElementById('home').style.display = 'block';
@@ -153,14 +149,12 @@
   }
 
   function openModule(kind){
-    // Для простоты показываем попапы и быстрые действия,
-    // без сложной логики — достаточно для MVP проверки.
     if(kind==='aiTranslator'){
       alert('AI Translator: Загрузите письмо/документ → получаете перевод и краткое резюме. (В MVP-заглушке загрузка опущена)');
       return;
     }
     if(kind==='findSlot'){
-      const dates = prompt('Укажите даты/дни, когда вы доступны (например: Пн/Ср/Пт или 20-25 августа). Мы мониторим, но слот не гарантирован.');
+      const dates = prompt('Укажите даты/дни, когда вы доступны (напр: Пн/Ср/Пт или 20-25 августа). Слот не гарантирован; мы мониторим.');
       alert('Спасибо! Подписка на обновления оформлена.\nВаши доступные дни: '+(dates||'не указано')+'\nПодтверждение визита — вручную.');
       return;
     }
@@ -175,7 +169,7 @@
       return;
     }
     if(kind==='insurance'){
-      const has = confirm('Есть действующая страховка? Нажмите OK если да, Отмена если пока нет.');
+      const has = confirm('Есть действующая страховка? OK — да, Отмена — пока нет.');
       if(!has){
         alert('Нажмите «Написать в чат», чтобы обсудить, как оформить страховку.');
         if(tg && tg.openTelegramLink) tg.openTelegramLink('https://t.me/'+(tg.initDataUnsafe?.user?.username||'')); // заглушка
@@ -224,7 +218,6 @@
     }
   }
 
-  // ===== Онбординг
   function nextOnb(){
     document.getElementById('step').innerText = '2';
     document.getElementById('onb1').style.display='none';
@@ -247,7 +240,6 @@
     renderChecklist();
   }
 
-  // Автозагрузка
   (function init(){
     if(st.track){
       document.getElementById('onb').style.display='none';
