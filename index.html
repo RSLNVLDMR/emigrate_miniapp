@@ -2,44 +2,32 @@
 <html lang="ru">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, viewport-fit=cover"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#ffffff" />
     <title>eMigrant • Mini App</title>
 
     <!-- Telegram Mini Apps SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-    <!-- === eMigrant global config (читается приложением на старте) === -->
+    <!-- === eMigrant global config === -->
     <script>
       window.__EMIGRANT_CONFIG = {
         questionnaire: {
-          /* ВАЖНО: «Продолжить» НИЧЕГО не триггерит, только ведёт на чеклист */
-          continueAction: "toChecklist",
-          /* В предпросмотре у каждого поля есть ✎ для точечного редактирования */
-          previewInlineEdit: true
+          continueAction: "toChecklist",      // «Продолжить» НЕ триггерит PDF/AI
+          previewInlineEdit: true             // ✎-редактирование в предпросмотре
         },
-        ui: {
-          tabbarHeight: 64
-        }
+        ui: { tabbarHeight: 64 },
+        __version: "idx-2025-08-16-01"        // меняй для пробития кэша
       };
+      console.log("[eMigrant] index.html loaded:", window.__EMIGRANT_CONFIG.__version);
     </script>
 
     <style>
-      /* Базовые стили контейнера TMA */
-      html, body, #root {
-        height: 100%;
-        margin: 0;
-        padding: 0;
-      }
+      html, body, #root { height: 100%; margin: 0; padding: 0; }
       body {
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
+        -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
         font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial, "Noto Sans";
-        background: #ffffff;
-        color: #111;
+        background: #fff; color: #111;
       }
       :root {
         --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -47,64 +35,20 @@
         --tabbar-h: 64px;
       }
       .app-container {
-        min-height: 100%;
-        box-sizing: border-box;
+        min-height: 100%; box-sizing: border-box;
         padding-bottom: calc(var(--tabbar-h) + var(--safe-bottom));
         padding-top: var(--safe-top);
       }
-
-      /* Низовое меню (если рисуется нативно в App.tsx — эти стили нейтральны) */
       .tabbar {
-        position: fixed;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        height: var(--tabbar-h);
-        padding-bottom: var(--safe-bottom);
-        border-top: 1px solid rgba(0,0,0,0.06);
-        background: #fff;
-        display: flex;
-        align-items: stretch;
-        gap: 8px;
-        padding: 8px;
-        box-sizing: border-box;
+        position: fixed; left: 0; right: 0; bottom: 0; height: var(--tabbar-h);
+        padding-bottom: var(--safe-bottom); border-top: 1px solid rgba(0,0,0,.06);
+        background: #fff; display: flex; gap: 8px; padding: 8px; box-sizing: border-box;
       }
-      .tabbar a, .tabbar button {
-        flex: 1 1 0;
-        border: none;
-        background: transparent;
-        font: inherit;
-        cursor: pointer;
-        border-radius: 10px;
-        padding: 10px 8px;
-      }
-      .tabbar .active {
-        background: rgba(0,0,0,0.06);
-        font-weight: 600;
-      }
-
-      /* Маленькая ✎-кнопка для предпросмотра анкеты */
-      .edit-btn {
-        border: none;
-        background: transparent;
-        cursor: pointer;
-        padding: 6px;
-        line-height: 1;
-        border-radius: 8px;
-      }
-      .edit-btn:focus-visible {
-        outline: 2px solid #2684ff;
-        outline-offset: 2px;
-      }
-
-      /* Базовые кнопки */
-      .btn {
-        border: none;
-        border-radius: 10px;
-        padding: 12px 14px;
-        font: inherit;
-        cursor: pointer;
-      }
+      .tabbar a, .tabbar button { flex: 1 1 0; border: none; background: transparent; cursor: pointer; border-radius: 10px; padding: 10px 8px; }
+      .tabbar .active { background: rgba(0,0,0,.06); font-weight: 600; }
+      .edit-btn { border: none; background: transparent; cursor: pointer; padding: 6px; line-height: 1; border-radius: 8px; }
+      .edit-btn:focus-visible { outline: 2px solid #2684ff; outline-offset: 2px; }
+      .btn { border: none; border-radius: 10px; padding: 12px 14px; font: inherit; cursor: pointer; }
       .btn-primary { background: #111; color: #fff; }
       .btn-secondary { background: #f2f2f2; color: #111; }
     </style>
@@ -112,77 +56,90 @@
 
   <body>
     <noscript>Для работы приложения требуется JavaScript.</noscript>
-
-    <!-- Корневой контейнер приложения -->
     <div id="root" class="app-container"></div>
 
-    <!-- Инициализация Telegram WebApp + защитные обработчики -->
     <script>
       (function initTelegram() {
         if (window.Telegram && window.Telegram.WebApp) {
           const WebApp = window.Telegram.WebApp;
-          try {
-            WebApp.expand();
-            WebApp.ready();
-          } catch (e) {
-            console.warn("TWA init warning:", e);
-          }
+          try { WebApp.expand(); WebApp.ready(); } catch (e) { console.warn("TWA init warning:", e); }
         }
       })();
 
-      // Доступ к конфигу из приложения
-      window.__getEmigrantConfig = function () {
-        return window.__EMIGRANT_CONFIG || {};
-      };
+      // Доступ к конфигу
+      window.__getEmigrantConfig = function () { return window.__EMIGRANT_CONFIG || {}; };
 
-      /**
-       * Страховочный делегат:
-       * - Любая кнопка с id="qn-continue" или data-role="continue-to-checklist"
-       *   всегда переводит пользователя на чеклист и НИЧЕГО больше не делает.
-       * - Это полезно, даже если основной роутинг живёт в SPA (React Router).
-       */
-      (function bindSafeContinue() {
+      // --- Жёсткий принудительный "Continue → Checklist" ---
+      (function forceContinueToChecklist() {
         function goChecklist() {
           try {
-            // 1) Кастомное событие для SPA (если слушают)
             window.dispatchEvent(new CustomEvent("emigrant:navigate", { detail: { to: "/checklist" } }));
-            // 2) Попытка history API
             if (history && history.pushState) {
               history.pushState({}, "", "/checklist");
               window.dispatchEvent(new PopStateEvent("popstate"));
             }
-            // 3) Fallback для hash-роутинга
             if (!location.pathname.endsWith("/checklist")) {
               location.hash = "#/checklist";
             }
           } catch (e) {
-            // Минимальный запасной вариант
             location.href = "/checklist";
           }
         }
 
+        // 1) Глобальная функция (можно дергать из React)
+        window.emigrantContinueToChecklist = goChecklist;
+
+        // 2) Делегат кликов: id, data-role, ТАКЖЕ поиск по тексту «Продолжить»
         document.addEventListener("click", function (e) {
           const t = e.target;
-          if (!t) return;
-          // Ищем по самому элементу и по родителям (например, если клик по иконке внутри кнопки)
-          const btn = t.closest
-            ? t.closest('#qn-continue, [data-role="continue-to-checklist"]')
-            : null;
+          if (!t || !t.closest) return;
+
+          // По id/data-role
+          let btn = t.closest('#qn-continue, [data-role="continue-to-checklist"]');
+
+          // По тексту (рус/англ), если id/data нет
+          if (!btn) {
+            const cand = t.closest("button, a, [role='button']");
+            if (cand) {
+              const txt = (cand.innerText || cand.textContent || "").trim().toLowerCase();
+              if (["продолжить","continue"].includes(txt)) btn = cand;
+            }
+          }
+
           if (btn) {
             e.preventDefault();
             e.stopPropagation();
             goChecklist();
           }
-        });
+        }, true); // useCapture=true, чтобы перехватить до React
 
-        // На случай, если кто-то будет триггерить программно:
-        window.addEventListener("emigrant:continue", function () {
-          goChecklist();
+        // 3) MutationObserver: вдруг кнопка дорисуется позже
+        const mo = new MutationObserver(() => {
+          const candidates = Array.from(document.querySelectorAll(
+            '#qn-continue, [data-role="continue-to-checklist"], button, a, [role="button"]'
+          ));
+          for (const el of candidates) {
+            const txt = (el.innerText || el.textContent || "").trim().toLowerCase();
+            if (
+              el.id === "qn-continue" ||
+              el.getAttribute && el.getAttribute("data-role") === "continue-to-checklist" ||
+              ["продолжить","continue"].includes(txt)
+            ) {
+              // навесим data-guard чтобы не дублить
+              if (!el.getAttribute("data-emigrant-continue-guard")) {
+                el.setAttribute("data-emigrant-continue-guard", "1");
+                el.addEventListener("click", function(ev){ ev.preventDefault(); ev.stopPropagation(); goChecklist(); }, true);
+              }
+            }
+          }
         });
+        mo.observe(document.documentElement, { childList: true, subtree: true });
+
+        console.log("[eMigrant] Continue→Checklist guard active");
       })();
     </script>
 
-    <!-- Точка входа вашего приложения (Vite/React). Замените путь при другом бандлере -->
-    <script type="module" src="/src/main.tsx"></script>
+    <!-- Vite/React entry (замени путь, если другой бандлер) -->
+    <script type="module" src="/src/main.tsx?v=idx-2025-08-16-01"></script>
   </body>
 </html>
