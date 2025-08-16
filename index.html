@@ -2,223 +2,181 @@
 <html lang="ru">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
     <meta name="theme-color" content="#ffffff" />
-    <title>eMigrant • Checklist</title>
+    <title>eMigrant • Mini App</title>
 
-    <!-- Telegram Mini Apps SDK (не мешает в обычном браузере) -->
+    <!-- Telegram Mini Apps SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
+    <!-- App config (read in your app code at startup) -->
+    <script>
+      // === eMigrant global config ===
+      // Frontend should read this on boot and adjust flows accordingly.
+      window.__EMIGRANT_CONFIG = {
+        questionnaire: {
+          // VERY IMPORTANT: "Continue" must NOT generate PDF or trigger AI.
+          // It only navigates back to the Checklist (homepage).
+          continueAction: "toChecklist",
+          // Enable inline ✎ edit on each field in the final Preview.
+          // Clicking it must jump to the corresponding step/field
+          // and return to Preview after saving.
+          previewInlineEdit: true
+        },
+        ui: {
+          // Keep a bit of bottom padding so the TabBar never overlaps content.
+          tabbarHeight: 64
+        }
+      };
+    </script>
+
     <style>
-      html, body { margin:0; padding:0; height:100%; background:#fff; color:#111;
-        font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial,"Noto Sans"; }
-      :root { --safe-bottom: env(safe-area-inset-bottom, 0px); --tabbar-h: 64px; }
-      .wrap { min-height:100%; box-sizing:border-box; padding-bottom: calc(var(--tabbar-h) + var(--safe-bottom)); }
-      header { padding:16px 16px 8px; border-bottom:1px solid #eee; position:sticky; top:0; background:#fff; z-index:2; }
-      h1 { margin:0; font-size:20px; }
-      .progress-box { display:flex; align-items:center; gap:12px; margin-top:8px; }
-      .bar { flex:1; height:10px; background:#eee; border-radius:6px; overflow:hidden; }
-      .fill { height:10px; background:#111; width:0%; transition:width .25s ease; }
-      .pct { min-width:42px; text-align:right; font-size:13px; color:#555; }
+      /* Basic, safe default styles for a clean TMA container */
+      html, body, #root {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+        background: #ffffff;
+        color: #111;
+      }
 
-      .section { padding:10px 16px; }
-      .card { border:1px solid #eee; border-radius:12px; padding:12px; margin-bottom:10px; display:flex; gap:10px; align-items:flex-start; }
-      .badge { font-size:12px; padding:2px 8px; border-radius:999px; background:#f2f2f2; color:#111; }
-      .badge.ok { background:#dcfce7; }
-      .badge.wait { background:#fff7cc; }
-      .badge.issues { background:#ffe3e3; }
+      /* Respect iOS safe areas */
+      :root {
+        --safe-bottom: env(safe-area-inset-bottom, 0px);
+        --safe-top: env(safe-area-inset-top, 0px);
+        --tabbar-h: 64px;
+      }
 
-      .title { font-weight:600; }
-      .desc { color:#666; font-size:13px; margin-top:4px; }
-      .actions { display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; }
-      .btn { border:none; border-radius:10px; padding:10px 12px; font:inherit; cursor:pointer; }
-      .btn.primary { background:#111; color:#fff; }
-      .btn.secondary { background:#f2f2f2; color:#111; }
-      .btn.link { background:transparent; color:#111; text-decoration:underline; padding:0; }
+      /* Utility to ensure main views are not covered by the tab bar */
+      .app-container {
+        min-height: 100%;
+        box-sizing: border-box;
+        padding-bottom: calc(var(--tabbar-h) + var(--safe-bottom));
+        padding-top: var(--safe-top);
+      }
 
-      .tabbar { position:fixed; left:0; right:0; bottom:0; height:64px; padding:8px; box-sizing:border-box;
-        display:flex; gap:8px; background:#fff; border-top:1px solid #eee; z-index:3; padding-bottom:calc(8px + var(--safe-bottom)); }
-      .tabbar button { flex:1; border:none; background:#f6f7f9; border-radius:10px; padding:10px; font:inherit; cursor:pointer; }
-      .toast { position:fixed; bottom:calc(72px + var(--safe-bottom)); left:50%; transform:translateX(-50%);
-        background:#111; color:#fff; padding:10px 12px; border-radius:10px; font-size:13px; opacity:0; pointer-events:none; transition:opacity .2s; }
-      .toast.show { opacity:1; }
+      /* Optional base styles for the persistent TabBar */
+      .tabbar {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: var(--tabbar-h);
+        padding-bottom: var(--safe-bottom);
+        border-top: 1px solid rgba(0,0,0,0.06);
+        background: #fff;
+        display: flex;
+        align-items: stretch;
+        gap: 8px;
+        padding: 8px;
+        box-sizing: border-box;
+      }
+      .tabbar a, .tabbar button {
+        flex: 1 1 0;
+        border: none;
+        background: transparent;
+        font: inherit;
+        cursor: pointer;
+        border-radius: 10px;
+        padding: 10px 8px;
+      }
+      .tabbar .active {
+        background: rgba(0,0,0,0.06);
+        font-weight: 600;
+      }
+
+      /* Small, accessible inline edit button (✎) you can reuse in Preview UI */
+      .edit-btn {
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        padding: 6px;
+        line-height: 1;
+        border-radius: 8px;
+      }
+      .edit-btn:focus-visible {
+        outline: 2px solid #2684ff;
+        outline-offset: 2px;
+      }
+
+      /* Main CTA buttons baseline */
+      .btn {
+        border: none;
+        border-radius: 10px;
+        padding: 12px 14px;
+        font: inherit;
+        cursor: pointer;
+      }
+      .btn-primary {
+        background: #111;
+        color: #fff;
+      }
+      .btn-secondary {
+        background: #f2f2f2;
+        color: #111;
+      }
+
+      /* Minimal noscript message */
+      noscript {
+        display: block;
+        padding: 16px;
+        background: #fff3cd;
+        color: #533f03;
+        border: 1px solid #ffeeba;
+        margin: 12px;
+        border-radius: 8px;
+      }
     </style>
   </head>
+
   <body>
-    <div class="wrap">
-      <header>
-        <h1>Чеклист подачи</h1>
-        <div class="progress-box">
-          <div class="bar"><div id="fill" class="fill"></div></div>
-          <div id="pct" class="pct">0%</div>
-        </div>
-      </header>
+    <noscript>Для работы приложения требуется JavaScript.</noscript>
 
-      <div class="section">
-        <!-- Список задач генерируется JS-ом ниже -->
-        <div id="list"></div>
-      </div>
-    </div>
-
-    <div class="tabbar">
-      <button data-nav="translator">AI Translator</button>
-      <button data-nav="slot">Book a slot</button>
-      <button data-nav="assistant">Start a chat</button>
-    </div>
-
-    <div id="toast" class="toast"></div>
+    <!--
+      The app should mount into #root.
+      Apply the .app-container class at your root layout so content
+      never overlaps with the bottom TabBar.
+    -->
+    <div id="root" class="app-container"></div>
 
     <script>
-      // === Инициализация WebApp (не мешает в обычном браузере) ===
+      // Telegram WebApp minimal init
       (function initTelegram() {
         if (window.Telegram && window.Telegram.WebApp) {
-          try { window.Telegram.WebApp.expand(); window.Telegram.WebApp.ready(); } catch(e){}
+          const WebApp = window.Telegram.WebApp;
+          try {
+            WebApp.expand();
+            WebApp.ready();
+
+            // Optional: react to theme changes (dark/light)
+            WebApp.onEvent("themeChanged", function () {
+              // You can read colors from WebApp.themeParams in your app code.
+              // index.html keeps styling neutral.
+            });
+          } catch (e) {
+            console.warn("TWA init warning:", e);
+          }
         }
       })();
 
-      // === Модель чеклиста (минимум для старта) ===
-      const DEFAULT_ITEMS = [
-        { key:'questionnaire', title:'Анкета (wniosek)', desc:'Заполните шаблон, у вас будет предпросмотр и ✎-правка.', required:true, status:'not_started' },
-        { key:'photos',        title:'Фотографии 3.5×4.5', desc:'Загрузите фото — проверим автоматически.', required:true, status:'not_started' },
-        { key:'fee',           title:'Opłata skarbowa', desc:'Покажем реквизиты, отметьте оплату.', required:true, status:'not_started' },
-        { key:'contract',      title:'Договор (UoP/UoD/B2B)', desc:'Загрузите договор — проверим подписи, даты, NIP.', required:false, status:'not_started' },
-        { key:'attachment',    title:'Załącznik od pracodawcy', desc:'Скачайте шаблон → подпись/печать → загрузите.', required:false, status:'not_started' },
-        { key:'housing',       title:'Umowa najmu / Meldunek', desc:'Проверим адрес, сроки, подписи.', required:true, status:'not_started' },
-        { key:'university',    title:'Zaświadczenie z uczelni', desc:'Для студентов — загрузите справку.', required:false, status:'not_started' },
-        { key:'funds',         title:'Финансовые средства', desc:'Выписка из банка: сумма/дата/реквизиты.', required:true, status:'not_started' },
-        { key:'insurance',     title:'Страховка (Private/NFZ/ZUS)', desc:'Проверим срок действия и реквизиты.', required:true, status:'not_started' },
-        { key:'slot',          title:'Запись в ужонд', desc:'Найдём и забронируем слот, можно подписаться на email.', required:true, status:'not_started' }
-      ];
-
-      // Статусы: not_started | in_progress | waiting_ai | ok | issues
-      const LS_KEY = 'emigrant_checklist_v1';
-
-      function loadState() {
-        try { return JSON.parse(localStorage.getItem(LS_KEY)) || DEFAULT_ITEMS; }
-        catch(e) { return DEFAULT_ITEMS; }
-      }
-      function saveState(items){ localStorage.setItem(LS_KEY, JSON.stringify(items)); }
-
-      const items = loadState();
-
-      function renderList() {
-        const list = document.getElementById('list');
-        list.innerHTML = '';
-        items.forEach((it, i) => {
-          const card = document.createElement('div');
-          card.className = 'card';
-          card.innerHTML = `
-            <div style="flex:1">
-              <div class="title">${escapeHtml(it.title)}</div>
-              <div class="desc">${escapeHtml(it.desc)}</div>
-              <div class="actions">
-                ${actionButtons(it).join('')}
-              </div>
-            </div>
-            <div><span class="badge ${badgeClass(it.status)}">${statusLabel(it.status)}</span></div>
-          `;
-          // навесим события на кнопки внутри карточки
-          card.querySelectorAll('[data-act]').forEach(btn => {
-            btn.addEventListener('click', (e) => handleAction(e, i));
-          });
-          list.appendChild(card);
-        });
-        renderProgress();
-      }
-
-      function actionButtons(it) {
-        const btns = [];
-        // Открыть модуль
-        btns.push(`<button class="btn secondary" data-act="open" data-key="${it.key}">Открыть</button>`);
-        // Пометить как "ожидает AI"
-        if (it.status === 'in_progress') {
-          btns.push(`<button class="btn secondary" data-act="waitai" data-key="${it.key}">Отправить на проверку</button>`);
-        }
-        // Пометить как "ok"
-        if (['in_progress','waiting_ai','issues'].includes(it.status)) {
-          btns.push(`<button class="btn primary" data-act="ok" data-key="${it.key}">Отметить как OK</button>`);
-        }
-        // Пометить "есть проблемы"
-        if (['in_progress','waiting_ai'].includes(it.status)) {
-          btns.push(`<button class="btn secondary" data-act="issues" data-key="${it.key}">Пометки (issues)</button>`);
-        }
-        // Сбросить
-        if (it.status !== 'not_started') {
-          btns.push(`<button class="btn link" data-act="reset" data-key="${it.key}">Сбросить</button>`);
-        }
-        return btns;
-      }
-
-      function handleAction(e, index) {
-        const act = e.currentTarget.getAttribute('data-act');
-        const key = e.currentTarget.getAttribute('data-key');
-        const it = items[index];
-        switch (act) {
-          case 'open':
-            // Здесь будет переход в модуль; пока покажем тост
-            toast(`Модуль «${it.title}»: не подключен (демо).`);
-            // пример: если это анкета, можно имитировать «вернуться на чеклист»
-            if (key === 'questionnaire') {
-              toast('Подсказка: в конце анкеты кнопка «Продолжить» вернёт вас сюда.');
-            }
-            break;
-          case 'waitai':
-            it.status = 'waiting_ai'; saveState(items); renderList(); break;
-          case 'ok':
-            it.status = 'ok'; saveState(items); renderList(); break;
-          case 'issues':
-            it.status = 'issues'; saveState(items); renderList(); break;
-          case 'reset':
-            it.status = 'not_started'; saveState(items); renderList(); break;
-        }
-      }
-
-      function renderProgress() {
-        const required = items.filter(i => i.required);
-        const done = required.filter(i => i.status === 'ok');
-        const pct = required.length ? Math.round((done.length / required.length) * 100) : 0;
-        document.getElementById('fill').style.width = pct + '%';
-        document.getElementById('pct').textContent = pct + '%';
-      }
-
-      function statusLabel(s) {
-        return ({
-          not_started:'new',
-          in_progress:'in progress',
-          waiting_ai:'waiting AI',
-          ok:'OK',
-          issues:'issues'
-        })[s] || s;
-      }
-      function badgeClass(s) {
-        return ({
-          ok:'ok',
-          waiting_ai:'wait',
-          issues:'issues'
-        })[s] || '';
-      }
-      function escapeHtml(str){
-        return String(str).replace(/[&<>"']/g, s=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[s]));
-      }
-
-      // Нижние кнопки
-      document.querySelectorAll('.tabbar [data-nav]').forEach(b=>{
-        b.addEventListener('click', ()=>{
-          const dest = b.getAttribute('data-nav');
-          toast(`Экран «${dest}» пока не подключён (демо).`);
-        });
-      });
-
-      function toast(text) {
-        const t = document.getElementById('toast');
-        t.textContent = text;
-        t.classList.add('show');
-        clearTimeout(window.__toastTimer);
-        window.__toastTimer = setTimeout(()=>t.classList.remove('show'), 1800);
-      }
-
-      // первичный рендер
-      renderList();
+      // Expose a simple guard so the app can confirm config is present.
+      window.__getEmigrantConfig = function () {
+        return window.__EMIGRANT_CONFIG || {};
+      };
     </script>
+
+    <!--
+      Vite/React entry.
+      If your project is not Vite-based, replace the path below with your bundler entry.
+    -->
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
