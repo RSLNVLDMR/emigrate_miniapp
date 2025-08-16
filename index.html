@@ -1,368 +1,182 @@
 <!doctype html>
 <html lang="ru">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-  <title>eMigrant — Mini App</title>
-  <meta name="theme-color" content="#ffffff" />
-  <!-- Telegram WebApp SDK -->
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <style>
-    :root{
-      --bg:#ffffff;--text:#111;--muted:#6a6a6a;--line:#ececec;--accent:#2ea44f;
-      --danger:#c62828;--warn:#d97706;
-    }
-    *{box-sizing:border-box}
-    html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font:14px/1.4 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Inter,Helvetica,Arial,sans-serif}
-    a{color:inherit}
-    .app{min-height:100dvh;display:flex;flex-direction:column}
-    header{padding:12px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:5}
-    header h1{margin:0;font-size:16px}
-    main{flex:1;padding:16px 16px 80px}
-    .section-title{margin:0 0 8px;font-size:15px}
-    .muted{color:var(--muted)}
-    .card{border:1px solid var(--line);border-radius:12px;padding:12px;margin:8px 0;background:#fff}
-    .row{display:flex;gap:8px;align-items:center}
-    .row-spread{display:flex;gap:8px;align-items:center;justify-content:space-between}
-    button{appearance:none;border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 12px;cursor:pointer}
-    button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
-    button.ghost{background:transparent;border-color:transparent}
-    button.warn{background:#fff7ed;border-color:#fed7aa}
-    button.danger{background:#ffebee;border-color:#ffcdd2}
-    .full{width:100%}
-    .grid{display:grid;gap:8px}
-    .progress{background:#f1f1f1;border-radius:999px;height:10px;overflow:hidden}
-    .progress > span{display:block;height:100%;background:var(--accent);width:0;transition:width .25s}
-    .tag{font-size:12px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
-    .ok{color:var(--accent)}
-    .issues{color:var(--warn)}
-    .fixed-bottom{
-      position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);
-      display:flex;gap:4px;padding:8px 8px 10px;z-index:10
-    }
-    .tab{flex:1;text-align:center;padding:8px;border-radius:10px}
-    .tab.active{background:#f7f7f7;font-weight:600}
-    .list{display:flex;flex-direction:column;gap:8px}
-    .clickable{cursor:pointer}
-    .preview-row{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px dashed #f0f0f0}
-    .preview-row:last-child{border-bottom:none}
-    .preview-label{font-size:12px;color:var(--muted)}
-    .preview-value{font-size:15px}
-    .edit-btn{border:none;background:transparent;cursor:pointer;padding:6px;border-radius:8px}
-    .edit-btn:hover{background:#f5f5f5}
-    .spacer{height:8px}
-    .hidden{display:none !important}
-  </style>
-</head>
-<body>
-<div class="app" id="app">
-  <header>
-    <h1 id="app-title">eMigrant</h1>
-  </header>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#ffffff" />
+    <title>eMigrant • Mini App</title>
 
-  <main id="view"><!-- screen will render here --></main>
+    <!-- Telegram Mini Apps SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-  <!-- Bottom tabs -->
-  <nav class="fixed-bottom" id="tabs">
-    <div class="tab" data-route="#/checklist">Checklist</div>
-    <div class="tab" data-route="#/translator">AI Translator</div>
-    <div class="tab" data-route="#/slots">Book a slot</div>
-    <div class="tab" data-route="#/assistant">Start a chat</div>
-  </nav>
-</div>
+    <!-- App config (read in your app code at startup) -->
+    <script>
+      // === eMigrant global config ===
+      // Frontend should read this on boot and adjust flows accordingly.
+      window.__EMIGRANT_CONFIG = {
+        questionnaire: {
+          // VERY IMPORTANT: "Continue" must NOT generate PDF or trigger AI.
+          // It only navigates back to the Checklist (homepage).
+          continueAction: "toChecklist",
+          // Enable inline ✎ edit on each field in the final Preview.
+          // Clicking it must jump to the corresponding step/field
+          // and return to Preview after saving.
+          previewInlineEdit: true
+        },
+        ui: {
+          // Keep a bit of bottom padding so the TabBar never overlaps content.
+          tabbarHeight: 64
+        }
+      };
+    </script>
 
-<script>
-/* -------------------- Telegram init -------------------- */
-(function initTG(){
-  try {
-    if (window.Telegram && Telegram.WebApp) {
-      Telegram.WebApp.expand();
-      Telegram.WebApp.ready();
-    }
-  } catch(e) { /* noop */ }
-})();
-
-/* -------------------- App State (simple store) -------------------- */
-const Store = {
-  state: {
-    progress: 0,
-    checklist: [
-      {key:'questionnaire', title:'Заполни шаблон внеска', required:true, status:'in_progress'},
-      {key:'photos', title:'Приготовить фотки', required:true, status:'not_started'},
-      {key:'fee', title:'Opłata skarbowa', required:true, status:'not_started'},
-      {key:'contract', title:'Upload your contract', required:true, status:'not_started'},
-      {key:'employer_attachment', title:'Załącznik od pracodawcy', required:true, status:'not_started'},
-      {key:'housing', title:'Umowa najmu / Meldunek', required:true, status:'not_started'},
-      {key:'university', title:'Zaświadczenie z uczelni (для студентов)', required:false, status:'not_started'},
-      {key:'funds', title:'Informacje o środkach', required:true, status:'not_started'},
-      {key:'insurance', title:'Ubezpieczenie', required:true, status:'not_started'},
-      {key:'slot', title:'Find a slot', required:true, status:'not_started'}
-    ],
-    questionnaire: {
-      data: {
-        'person.fullName': 'Ivan Petrov',
-        'person.pesel': '12345678901',
-        'address.street': 'Marszałkowska 10',
-        'address.city': 'Warszawa',
-        'basis.type': 'work',
-        'employment.employer': 'ACME Sp. z o.o.',
-        'employment.nip': '5251234567',
-        'housing.address': 'Marszałkowska 10, Warszawa',
-        'insurance.type': 'NFZ',
-        'funds.bankName': 'mBank'
-      },
-      aiStatus: 'issues', // 'ok' | 'issues' | 'waiting'
-      returnToPreview: false
-    },
-    route: '#/checklist'
-  },
-  get(k){ return this.state[k] },
-  set(patch){ Object.assign(this.state, patch); render() },
-  updateChecklistProgress(){
-    const done = this.state.checklist.filter(i => i.status === 'ok').length;
-    const req = this.state.checklist.filter(i => i.required).length;
-    const pct = Math.round((done/Math.max(1,req))*100);
-    this.state.progress = Math.min(100, pct);
-  },
-  markDone(key){
-    const item = this.state.checklist.find(i=>i.key===key);
-    if (item){ item.status='ok'; this.updateChecklistProgress(); }
-  },
-  jumpToQuestionnaireField(fieldKey){
-    console.log('[analytics] q_preview_edit_click', {fieldKey});
-    this.state.questionnaire.returnToPreview = true;
-    // в реальном приложении — роут на этап визарда и фокус поля.
-    alert('Переход к шагу визарда для поля: ' + fieldKey + '\n(демо: показываем алерт)');
-  }
-};
-
-/* -------------------- Simple Router -------------------- */
-const routes = {
-  '#/checklist': renderChecklist,
-  '#/questionnaire/preview': renderQuestionnairePreview,
-  '#/questionnaire/result': renderQuestionnaireResult,
-  '#/translator': renderTranslator,
-  '#/slots': renderSlots,
-  '#/assistant': renderAssistant
-};
-
-function navigate(hash){
-  if (!routes[hash]) hash = '#/checklist';
-  Store.set({route: hash});
-  window.location.hash = hash;
-}
-
-window.addEventListener('hashchange', ()=> {
-  const h = window.location.hash || '#/checklist';
-  Store.set({route:h});
-});
-
-document.getElementById('tabs').addEventListener('click', (e)=>{
-  const el = e.target.closest('[data-route]');
-  if (!el) return;
-  navigate(el.dataset.route);
-});
-
-function setActiveTab(){
-  const tabs = document.querySelectorAll('.tab');
-  tabs.forEach(t=>{
-    if (t.dataset.route === Store.state.route) t.classList.add('active');
-    else t.classList.remove('active');
-  });
-}
-
-/* -------------------- Screens -------------------- */
-
-function renderChecklist(){
-  const s = Store.state;
-  const listHtml = s.checklist.map(i=>{
-    const status = i.status==='ok' ? 'ok' : (i.status==='issues'?'issues':'muted');
-    const tag = i.status==='ok' ? '✅ ok' : i.status==='issues' ? '⚠️ issues' : '•';
-    return `
-      <div class="card clickable" data-open="${i.key}">
-        <div class="row-spread">
-          <div>
-            <div><strong>${i.title}</strong></div>
-            <div class="muted">${i.required? 'Обязательно':'Опционально'}</div>
-          </div>
-          <div class="tag ${status}">${tag}</div>
-        </div>
-      </div>
-    `;
-  }).join('');
-
-  const v = document.getElementById('view');
-  v.innerHTML = `
-    <div class="grid">
-      <div class="card">
-        <div class="row-spread">
-          <div>
-            <div class="section-title">Прогресс</div>
-            <div class="muted">${s.progress}% выполнено</div>
-          </div>
-        </div>
-        <div class="progress" style="margin-top:8px"><span style="width:${s.progress}%"></span></div>
-      </div>
-
-      <div class="section-title">Чеклист</div>
-      ${listHtml}
-    </div>
-  `;
-
-  v.querySelectorAll('[data-open]').forEach(el=>{
-    el.addEventListener('click', ()=>{
-      const key = el.getAttribute('data-open');
-      // роутим на соответствующий модуль (для демо показываем только анкету/слот/перевод/ассистента)
-      if (key === 'questionnaire') navigate('#/questionnaire/preview');
-      else if (key === 'slot') navigate('#/slots');
-      else if (key === 'photos') alert('Откроется модуль Фото (демо)');
-      else alert('Откроется модуль: '+key+' (демо)');
-    });
-  });
-}
-
-function renderQuestionnairePreview(){
-  const data = Store.state.questionnaire.data;
-  const rows = Object.keys(data).map(k=>{
-    return `
-      <div class="preview-row">
-        <div style="flex:1">
-          <div class="preview-label">${k}</div>
-          <div class="preview-value">${data[k] ?? '—'}</div>
-        </div>
-        <button class="edit-btn" data-edit="${k}" aria-label="Редактировать">✎</button>
-      </div>
-    `;
-  }).join('');
-
-  const v = document.getElementById('view');
-  v.innerHTML = `
-    <div class="grid">
-      <h3 class="section-title">Предпросмотр данных анкеты</h3>
-      <div class="card">${rows}</div>
-
-      <div class="row" style="gap:8px">
-        <button class="primary full" id="btn-validate">На проверку AI</button>
-      </div>
-
-      <div class="spacer"></div>
-      <div class="row" style="gap:8px">
-        <button class="full" id="btn-continue">Продолжить</button>
-        <button class="full" id="btn-reset">Заполнить заново</button>
-      </div>
-
-      <p class="muted">Кнопка «Продолжить» вернёт вас на чеклист без генерации PDF.</p>
-    </div>
-  `;
-
-  v.querySelectorAll('[data-edit]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const fieldKey = btn.getAttribute('data-edit');
-      Store.jumpToQuestionnaireField(fieldKey);
-    });
-  });
-
-  document.getElementById('btn-validate').addEventListener('click', ()=>{
-    console.log('[analytics] q_validate_click');
-    // демо: поменяем статус на waiting → issues (как будто AI отработал)
-    Store.state.questionnaire.aiStatus = 'waiting';
-    setTimeout(()=>{
-      Store.state.questionnaire.aiStatus = 'issues'; // или 'ok'
-      alert('AI: найдены замечания в анкете (демо).');
-      renderQuestionnairePreview();
-    }, 1000);
-  });
-
-  document.getElementById('btn-continue').addEventListener('click', ()=>{
-    console.log('[analytics] q_continue_click', { aiStatus: Store.state.questionnaire.aiStatus });
-    // ВАЖНО: никаких PDF, просто возвращаем на чеклист
-    navigate('#/checklist');
-  });
-
-  document.getElementById('btn-reset').addEventListener('click', ()=>{
-    if (confirm('Сбросить и заполнить заново?')){
-      Store.state.questionnaire.data = {};
-      Store.state.questionnaire.aiStatus = undefined;
-      alert('Анкета сброшена (демо).');
-      renderQuestionnairePreview();
-    }
-  });
-}
-
-function renderQuestionnaireResult(){
-  const status = Store.state.questionnaire.aiStatus || 'waiting';
-  const v = document.getElementById('view');
-  v.innerHTML = `
-    <div class="grid">
-      <h3 class="section-title">Результат анкеты</h3>
-      ${status==='ok' ? '<div class="card ok">✅ Документ корректен (демо)</div>' :
-        status==='issues' ? '<div class="card issues">⚠️ Обнаружены замечания (демо)</div>' :
-        '<div class="card">⌛ Идёт проверка…</div>'
+    <style>
+      /* Basic, safe default styles for a clean TMA container */
+      html, body, #root {
+        height: 100%;
+        margin: 0;
+        padding: 0;
       }
-      <div class="row" style="gap:8px">
-        <button class="full" id="btn-continue">Продолжить</button>
-        <button class="full" id="btn-again">Заполнить заново</button>
-      </div>
-      <p class="muted">«Продолжить» вернёт на чеклист. PDF не генерируется на этом этапе.</p>
-    </div>
-  `;
-  document.getElementById('btn-continue').addEventListener('click', ()=> navigate('#/checklist'));
-  document.getElementById('btn-again').addEventListener('click', ()=> navigate('#/questionnaire/preview'));
-}
+      body {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+        background: #ffffff;
+        color: #111;
+      }
 
-function renderTranslator(){
-  const v = document.getElementById('view');
-  v.innerHTML = `
-    <h3 class="section-title">AI Translator</h3>
-    <div class="card">
-      <p class="muted">Загрузите документ для перевода (демо-экран).</p>
-      <div class="row" style="gap:8px">
-        <button>Выбрать файл</button>
-        <button class="primary">Перевести</button>
-      </div>
-    </div>
-  `;
-}
+      /* Respect iOS safe areas */
+      :root {
+        --safe-bottom: env(safe-area-inset-bottom, 0px);
+        --safe-top: env(safe-area-inset-top, 0px);
+        --tabbar-h: 64px;
+      }
 
-function renderSlots(){
-  const v = document.getElementById('view');
-  v.innerHTML = `
-    <h3 class="section-title">Find a slot</h3>
-    <div class="card">
-      <p class="muted">Календарь и доступные даты (демо-экран).</p>
-      <div class="row" style="gap:8px">
-        <button>Показать слоты</button>
-        <button class="primary">Забронировать</button>
-      </div>
-    </div>
-  `;
-}
+      /* Utility to ensure main views are not covered by the tab bar */
+      .app-container {
+        min-height: 100%;
+        box-sizing: border-box;
+        padding-bottom: calc(var(--tabbar-h) + var(--safe-bottom));
+        padding-top: var(--safe-top);
+      }
 
-function renderAssistant(){
-  const v = document.getElementById('view');
-  v.innerHTML = `
-    <h3 class="section-title">Book an assistant</h3>
-    <div class="card">
-      <p class="muted">Опишите проблему — мы свяжемся.</p>
-      <textarea style="width:100%;min-height:80px;border:1px solid var(--line);border-radius:8px;padding:8px" placeholder="Опишите, что нужно"></textarea>
-      <div class="spacer"></div>
-      <button class="primary full">Отправить</button>
-    </div>
-  `;
-}
+      /* Optional base styles for the persistent TabBar */
+      .tabbar {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: var(--tabbar-h);
+        padding-bottom: var(--safe-bottom);
+        border-top: 1px solid rgba(0,0,0,0.06);
+        background: #fff;
+        display: flex;
+        align-items: stretch;
+        gap: 8px;
+        padding: 8px;
+        box-sizing: border-box;
+      }
+      .tabbar a, .tabbar button {
+        flex: 1 1 0;
+        border: none;
+        background: transparent;
+        font: inherit;
+        cursor: pointer;
+        border-radius: 10px;
+        padding: 10px 8px;
+      }
+      .tabbar .active {
+        background: rgba(0,0,0,0.06);
+        font-weight: 600;
+      }
 
-/* -------------------- Render -------------------- */
-function render(){
-  const route = Store.state.route || '#/checklist';
-  const fn = routes[route] || renderChecklist;
-  fn();
-  setActiveTab();
-}
+      /* Small, accessible inline edit button (✎) you can reuse in Preview UI */
+      .edit-btn {
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        padding: 6px;
+        line-height: 1;
+        border-radius: 8px;
+      }
+      .edit-btn:focus-visible {
+        outline: 2px solid #2684ff;
+        outline-offset: 2px;
+      }
 
-// initial
-if (!location.hash) location.hash = '#/checklist';
-Store.updateChecklistProgress();
-render();
-</script>
-</body>
+      /* Main CTA buttons baseline */
+      .btn {
+        border: none;
+        border-radius: 10px;
+        padding: 12px 14px;
+        font: inherit;
+        cursor: pointer;
+      }
+      .btn-primary {
+        background: #111;
+        color: #fff;
+      }
+      .btn-secondary {
+        background: #f2f2f2;
+        color: #111;
+      }
+
+      /* Minimal noscript message */
+      noscript {
+        display: block;
+        padding: 16px;
+        background: #fff3cd;
+        color: #533f03;
+        border: 1px solid #ffeeba;
+        margin: 12px;
+        border-radius: 8px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <noscript>Для работы приложения требуется JavaScript.</noscript>
+
+    <!--
+      The app should mount into #root.
+      Apply the .app-container class at your root layout so content
+      never overlaps with the bottom TabBar.
+    -->
+    <div id="root" class="app-container"></div>
+
+    <script>
+      // Telegram WebApp minimal init
+      (function initTelegram() {
+        if (window.Telegram && window.Telegram.WebApp) {
+          const WebApp = window.Telegram.WebApp;
+          try {
+            WebApp.expand();
+            WebApp.ready();
+
+            // Optional: react to theme changes (dark/light)
+            WebApp.onEvent("themeChanged", function () {
+              // You can read colors from WebApp.themeParams in your app code.
+              // index.html keeps styling neutral.
+            });
+          } catch (e) {
+            console.warn("TWA init warning:", e);
+          }
+        }
+      })();
+
+      // Expose a simple guard so the app can confirm config is present.
+      window.__getEmigrantConfig = function () {
+        return window.__EMIGRANT_CONFIG || {};
+      };
+    </script>
+
+    <!--
+      Vite/React entry.
+      If your project is not Vite-based, replace the path below with your bundler entry.
+    -->
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>
