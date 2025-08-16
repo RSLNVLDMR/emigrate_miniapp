@@ -1,253 +1,432 @@
 <!doctype html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <title>eMigrant — Miniapp MVP</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- Telegram Web Apps SDK (в браузере без Telegram — просто игнорируется) -->
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <meta charset="utf-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+  />
+  <title>eMigrant — Опросник</title>
+  <meta name="color-scheme" content="light dark">
   <style>
-    :root{--bg:#0f1115;--card:#171a21;--text:#e7eaf0;--muted:#9aa3b2;--accent:#7cdfff;--line:#242936;--ok:#33d69e;--warn:#ffb84d;}
-    *{box-sizing:border-box} html,body{height:100%} body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-    .wrap{max-width:920px;margin:0 auto;padding:16px 16px 86px}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px}
-    h1,h2,h3{margin:0 0 10px} .small{color:var(--muted);font-size:13px}
-    input,select,button,textarea{width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:#0c0f14;color:var(--text);margin-top:6px}
-    button{cursor:pointer} button.primary{background:#2a73ff;border-color:#2a73ff}
-    .row{display:flex;gap:8px;align-items:center} .row> *{flex:1}
-    .progress{height:10px;background:#0c0f14;border:1px solid var(--line);border-radius:999px;overflow:hidden}
-    .progress>span{display:block;height:100%;background:#2a73ff}
-    .badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;border:1px solid var(--line);color:var(--muted)}
-    .ok{color:var(--ok);border-color:var(--ok)} .warn{color:var(--warn);border-color:var(--warn)}
-    .bottom{position:fixed;left:0;right:0;bottom:0;background:#0c0f14;border-top:1px solid var(--line);display:flex;gap:6px;padding:8px}
-    .bottom button{flex:1}
-    header{position:sticky;top:0;background:linear-gradient(180deg,#0f1115,rgba(15,17,21,0.6));backdrop-filter:blur(6px);z-index:2;border-bottom:1px solid var(--line);padding:12px}
-    a{color:var(--accent)}
+    :root {
+      --bg: #0b0f14;
+      --card: #12171f;
+      --muted: #7d8aa3;
+      --text: #e9eef9;
+      --accent: #6ea8ff;
+      --accent-2: #96d38c;
+      --danger: #ff6b6b;
+      --stroke: #223043;
+    }
+    html, body { height: 100%; }
+    body {
+      margin: 0; background: var(--bg); color: var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    }
+    .app {
+      min-height: 100dvh; display: grid; grid-template-rows: auto 1fr auto;
+    }
+    header {
+      position: sticky; top: 0; z-index: 10;
+      backdrop-filter: blur(6px);
+      border-bottom: 1px solid var(--stroke);
+      background: color-mix(in oklab, var(--bg) 80%, #000 20%);
+      padding: 12px 16px;
+    }
+    .title { font-weight: 700; font-size: 16px; }
+    .progress-wrap { display: grid; gap: 8px; margin-top: 8px; }
+    .progress {
+      height: 8px; background: #0f1520; border-radius: 999px; overflow: hidden;
+      border: 1px solid var(--stroke);
+    }
+    .bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+
+    main { padding: 16px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--stroke);
+      border-radius: 16px;
+      padding: 16px;
+      display: grid; gap: 14px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+    }
+    .q-title { font-size: 18px; font-weight: 700; line-height: 1.3; }
+    .q-hint { color: var(--muted); font-size: 13px; }
+    .field { display: grid; gap: 10px; }
+    .row { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; }
+    label { font-size: 14px; color: var(--text); }
+    input[type="text"] {
+      width: 100%; padding: 12px 12px; border-radius: 12px;
+      border: 1px solid var(--stroke); background: #0f1520; color: var(--text);
+      outline: none;
+    }
+    .options { display: grid; gap: 8px; }
+    .option {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px; border: 1px solid var(--stroke); border-radius: 12px;
+      background: #0f1520; cursor: pointer;
+    }
+    .option input { accent-color: var(--accent); }
+    .controls { display: flex; gap: 10px; margin-top: 8px; }
+    .btn {
+      flex: 1; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--stroke);
+      background: #101827; color: var(--text); font-weight: 600; cursor: pointer;
+    }
+    .btn.primary { background: linear-gradient(90deg, var(--accent), var(--accent-2)); color: #0b0f14; border: none; }
+    .btn.ghost { background: transparent; }
+    .btn.danger { background: #2a1214; border-color: #5a1f25; color: #ffb3b3; }
+    .error { color: var(--danger); font-size: 13px; }
+
+    .review { display: grid; gap: 10px; }
+    .kv {
+      display: flex; justify-content: space-between; gap: 10px;
+      padding: 10px 12px; border: 1px dashed var(--stroke); border-radius: 10px;
+      background: #0f1520;
+    }
+    .kv b { color: var(--muted); font-weight: 600; }
+    .kv span { text-align: right; }
+
+    footer {
+      position: sticky; bottom: 0; z-index: 10;
+      border-top: 1px solid var(--stroke);
+      background: color-mix(in oklab, var(--bg) 80%, #000 20%);
+      padding: 10px 12px;
+    }
+    .bottom-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+    .mini { font-size: 12px; padding: 10px 10px; border-radius: 12px; border: 1px solid var(--stroke); background:#0f1520; color: var(--text); }
+    .mini.primary { background: #111c2c; }
+
+    /* mobile-safe tap sizes */
+    button, label, input { -webkit-tap-highlight-color: transparent; }
   </style>
 </head>
 <body>
-<div class="wrap">
-  <header><h2 id="title">eMigrant · Онбординг</h2></header>
-
-  <!-- Онбординг -->
-  <div id="onb" class="card">
-    <div class="badge">Шаг <span id="step">1</span>/2</div>
-    <div id="onb1">
-      <h3>Intro & Disclaimer</h3>
-      <p class="small">Мы помогаем собрать пакет документов и пройти шаги подачи. Это не юридическая консультация. Слот в ужонде не гарантируем.</p>
-      <button class="primary" onclick="nextOnb()">Далее</button>
-    </div>
-    <div id="onb2" style="display:none">
-      <h3>Выберите трек</h3>
-      <select id="track">
-        <option value="work">Работа</option>
-        <option value="study">Учёба</option>
-        <option value="family">Семья</option>
-        <option value="business">Бизнес</option>
-      </select>
-      <div class="row" style="margin-top:10px">
-        <button onclick="prevOnb()">Назад</button>
-        <button class="primary" onclick="finishOnb()">Завершить</button>
+  <div class="app">
+    <header>
+      <div class="title">eMigrant — Опросник</div>
+      <div class="progress-wrap">
+        <div class="progress"><div id="progressBar" class="bar"></div></div>
+        <div id="stepText" class="q-hint">Шаг 1 из 8</div>
       </div>
-    </div>
+    </header>
+
+    <main>
+      <div id="screen" class="card"></div>
+    </main>
+
+    <footer>
+      <div class="bottom-actions">
+        <button class="mini" onclick="uiActions.translate()">AI Translator</button>
+        <button class="mini primary" onclick="uiActions.slot()">Book a slot</button>
+        <button class="mini" onclick="uiActions.assistant()">Start a chat</button>
+      </div>
+    </footer>
   </div>
 
-  <!-- Чеклист -->
-  <div id="home" style="display:none">
-    <div class="card">
-      <h3>Прогресс</h3>
-      <div class="progress"><span id="progressBar" style="width:0%"></span></div>
-      <div class="small" style="margin-top:6px">Готово: <span id="doneCount">0</span>/<span id="totalCount">0</span></div>
-    </div>
-
-    <div id="tasks"></div>
-  </div>
-</div>
-
-<!-- Нижнее меню -->
-<div class="bottom">
-  <button onclick="openChecklist()">Checklist</button>
-  <button onclick="openModule('aiTranslator')">AI Translator</button>
-  <button onclick="openModule('findSlot')">Book a slot</button>
-  <button onclick="openModule('bookAssistant')">Start a chat</button>
-</div>
-
-<script>
-  const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
-  try { tg && tg.ready(); tg && tg.expand(); } catch(e) {}
-
-  const st = {
-    track: localStorage.getItem('track') || null,
-    tasks: JSON.parse(localStorage.getItem('tasks')||'[]')
-  };
-
-  function baseTasks(track){
-    const common = [
-      {id:'wniosek', title:'Wniosek (PDF)', status:'todo', requiresAI:true, kind:'wniosek'},
-      {id:'photos', title:'Фотографии', status:'todo', requiresAI:false, kind:'photos'},
-      {id:'skarb', title:'Opłata skarbowa', status:'todo', requiresAI:false, kind:'skarb'},
-      {id:'rent', title:'Umowa najmu / Meldunek', status:'todo', requiresAI:true, kind:'rent'},
-      {id:'ins', title:'Ubezpieczenie', status:'todo', requiresAI:true, kind:'insurance'},
-      {id:'slot', title:'Find a slot', status:'todo', requiresAI:false, kind:'slot'},
-      {id:'ai', title:'AI Translator', status:'todo', requiresAI:false, kind:'aiTranslator'},
-      {id:'assist', title:'Book an assistant', status:'todo', requiresAI:false, kind:'bookAssistant'}
-    ];
-    if(track==='work'||track==='business'){
-      common.splice(2,0,{id:'contract', title:'Контракт / Основание', status:'todo', requiresAI:true, kind:'contract'});
-      common.splice(3,0,{id:'hr', title:'Załącznik od pracodawcy', status:'todo', requiresAI:true, kind:'attachmentHR'});
+  <!-- Telegram WebApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script>
+    // ---- Telegram init ----
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.ready();
+      tg.expand(); // use full height
+      tg.setHeaderColor('secondary');
+      tg.setBackgroundColor('#0b0f14');
     }
-    if(track==='study'){
-      common.splice(2,0,{id:'uni', title:'Справка из вуза', status:'todo', requiresAI:true, kind:'university'});
-      common.splice(3,0,{id:'funds', title:'Информация о средствах', status:'todo', requiresAI:true, kind:'funds'});
-    }
-    return common;
-  }
 
-  function renderChecklist(){
-    document.getElementById('title').innerText = 'eMigrant · Чеклист';
-    const tasksDiv = document.getElementById('tasks');
-    tasksDiv.innerHTML = '';
-    const done = st.tasks.filter(t=>t.status==='done').length;
-    const total = st.tasks.length || 1;
-    document.getElementById('doneCount').innerText = done;
-    document.getElementById('totalCount').innerText = total;
-    document.getElementById('progressBar').style.width = Math.round(done/total*100)+'%';
-
-    st.tasks.forEach(t=>{
-      const card = document.createElement('div');
-      card.className='card';
-      const badgeClass = t.status==='done'?'ok':(t.status==='inreview'?'warn':'');
-      card.innerHTML = `
-        <div class="row" style="align-items:center">
-          <div style="flex:3">
-            <h3 style="margin:0 0 6px">${t.title}</h3>
-            <span class="badge ${badgeClass}">${t.status==='todo'?'To do':t.status==='inreview'?'In review':'Done'}</span>
-            ${t.requiresAI?'<span class="small" style="margin-left:8px">Рекомендуется AI-проверка</span>':''}
-          </div>
-          <div style="flex:2">
+    // ---- Questionnaire model ----
+    const QUESTIONS = [
+      {
+        key: 'name',
+        title: 'Как тебя зовут?',
+        render: () => html`
+          <div class="field">
             <div class="row">
-              <button class="primary" onclick="openModule('${t.kind}')">Открыть</button>
-              ${t.status!=='done'?'<button onclick="markDone(\''+t.id+'\')">Сделано</button>':''}
+              <div>
+                <label>Имя</label>
+                <input type="text" id="firstName" placeholder="Имя" />
+              </div>
+              <div>
+                <label>Фамилия</label>
+                <input type="text" id="lastName" placeholder="Фамилия" />
+              </div>
             </div>
           </div>
+        `,
+        validate: () => {
+          const first = byId('firstName').value.trim();
+          const last = byId('lastName').value.trim();
+          if (!first || !last) return { ok: false, msg: 'Пожалуйста, укажи имя и фамилию.' };
+          return { ok: true, value: { first, last } };
+        }
+      },
+      {
+        key: 'region',
+        title: 'Где ты живешь?',
+        options: ['Mazowieckie','Małopolskie','Pomorskie','Dolnośląskie','Inne'],
+        render: (q) => renderOptions(q.options, 'region'),
+        validate: () => pickRadio('region', 'Выбери воеводство.')
+      },
+      {
+        key: 'citizenship',
+        title: 'Гражданство',
+        options: ['Укр','Бел','Рус','Другое'],
+        render: (q) => renderOptions(q.options, 'citizenship'),
+        validate: () => pickRadio('citizenship', 'Выбери гражданство.')
+      },
+      {
+        key: 'time_in_pl',
+        title: 'Сколько времени ты в Польше',
+        options: ['2-3 года','год и меньше','больше 4 лет','только приехал'],
+        render: (q) => renderOptions(q.options, 'time_in_pl'),
+        validate: () => pickRadio('time_in_pl', 'Выбери вариант.')
+      },
+      {
+        key: 'status',
+        title: 'Твой текущий статус',
+        options: ['Жду','Получил отказ','Status UKR','Pobyt Czasowy','Inne (Karta Polaka, Karta Rezydenta Długотerminowego EU)'],
+        render: (q) => renderOptions(q.options, 'status'),
+        validate: () => pickRadio('status', 'Выбери статус.')
+      },
+      {
+        key: 'grounds',
+        title: 'Какие у тебя могут быть основания для ВНЖ',
+        options: ['Работа (UoP)','Работа (UoD)','Работа (UoZ)','Работа (Działalność)','Учеба','Семья'],
+        multiple: true,
+        render: (q) => renderOptions(q.options, 'grounds', true),
+        validate: () => pickChecks('grounds', 'Выбери хотя бы один вариант.')
+      },
+      {
+        key: 'income',
+        title: 'Твой ежемесячный доход (рамки)',
+        options: ['до 4700 brutto/m','от 4800 до 10000 brutto/m','10000+ brutto/m'],
+        render: (q) => renderOptions(q.options, 'income'),
+        validate: () => pickRadio('income', 'Выбери диапазон дохода.')
+      },
+      {
+        key: 'goal',
+        title: 'Твоя долгосрочная цель в Польше',
+        options: ['Переждать бурю','Получить резидента, но насчет паспорта неуверен','Получить паспорт'],
+        render: (q) => renderOptions(q.options, 'goal'),
+        validate: () => pickRadio('goal', 'Выбери цель.')
+      },
+    ];
+
+    // ---- State ----
+    const STATE_KEY = 'emigrant_q1_state';
+    let state = loadState() || { step: 0, answers: {} };
+
+    // ---- Utils ----
+    function byId(id){ return document.getElementById(id); }
+    function html(strings, ...vals){ return strings.map((s,i)=>s+(vals[i]??'')).join(''); }
+    function saveState(){ localStorage.setItem(STATE_KEY, JSON.stringify(state)); }
+    function loadState(){
+      try { return JSON.parse(localStorage.getItem(STATE_KEY)); } catch { return null; }
+    }
+    function setProgress(step, total){
+      const pct = Math.round((Math.min(step, total) / total) * 100);
+      byId('progressBar').style.width = pct + '%';
+      byId('stepText').textContent = (step < total)
+        ? `Шаг ${step+1} из ${total}`
+        : `Резюме`;
+    }
+    function renderOptions(options, name, multiple=false){
+      const inputType = multiple ? 'checkbox' : 'radio';
+      return html`
+        <div class="options">
+          ${options.map((opt, idx)=> html`
+            <label class="option">
+              <input type="${inputType}" name="${name}" value="${opt}" ${multiple ? '' : (idx===0 && false ? 'checked' : '')} />
+              <span>${opt}</span>
+            </label>
+          `).join('')}
         </div>
       `;
-      tasksDiv.appendChild(card);
-    });
-  }
+    }
+    function pickRadio(group, err){
+      const v = [...document.querySelectorAll(`input[name="${group}"]`)]
+        .find(i=>i.checked)?.value;
+      return v ? { ok: true, value: v } : { ok: false, msg: err };
+    }
+    function pickChecks(group, err){
+      const vs = [...document.querySelectorAll(`input[name="${group}"]`)]
+        .filter(i=>i.checked).map(i=>i.value);
+      return vs.length ? { ok: true, value: vs } : { ok: false, msg: err };
+    }
 
-  function markDone(id){
-    st.tasks = st.tasks.map(t=> t.id===id ? {...t, status:'done'} : t);
-    localStorage.setItem('tasks', JSON.stringify(st.tasks));
-    renderChecklist();
-  }
+    // ---- Screens ----
+    const screen = byId('screen');
 
-  function openChecklist(){
-    document.getElementById('onb').style.display = 'none';
-    document.getElementById('home').style.display = 'block';
-    renderChecklist();
-  }
+    function renderStep(){
+      if (state.step >= QUESTIONS.length) return renderReview();
+      const q = QUESTIONS[state.step];
+      setProgress(state.step, QUESTIONS.length);
 
-  function openModule(kind){
-    if(kind==='aiTranslator'){
-      alert('AI Translator: Загрузите письмо/документ → получаете перевод и краткое резюме. (В MVP-заглушке загрузка опущена)');
-      return;
-    }
-    if(kind==='findSlot'){
-      const dates = prompt('Укажите даты/дни, когда вы доступны (напр: Пн/Ср/Пт или 20-25 августа). Слот не гарантирован; мы мониторим.');
-      alert('Спасибо! Подписка на обновления оформлена.\nВаши доступные дни: '+(dates||'не указано')+'\nПодтверждение визита — вручную.');
-      return;
-    }
-    if(kind==='bookAssistant'){
-      const text = prompt('Коротко опишите, о чём поговорить. Заявка уйдёт в отдельный чат-аккаунт.');
-      alert('Заявка отправлена. Нажмите ОК, чтобы открыть чат с ассистентом.');
-      if(tg && tg.openTelegramLink) tg.openTelegramLink('https://t.me/'+(tg.initDataUnsafe?.user?.username||''));
-      return;
-    }
-    if(kind==='photos'){
-      alert('Фото: смотрите гайд по размеру/фону. Загрузите фото (AI-проверка качества отключена в MVP).');
-      return;
-    }
-    if(kind==='insurance'){
-      const has = confirm('Есть действующая страховка? OK — да, Отмена — пока нет.');
-      if(!has){
-        alert('Нажмите «Написать в чат», чтобы обсудить, как оформить страховку.');
-        if(tg && tg.openTelegramLink) tg.openTelegramLink('https://t.me/'+(tg.initDataUnsafe?.user?.username||'')); // заглушка
-      } else {
-        alert('Загрузите полис. AI-проверка: срок действия и реквизиты.');
+      screen.innerHTML = html`
+        <div class="q-title">${q.title}</div>
+        <div class="q-hint">Заполни поле(я) и нажми «Далее»</div>
+        ${q.render(q)}
+        <div id="error" class="error" style="display:none;"></div>
+        <div class="controls">
+          <button class="btn ghost" onclick="goBack()">Назад</button>
+          <button class="btn primary" onclick="goNext()">Далее</button>
+        </div>
+      `;
+
+      // restore previously entered values if any
+      const prev = state.answers[q.key];
+      if (q.key === 'name' && prev){
+        byId('firstName').value = prev.first || '';
+        byId('lastName').value = prev.last || '';
+      } else if (prev){
+        if (q.multiple){
+          prev.forEach(v => {
+            const el = [...document.querySelectorAll(`input[name="${q.key}"]`)]
+              .find(i=>i.value===v);
+            if (el) el.checked = true;
+          });
+        } else {
+          const el = [...document.querySelectorAll(`input[name="${q.key}"]`)]
+            .find(i=>i.value===prev);
+          if (el) el.checked = true;
+        }
       }
-      return;
-    }
-    if(kind==='wniosek'){
-      const path = confirm('У вас уже есть готовый скан внеска? (OK — загрузить скан; Отмена — пройти анкету и сгенерировать PDF)');
-      if(path){
-        alert('Загрузите скан. AI-проверка: подпись, даты, совпадение ФИО.');
-      } else {
-        alert('Откроется анкета внеска → затем можно сгенерировать PDF и распечатать.');
-      }
-      return;
-    }
-    if(kind==='contract'){
-      alert('Загрузите договор (UoP/UoD/B2B). AI-проверка: NIP, даты, подписи. Можно завершить вручную.');
-      return;
-    }
-    if(kind==='attachmentHR'){
-      alert('Скачайте шаблон, отдайте HR. Затем загрузите подписанный/с печатью документ (AI-проверка).');
-      return;
-    }
-    if(kind==='rent'){
-      alert('Загрузите договор аренды или meldunek. AI-проверка: адрес, сроки, подписи. Если нет — покажем инструкцию.');
-      return;
-    }
-    if(kind==='university'){
-      alert('Справка из вуза: Загрузка → AI-проверка. Если нет — инструкция, где получить.');
-      return;
-    }
-    if(kind==='funds'){
-      alert('Информация о средствах: Загрузите банковскую справку. AI-проверка — сумма/дата/реквизиты.');
-      return;
-    }
-    if(kind==='skarb'){
-      const paid = confirm('Оплатили госпошлину? (OK — да; Отмена — нет)');
-      if(paid){
-        alert('Отметили как выполнено. (Можно прикрепить чек — опционально в MVP)');
-      } else {
-        alert('Покажем реквизиты и короткую инструкцию по оплате.');
-      }
-      return;
-    }
-  }
 
-  function nextOnb(){
-    document.getElementById('step').innerText = '2';
-    document.getElementById('onb1').style.display='none';
-    document.getElementById('onb2').style.display='';
-  }
-  function prevOnb(){
-    document.getElementById('step').innerText = '1';
-    document.getElementById('onb1').style.display='';
-    document.getElementById('onb2').style.display='none';
-  }
-  function finishOnb(){
-    const tr = document.getElementById('track').value;
-    st.track = tr;
-    st.tasks = baseTasks(tr);
-    localStorage.setItem('track', tr);
-    localStorage.setItem('tasks', JSON.stringify(st.tasks));
-    document.getElementById('onb').style.display='none';
-    document.getElementById('home').style.display='';
-    document.getElementById('title').innerText = 'eMigrant · Чеклист';
-    renderChecklist();
-  }
-
-  (function init(){
-    if(st.track){
-      document.getElementById('onb').style.display='none';
-      document.getElementById('home').style.display='';
-      document.getElementById('title').innerText = 'eMigrant · Чеклист';
-      renderChecklist();
+      // Telegram buttons mirror
+      if (tg){
+        tg.MainButton.setText('Далее');
+        tg.MainButton.show();
+        tg.MainButton.onClick(goNext);
+        tg.BackButton.show();
+        tg.BackButton.onClick(goBack);
+      }
     }
-  })();
-</script>
+
+    function goBack(){
+      if (state.step === 0){
+        // optionally close the app
+        if (tg) tg.close();
+        return;
+      }
+      state.step = Math.max(0, state.step - 1);
+      saveState();
+      renderStep();
+    }
+
+    function goNext(){
+      const q = QUESTIONS[state.step];
+      const res = q.validate();
+      const err = byId('error');
+      if (!res.ok){
+        err.textContent = res.msg;
+        err.style.display = 'block';
+        return;
+      }
+      err.style.display = 'none';
+      state.answers[q.key] = res.value;
+      state.step += 1;
+      saveState();
+      if (state.step >= QUESTIONS.length) renderReview();
+      else renderStep();
+    }
+
+    function renderReview(){
+      setProgress(QUESTIONS.length, QUESTIONS.length);
+      const a = state.answers;
+      const fullName = a.name ? `${a.name.first} ${a.name.last}` : '';
+      const review = [
+        ['Имя и фамилия', fullName],
+        ['Воеводство', a.region],
+        ['Гражданство', a.citizenship],
+        ['Срок пребывания', a.time_in_pl],
+        ['Текущий статус', a.status],
+        ['Основания для ВНЖ', (a.grounds||[]).join(', ')],
+        ['Ежемесячный доход', a.income],
+        ['Долгосрочная цель', a.goal],
+      ];
+
+      screen.innerHTML = html`
+        <div class="q-title">Проверим ответы и завершим</div>
+        <div class="q-hint">Если нужно — вернись и поправь на предыдущих шагах.</div>
+        <div class="review">
+          ${review.map(([k,v]) => html`
+            <div class="kv"><b>${k}</b><span>${v || '—'}</span></div>
+          `).join('')}
+        </div>
+        <div class="controls">
+          <button class="btn ghost" onclick="editFromStart()">Редактировать</button>
+          <button class="btn primary" onclick="submitAnswers()">Завершить</button>
+        </div>
+        <div class="controls">
+          <button class="btn danger" onclick="resetForm()">Сбросить всё</button>
+        </div>
+      `;
+
+      if (tg){
+        tg.MainButton.setText('Завершить');
+        tg.MainButton.show();
+        tg.MainButton.onClick(submitAnswers);
+        tg.BackButton.show();
+        tg.BackButton.onClick(()=> { state.step = QUESTIONS.length-1; saveState(); renderStep(); });
+      }
+    }
+
+    function editFromStart(){
+      state.step = 0; saveState(); renderStep();
+    }
+
+    function submitAnswers(){
+      // payload for bot
+      const payload = {
+        module: 'questionnaire_v1',
+        timestamp: new Date().toISOString(),
+        answers: state.answers,
+      };
+      // save locally
+      localStorage.setItem('emigrant_q1_payload', JSON.stringify(payload));
+
+      // send to Telegram bot
+      if (tg && tg.sendData){
+        tg.sendData(JSON.stringify(payload));
+      }
+
+      // show success
+      screen.innerHTML = html`
+        <div class="q-title">✅ Опросник завершён</div>
+        <div class="q-hint">Данные отправлены. Можно переходить к следующему шагу.</div>
+        <div class="controls">
+          <button class="btn primary" onclick="editFromStart()">Заполнить заново</button>
+        </div>
+      `;
+      if (tg){
+        tg.MainButton.hide();
+        tg.BackButton.hide();
+        tg.HapticFeedback.notificationOccurred('success');
+      }
+    }
+
+    function resetForm(){
+      localStorage.removeItem(STATE_KEY);
+      localStorage.removeItem('emigrant_q1_payload');
+      state = { step: 0, answers: {} };
+      saveState();
+      renderStep();
+      if (tg) tg.HapticFeedback.impactOccurred('heavy');
+    }
+
+    // ---- Bottom actions (stubs for now; integrate later with router) ----
+    const uiActions = {
+      translate(){ alert('AI Translator (в разработке)'); },
+      slot(){ alert('Find a slot (в разработке)'); },
+      assistant(){ alert('Start a chat / Book an assistant (в разработке)'); }
+    };
+    window.uiActions = uiActions;
+
+    // ---- initial render ----
+    renderStep();
+  </script>
 </body>
 </html>
+
