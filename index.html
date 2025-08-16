@@ -40,3 +40,185 @@
         display:flex; gap:8px; background:#fff; border-top:1px solid #eee; z-index:3; padding-bottom:calc(8px + var(--safe-bottom)); }
       .tabbar button { flex:1; border:none; background:#f6f7f9; border-radius:10px; padding:10px; font:inherit; cursor:pointer; }
       .toast { position:fixed; bottom:calc(72px + var(--safe-bottom)); left:50%; transform:translateX(-50%);
+        background:#111; color:#fff; padding:10px 12px; border-radius:10px; font-size:13px; opacity:0; pointer-events:none; transition:opacity .2s; }
+      .toast.show { opacity:1; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <h1>Чеклист подачи</h1>
+        <div class="progress-box">
+          <div class="bar"><div id="fill" class="fill"></div></div>
+          <div id="pct" class="pct">0%</div>
+        </div>
+      </header>
+
+      <div class="section">
+        <!-- Список задач генерируется JS-ом ниже -->
+        <div id="list"></div>
+      </div>
+    </div>
+
+    <div class="tabbar">
+      <button data-nav="translator">AI Translator</button>
+      <button data-nav="slot">Book a slot</button>
+      <button data-nav="assistant">Start a chat</button>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+      // === Инициализация WebApp (не мешает в обычном браузере) ===
+      (function initTelegram() {
+        if (window.Telegram && window.Telegram.WebApp) {
+          try { window.Telegram.WebApp.expand(); window.Telegram.WebApp.ready(); } catch(e){}
+        }
+      })();
+
+      // === Модель чеклиста (минимум для старта) ===
+      const DEFAULT_ITEMS = [
+        { key:'questionnaire', title:'Анкета (wniosek)', desc:'Заполните шаблон, у вас будет предпросмотр и ✎-правка.', required:true, status:'not_started' },
+        { key:'photos',        title:'Фотографии 3.5×4.5', desc:'Загрузите фото — проверим автоматически.', required:true, status:'not_started' },
+        { key:'fee',           title:'Opłata skarbowa', desc:'Покажем реквизиты, отметьте оплату.', required:true, status:'not_started' },
+        { key:'contract',      title:'Договор (UoP/UoD/B2B)', desc:'Загрузите договор — проверим подписи, даты, NIP.', required:false, status:'not_started' },
+        { key:'attachment',    title:'Załącznik od pracodawcy', desc:'Скачайте шаблон → подпись/печать → загрузите.', required:false, status:'not_started' },
+        { key:'housing',       title:'Umowa najmu / Meldunek', desc:'Проверим адрес, сроки, подписи.', required:true, status:'not_started' },
+        { key:'university',    title:'Zaświadczenie z uczelni', desc:'Для студентов — загрузите справку.', required:false, status:'not_started' },
+        { key:'funds',         title:'Финансовые средства', desc:'Выписка из банка: сумма/дата/реквизиты.', required:true, status:'not_started' },
+        { key:'insurance',     title:'Страховка (Private/NFZ/ZUS)', desc:'Проверим срок действия и реквизиты.', required:true, status:'not_started' },
+        { key:'slot',          title:'Запись в ужонд', desc:'Найдём и забронируем слот, можно подписаться на email.', required:true, status:'not_started' }
+      ];
+
+      // Статусы: not_started | in_progress | waiting_ai | ok | issues
+      const LS_KEY = 'emigrant_checklist_v1';
+
+      function loadState() {
+        try { return JSON.parse(localStorage.getItem(LS_KEY)) || DEFAULT_ITEMS; }
+        catch(e) { return DEFAULT_ITEMS; }
+      }
+      function saveState(items){ localStorage.setItem(LS_KEY, JSON.stringify(items)); }
+
+      const items = loadState();
+
+      function renderList() {
+        const list = document.getElementById('list');
+        list.innerHTML = '';
+        items.forEach((it, i) => {
+          const card = document.createElement('div');
+          card.className = 'card';
+          card.innerHTML = `
+            <div style="flex:1">
+              <div class="title">${escapeHtml(it.title)}</div>
+              <div class="desc">${escapeHtml(it.desc)}</div>
+              <div class="actions">
+                ${actionButtons(it).join('')}
+              </div>
+            </div>
+            <div><span class="badge ${badgeClass(it.status)}">${statusLabel(it.status)}</span></div>
+          `;
+          // навесим события на кнопки внутри карточки
+          card.querySelectorAll('[data-act]').forEach(btn => {
+            btn.addEventListener('click', (e) => handleAction(e, i));
+          });
+          list.appendChild(card);
+        });
+        renderProgress();
+      }
+
+      function actionButtons(it) {
+        const btns = [];
+        // Открыть модуль
+        btns.push(`<button class="btn secondary" data-act="open" data-key="${it.key}">Открыть</button>`);
+        // Пометить как "ожидает AI"
+        if (it.status === 'in_progress') {
+          btns.push(`<button class="btn secondary" data-act="waitai" data-key="${it.key}">Отправить на проверку</button>`);
+        }
+        // Пометить как "ok"
+        if (['in_progress','waiting_ai','issues'].includes(it.status)) {
+          btns.push(`<button class="btn primary" data-act="ok" data-key="${it.key}">Отметить как OK</button>`);
+        }
+        // Пометить "есть проблемы"
+        if (['in_progress','waiting_ai'].includes(it.status)) {
+          btns.push(`<button class="btn secondary" data-act="issues" data-key="${it.key}">Пометки (issues)</button>`);
+        }
+        // Сбросить
+        if (it.status !== 'not_started') {
+          btns.push(`<button class="btn link" data-act="reset" data-key="${it.key}">Сбросить</button>`);
+        }
+        return btns;
+      }
+
+      function handleAction(e, index) {
+        const act = e.currentTarget.getAttribute('data-act');
+        const key = e.currentTarget.getAttribute('data-key');
+        const it = items[index];
+        switch (act) {
+          case 'open':
+            // Здесь будет переход в модуль; пока покажем тост
+            toast(`Модуль «${it.title}»: не подключен (демо).`);
+            // пример: если это анкета, можно имитировать «вернуться на чеклист»
+            if (key === 'questionnaire') {
+              toast('Подсказка: в конце анкеты кнопка «Продолжить» вернёт вас сюда.');
+            }
+            break;
+          case 'waitai':
+            it.status = 'waiting_ai'; saveState(items); renderList(); break;
+          case 'ok':
+            it.status = 'ok'; saveState(items); renderList(); break;
+          case 'issues':
+            it.status = 'issues'; saveState(items); renderList(); break;
+          case 'reset':
+            it.status = 'not_started'; saveState(items); renderList(); break;
+        }
+      }
+
+      function renderProgress() {
+        const required = items.filter(i => i.required);
+        const done = required.filter(i => i.status === 'ok');
+        const pct = required.length ? Math.round((done.length / required.length) * 100) : 0;
+        document.getElementById('fill').style.width = pct + '%';
+        document.getElementById('pct').textContent = pct + '%';
+      }
+
+      function statusLabel(s) {
+        return ({
+          not_started:'new',
+          in_progress:'in progress',
+          waiting_ai:'waiting AI',
+          ok:'OK',
+          issues:'issues'
+        })[s] || s;
+      }
+      function badgeClass(s) {
+        return ({
+          ok:'ok',
+          waiting_ai:'wait',
+          issues:'issues'
+        })[s] || '';
+      }
+      function escapeHtml(str){
+        return String(str).replace(/[&<>"']/g, s=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[s]));
+      }
+
+      // Нижние кнопки
+      document.querySelectorAll('.tabbar [data-nav]').forEach(b=>{
+        b.addEventListener('click', ()=>{
+          const dest = b.getAttribute('data-nav');
+          toast(`Экран «${dest}» пока не подключён (демо).`);
+        });
+      });
+
+      function toast(text) {
+        const t = document.getElementById('toast');
+        t.textContent = text;
+        t.classList.add('show');
+        clearTimeout(window.__toastTimer);
+        window.__toastTimer = setTimeout(()=>t.classList.remove('show'), 1800);
+      }
+
+      // первичный рендер
+      renderList();
+    </script>
+  </body>
+</html>
