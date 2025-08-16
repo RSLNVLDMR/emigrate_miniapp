@@ -12,29 +12,23 @@
     <!-- Telegram Mini Apps SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-    <!-- App config (read in your app code at startup) -->
+    <!-- === eMigrant global config (читается приложением на старте) === -->
     <script>
-      // === eMigrant global config ===
-      // Frontend should read this on boot and adjust flows accordingly.
       window.__EMIGRANT_CONFIG = {
         questionnaire: {
-          // VERY IMPORTANT: "Continue" must NOT generate PDF or trigger AI.
-          // It only navigates back to the Checklist (homepage).
+          /* ВАЖНО: «Продолжить» НИЧЕГО не триггерит, только ведёт на чеклист */
           continueAction: "toChecklist",
-          // Enable inline ✎ edit on each field in the final Preview.
-          // Clicking it must jump to the corresponding step/field
-          // and return to Preview after saving.
+          /* В предпросмотре у каждого поля есть ✎ для точечного редактирования */
           previewInlineEdit: true
         },
         ui: {
-          // Keep a bit of bottom padding so the TabBar never overlaps content.
           tabbarHeight: 64
         }
       };
     </script>
 
     <style>
-      /* Basic, safe default styles for a clean TMA container */
+      /* Базовые стили контейнера TMA */
       html, body, #root {
         height: 100%;
         margin: 0;
@@ -43,19 +37,15 @@
       body {
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
-        font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial, "Noto Sans";
         background: #ffffff;
         color: #111;
       }
-
-      /* Respect iOS safe areas */
       :root {
         --safe-bottom: env(safe-area-inset-bottom, 0px);
         --safe-top: env(safe-area-inset-top, 0px);
         --tabbar-h: 64px;
       }
-
-      /* Utility to ensure main views are not covered by the tab bar */
       .app-container {
         min-height: 100%;
         box-sizing: border-box;
@@ -63,7 +53,7 @@
         padding-top: var(--safe-top);
       }
 
-      /* Optional base styles for the persistent TabBar */
+      /* Низовое меню (если рисуется нативно в App.tsx — эти стили нейтральны) */
       .tabbar {
         position: fixed;
         left: 0;
@@ -93,7 +83,7 @@
         font-weight: 600;
       }
 
-      /* Small, accessible inline edit button (✎) you can reuse in Preview UI */
+      /* Маленькая ✎-кнопка для предпросмотра анкеты */
       .edit-btn {
         border: none;
         background: transparent;
@@ -107,7 +97,7 @@
         outline-offset: 2px;
       }
 
-      /* Main CTA buttons baseline */
+      /* Базовые кнопки */
       .btn {
         border: none;
         border-radius: 10px;
@@ -115,68 +105,84 @@
         font: inherit;
         cursor: pointer;
       }
-      .btn-primary {
-        background: #111;
-        color: #fff;
-      }
-      .btn-secondary {
-        background: #f2f2f2;
-        color: #111;
-      }
-
-      /* Minimal noscript message */
-      noscript {
-        display: block;
-        padding: 16px;
-        background: #fff3cd;
-        color: #533f03;
-        border: 1px solid #ffeeba;
-        margin: 12px;
-        border-radius: 8px;
-      }
+      .btn-primary { background: #111; color: #fff; }
+      .btn-secondary { background: #f2f2f2; color: #111; }
     </style>
   </head>
 
   <body>
     <noscript>Для работы приложения требуется JavaScript.</noscript>
 
-    <!--
-      The app should mount into #root.
-      Apply the .app-container class at your root layout so content
-      never overlaps with the bottom TabBar.
-    -->
+    <!-- Корневой контейнер приложения -->
     <div id="root" class="app-container"></div>
 
+    <!-- Инициализация Telegram WebApp + защитные обработчики -->
     <script>
-      // Telegram WebApp minimal init
       (function initTelegram() {
         if (window.Telegram && window.Telegram.WebApp) {
           const WebApp = window.Telegram.WebApp;
           try {
             WebApp.expand();
             WebApp.ready();
-
-            // Optional: react to theme changes (dark/light)
-            WebApp.onEvent("themeChanged", function () {
-              // You can read colors from WebApp.themeParams in your app code.
-              // index.html keeps styling neutral.
-            });
           } catch (e) {
             console.warn("TWA init warning:", e);
           }
         }
       })();
 
-      // Expose a simple guard so the app can confirm config is present.
+      // Доступ к конфигу из приложения
       window.__getEmigrantConfig = function () {
         return window.__EMIGRANT_CONFIG || {};
       };
+
+      /**
+       * Страховочный делегат:
+       * - Любая кнопка с id="qn-continue" или data-role="continue-to-checklist"
+       *   всегда переводит пользователя на чеклист и НИЧЕГО больше не делает.
+       * - Это полезно, даже если основной роутинг живёт в SPA (React Router).
+       */
+      (function bindSafeContinue() {
+        function goChecklist() {
+          try {
+            // 1) Кастомное событие для SPA (если слушают)
+            window.dispatchEvent(new CustomEvent("emigrant:navigate", { detail: { to: "/checklist" } }));
+            // 2) Попытка history API
+            if (history && history.pushState) {
+              history.pushState({}, "", "/checklist");
+              window.dispatchEvent(new PopStateEvent("popstate"));
+            }
+            // 3) Fallback для hash-роутинга
+            if (!location.pathname.endsWith("/checklist")) {
+              location.hash = "#/checklist";
+            }
+          } catch (e) {
+            // Минимальный запасной вариант
+            location.href = "/checklist";
+          }
+        }
+
+        document.addEventListener("click", function (e) {
+          const t = e.target;
+          if (!t) return;
+          // Ищем по самому элементу и по родителям (например, если клик по иконке внутри кнопки)
+          const btn = t.closest
+            ? t.closest('#qn-continue, [data-role="continue-to-checklist"]')
+            : null;
+          if (btn) {
+            e.preventDefault();
+            e.stopPropagation();
+            goChecklist();
+          }
+        });
+
+        // На случай, если кто-то будет триггерить программно:
+        window.addEventListener("emigrant:continue", function () {
+          goChecklist();
+        });
+      })();
     </script>
 
-    <!--
-      Vite/React entry.
-      If your project is not Vite-based, replace the path below with your bundler entry.
-    -->
+    <!-- Точка входа вашего приложения (Vite/React). Замените путь при другом бандлере -->
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
