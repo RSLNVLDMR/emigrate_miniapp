@@ -440,7 +440,7 @@
     .payment-price.total{font-size:18px;color:var(--ok)}
     
     /* Photo module styles */
-    .photo-requirements{margin:20px 0}
+    .photo-requirements{margin:16px 0}
     .requirement-item{
       display:flex;
       justify-content:space-between;
@@ -457,13 +457,13 @@
       font-size:15px;
     }
     
-    .photo-studios{margin:20px 0}
+    .photo-studios{margin:16px 0}
     .studio-item{
       background:var(--card);
       border:1px solid var(--line);
-      border-radius:16px;
-      padding:16px;
-      margin-bottom:12px;
+      border-radius:14px;
+      padding:14px;
+      margin-bottom:10px;
       box-shadow:var(--shadow);
       transition:all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
       transform:translateY(0);
@@ -480,38 +480,38 @@
     .studio-item:nth-child(3){animation:fadeIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.3s both}
     
     .studio-info h4{
-      margin:0 0 10px;
+      margin:0 0 8px;
       color:var(--text);
-      font-size:16px;
+      font-size:15px;
       font-weight:700;
     }
     
     .studio-details{
       display:flex;
       flex-direction:column;
-      gap:4px;
-      margin-bottom:12px;
+      gap:3px;
+      margin-bottom:10px;
     }
     
     .studio-details span{
-      font-size:13px;
+      font-size:12px;
       color:var(--muted);
       display:flex;
       align-items:center;
-      gap:6px;
+      gap:4px;
     }
     
     .studio-actions{
       display:flex;
-      gap:8px;
+      gap:6px;
     }
     
     .studio-actions button{
       flex:1;
-      padding:10px;
-      border-radius:12px;
+      padding:8px 10px;
+      border-radius:10px;
       font-weight:600;
-      font-size:14px;
+      font-size:13px;
     }
     
     /* Mobile optimizations */
@@ -554,6 +554,73 @@
       .status {
         padding: 14px;
         border-radius: 14px;
+      }
+      
+      .photo-studios {
+        margin: 12px 0;
+      }
+      
+      .studio-item {
+        padding: 12px;
+        margin-bottom: 8px;
+        border-radius: 12px;
+      }
+      
+      .studio-info h4 {
+        font-size: 14px;
+        margin: 0 0 6px;
+      }
+      
+      .studio-details {
+        gap: 2px;
+        margin-bottom: 8px;
+      }
+      
+      .studio-details span {
+        font-size: 11px;
+      }
+      
+      .studio-actions button {
+        padding: 8px;
+        font-size: 12px;
+        border-radius: 8px;
+      }
+      
+      .photo-requirements {
+        margin: 12px 0;
+      }
+      
+      .requirement-item {
+        padding: 6px 0;
+      }
+      
+      /* Extra small screens optimization */
+      @media (max-width: 375px) {
+        .studio-item {
+          padding: 10px;
+          margin-bottom: 6px;
+        }
+        
+        .studio-info h4 {
+          font-size: 13px;
+        }
+        
+        .studio-details span {
+          font-size: 10px;
+        }
+        
+        .studio-actions button {
+          padding: 6px 8px;
+          font-size: 11px;
+        }
+        
+        .photo-requirements {
+          margin: 8px 0;
+        }
+        
+        .requirement-item {
+          padding: 4px 0;
+        }
       }
       
       .modal .sheet {
@@ -1035,10 +1102,10 @@
     <!-- экран 1: инструкции -->
     <div id="photos_step1">
       <h3>Требования к фотографиям для ВНЖ</h3>
-      <div class="status" style="margin-top:16px">
+      <div class="status" style="margin-top:14px">
         <div class="center">
-          <div style="font-size:24px;margin-bottom:8px">📸</div>
-          <div>Требуется 4 фотографии. Найди фото ателье рядом</div>
+          <div style="font-size:20px;margin-bottom:6px">📸</div>
+          <div style="font-size:14px">Требуется 4 фотографии. Найди фото ателье рядом</div>
         </div>
       </div>
       
@@ -1076,7 +1143,7 @@
 
     <!-- экран 2: список фотоателье -->
     <div id="photos_step2" style="display:none">
-      <h3>Фотоателье рядом с вами</h3>
+      <h3 style="margin-bottom:12px">Фотоателье рядом с вами</h3>
       
       <div class="photo-studios">
         <div class="studio-item">
@@ -1125,8 +1192,8 @@
         </div>
       </div>
       
-      <div style="margin-top:20px">
-        <button class="primary" onclick="markPhotosDone()" style="width:100%;margin-bottom:12px">Готово</button>
+      <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--line)">
+        <button class="primary" onclick="markPhotosDone()" style="width:100%;margin-bottom:10px">Готово</button>
         <button class="ghost" onclick="backToPhotosStep1()" style="width:100%">Назад к требованиям</button>
       </div>
     </div>
