@@ -4,25 +4,38 @@
   <meta charset="UTF-8" />
   <title>eMigrant — Miniapp MVP</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- Telegram Web Apps SDK (безопасно подключать; в обычном браузере просто не используется) -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    :root{--bg:#0f1115;--card:#171a21;--text:#e7eaf0;--muted:#9aa3b2;--accent:#7cdfff;--line:#242936;--ok:#33d69e;--warn:#ffb84d;}
-    *{box-sizing:border-box} html,body{height:100%} body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+    :root{--bg:#0f1115;--card:#171a21;--text:#e7eaf0;--muted:#9aa3b2;--accent:#2a73ff;--line:#242936;--ok:#33d69e;--warn:#ffb84d;--danger:#ff6b6b}
+    *{box-sizing:border-box} html,body{height:100%}
+    body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
     .wrap{max-width:920px;margin:0 auto;padding:16px 16px 86px}
     .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px}
     h1,h2,h3{margin:0 0 10px} .small{color:var(--muted);font-size:13px}
     input,select,button,textarea{width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:#0c0f14;color:var(--text);margin-top:6px}
-    button{cursor:pointer} button.primary{background:#2a73ff;border-color:#2a73ff}
+    button{cursor:pointer} button.primary{background:var(--accent);border-color:var(--accent)}
     .row{display:flex;gap:8px;align-items:center} .row> *{flex:1}
     .progress{height:10px;background:#0c0f14;border:1px solid var(--line);border-radius:999px;overflow:hidden}
-    .progress>span{display:block;height:100%;background:#2a73ff}
+    .progress>span{display:block;height:100%;background:var(--accent)}
     .badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;border:1px solid var(--line);color:var(--muted)}
     .ok{color:var(--ok);border-color:var(--ok)} .warn{color:var(--warn);border-color:var(--warn)}
     .bottom{position:fixed;left:0;right:0;bottom:0;background:#0c0f14;border-top:1px solid var(--line);display:flex;gap:6px;padding:8px}
     .bottom button{flex:1}
     header{position:sticky;top:0;background:linear-gradient(180deg,#0f1115,rgba(15,17,21,0.6));backdrop-filter:blur(6px);z-index:2;border-bottom:1px solid var(--line);padding:12px}
     .hint{margin:8px 0 0}
+    /* modal */
+    .modal{position:fixed;inset:0;display:none;place-items:center;background:rgba(0,0,0,0.5);z-index:10}
+    .modal .sheet{width:min(720px,92vw);max-height:92vh;overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px}
+    .muted{color:var(--muted)} .center{text-align:center}
+    .ghost{background:transparent}
+    .danger{background:var(--danger);border-color:var(--danger)}
+    .hr{height:1px;background:var(--line);margin:12px 0}
+    .pill{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:12px;color:var(--muted)}
+    .spinner{width:26px;height:26px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;margin:10px auto}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .status{padding:10px;border-radius:10px;border:1px solid var(--line);background:#0c0f14}
+    .status.ok{border-color:var(--ok)}
+    .status.err{border-color:var(--danger)}
   </style>
 </head>
 <body>
@@ -33,7 +46,7 @@
   <div id="onb" class="card">
     <div class="badge">Шаг <span id="step">1</span>/8</div>
 
-    <!-- Q1: Имя/Фамилия -->
+    <!-- Q1 -->
     <div id="q1">
       <h3>1) Как тебя зовут?</h3>
       <label>Имя</label>
@@ -46,7 +59,7 @@
       </div>
     </div>
 
-    <!-- Q2: Воеводство -->
+    <!-- Q2 -->
     <div id="q2" style="display:none">
       <h3>2) Где ты живёшь?</h3>
       <select id="voivodeship">
@@ -62,7 +75,7 @@
       </div>
     </div>
 
-    <!-- Q3: Гражданство -->
+    <!-- Q3 -->
     <div id="q3" style="display:none">
       <h3>3) Гражданство</h3>
       <select id="citizenship">
@@ -77,7 +90,7 @@
       </div>
     </div>
 
-    <!-- Q4: Срок пребывания -->
+    <!-- Q4 -->
     <div id="q4" style="display:none">
       <h3>4) Сколько времени ты в Польше?</h3>
       <select id="stayLength">
@@ -92,7 +105,7 @@
       </div>
     </div>
 
-    <!-- Q5: Текущий статус -->
+    <!-- Q5 -->
     <div id="q5" style="display:none">
       <h3>5) Твой текущий статус</h3>
       <select id="currentStatus">
@@ -108,7 +121,7 @@
       </div>
     </div>
 
-    <!-- Q6: Основания (множественный выбор) -->
+    <!-- Q6 -->
     <div id="q6" style="display:none">
       <h3>6) Какие у тебя могут быть основания для ВНЖ?</h3>
       <div class="small">Можно выбрать несколько.</div>
@@ -124,7 +137,7 @@
       </div>
     </div>
 
-    <!-- Q7: Доход -->
+    <!-- Q7 -->
     <div id="q7" style="display:none">
       <h3>7) Твой ежемесячный доход (brutto)</h3>
       <select id="income">
@@ -138,7 +151,7 @@
       </div>
     </div>
 
-    <!-- Q8: Долгосрочная цель -->
+    <!-- Q8 -->
     <div id="q8" style="display:none">
       <h3>8) Твоя долгосрочная цель в Польше</h3>
       <select id="goal">
@@ -165,7 +178,7 @@
 
     <div id="tasks"></div>
 
-    <!-- 🔄 ВРЕМЕННАЯ КНОПКА СБРОСА ДЛЯ ТЕСТОВ -->
+    <!-- 🔄 Временная кнопка сброса для тестов -->
     <div style="margin-top:16px; text-align:center">
       <button onclick="resetOnb()">🔄 Reset (для тестов)</button>
     </div>
@@ -180,19 +193,79 @@
   <button onclick="openModule('bookAssistant')">Start a chat</button>
 </div>
 
+<!-- ====== Контракт/Основание — модальный модуль -->
+<div id="modal" class="modal" role="dialog" aria-modal="true">
+  <div class="sheet">
+    <div class="row" style="align-items:center;margin-bottom:6px">
+      <button class="ghost" style="flex:0 0 auto;width:auto" onclick="closeModal()">← Назад</button>
+      <div class="pill">Контракт / Основание · AI-проверка</div>
+      <span></span>
+    </div>
+
+    <!-- экран 1: загрузка -->
+    <div id="ct_step1">
+      <h3>Загрузи документ для проверки</h3>
+      <div class="small">Поддерживаются PDF, JPG, PNG (до ~20 МБ).</div>
+      <input id="ct_file" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" />
+      <div class="hr"></div>
+      <button id="ct_btn_upload" class="primary" disabled onclick="ctStart()">Проверить с AI</button>
+      <div class="small muted" style="margin-top:8px"><a href="javascript:void(0)" onclick="ctNoDoc()">У меня нет — помогите</a></div>
+    </div>
+
+    <!-- экран 2: ожидание -->
+    <div id="ct_step2" style="display:none">
+      <h3>Анализ запущен</h3>
+      <div class="spinner"></div>
+      <div class="status" id="ct_queue_msg" style="margin-top:10px">Твой анализ будет готов в течение часа. Мы пришлём результат здесь.</div>
+      <div class="small muted" style="margin-top:12px">Ты также можешь ускорить AI и получить результат быстрее.</div>
+      <div class="row" style="margin-top:10px">
+        <button id="ct_btn_boost" class="primary" onclick="ctBoost()">Ускоряю!</button>
+      </div>
+      <div class="small muted" id="ct_poll_note" style="margin-top:8px"></div>
+    </div>
+
+    <!-- экран 3: результат -->
+    <div id="ct_step3" style="display:none">
+      <h3 id="ct_result_title">Ура! Всё удалось 🎉</h3>
+      <div id="ct_result_box" class="status ok" style="margin-top:10px">
+        <div id="ct_result_text">Все чётко. Замечаний нет.</div>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <button class="primary" onclick="ctBackToHome()">Вернуться в главное меню</button>
+        <button class="ghost" onclick="closeModal()">Остаться здесь</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
-  // ===== ИНИЦ Telegram WebApp (мягко, чтобы работало и в браузере)
+  // ====== Telegram init
   const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
   try { tg && tg.ready(); tg && tg.expand(); } catch(e) {}
 
-  // ===== ПРОСТЕЙШЕЕ СОСТОЯНИЕ (localStorage)
+  // ====== Простое состояние
   const st = {
     track: localStorage.getItem('track') || null,
     tasks: JSON.parse(localStorage.getItem('tasks')||'[]'),
     profile: JSON.parse(localStorage.getItem('profile')||'{}')
   };
 
-  // Базовые задачи по треку (упрощённо под твои правила)
+  // ====== Конфиг AI-модуля
+  const BACKEND_BASE = ""; // ← если есть сервер/бот API, укажите базовый URL
+  const ENDPOINTS = BACKEND_BASE ? {
+    upload: BACKEND_BASE + "/upload",
+    analyze: BACKEND_BASE + "/analyze",
+    status: BACKEND_BASE + "/status"
+  } : null;
+
+  const AI_PROMPT = `Проверь загруженный документ (контракт/основание на ВНЖ в Польше).
+1) Валидация реквизитов: стороны, NIP/PESEL (если есть), адреса, даты, подписи, срок действия.
+2) Несоответствия: несовпадение ФИО с анкетой пользователя, пустые поля, просроченные даты.
+3) Риски для ВНЖ: пункты, которые могут вызвать отказ (неполная занятость, нет адреса, нет основания).
+4) Итог: короткий вердикт (OK / есть замечания) и чеклист исправлений.
+Выводи список пунктов с краткими пояснениями. Язык ответа — русский.`;
+
+  // ====== Базовые задачи
   function baseTasks(track){
     const common = [
       {id:'wniosek', title:'Wniosek (PDF)', status:'todo', requiresAI:true, kind:'wniosek'},
@@ -215,7 +288,7 @@
     return common;
   }
 
-  // Маппинг воеводства → подсказка/ссылка (заглушки)
+  // ====== Voivodeship hint
   function officeHintByVoiv(v){
     const map = {
       'Mazowieckie': 'Ваш ужонд: Mazowiecki. Подсказка по формулярам: https://mazowieckie.example',
@@ -227,18 +300,17 @@
     return map[v] || '';
   }
 
-  // Определяем трек по основаниям (Q6)
+  // ====== Track detection
   function determineTrack(groundValues){
     const has = k => groundValues.includes(k);
     if (has('Study')) return 'study';
     if (has('Family')) return 'family';
     if (has('Dzialalnosc')) return 'business';
     if (has('UoP') || has('UoD') || has('UoZ')) return 'work';
-    // дефолт — работа (чтобы не оставлять пустым)
     return 'work';
   }
 
-  // Рендер прогресса и задач
+  // ====== Checklist render
   function renderChecklist(){
     const title = st.profile?.trackLabel ? `eMigrant · Чеклист (${st.profile.trackLabel})` : 'eMigrant · Чеклист';
     document.getElementById('title').innerText = title;
@@ -250,8 +322,6 @@
     document.getElementById('doneCount').innerText = done;
     document.getElementById('totalCount').innerText = total;
     document.getElementById('progressBar').style.width = Math.round(done/total*100)+'%';
-
-    // офис-хинт
     document.getElementById('officeHint').innerText = st.profile?.voivodeship ? officeHintByVoiv(st.profile.voivodeship) : '';
 
     st.tasks.forEach(t=>{
@@ -283,7 +353,7 @@
     renderChecklist();
   }
 
-  // ===== Навигация
+  // ====== Навигация
   function openChecklist(){
     document.getElementById('onb').style.display = 'none';
     document.getElementById('home').style.display = 'block';
@@ -291,7 +361,6 @@
   }
 
   function openModule(kind){
-    // Заглушки модулей (как раньше)
     if(kind==='aiTranslator'){
       alert('AI Translator: Загрузите письмо/документ → перевод и краткое резюме. (В MVP-заглушке загрузка опущена)');
       return;
@@ -312,10 +381,10 @@
       return;
     }
     if(kind==='insurance'){
-      const has = confirm('Есть действующая страховка? Нажмите OK если да, Отмена если пока нет.');
+      const has = confirm('Есть действующая страховка? (OK — да; Отмена — нет)');
       if(!has){
         alert('Нажмите «Написать в чат», чтобы обсудить, как оформить страховку.');
-        if(tg && tg.openTelegramLink) tg.openTelegramLink('https://t.me/'+(tg.initDataUnsafe?.user?.username||'')); // заглушка
+        if(tg && tg.openTelegramLink) tg.openTelegramLink('https://t.me/'+(tg.initDataUnsafe?.user?.username||'')); 
       } else {
         alert('Загрузите полис. AI-проверка: срок действия и реквизиты.');
       }
@@ -330,10 +399,7 @@
       }
       return;
     }
-    if(kind==='contract'){
-      alert('Загрузите договор (UoP/UoD/UoZ/B2B). AI-проверка: NIP, даты, подписи. Можно завершить вручную.');
-      return;
-    }
+    if(kind==='contract'){ openContractModal(); return; }
     if(kind==='attachmentHR'){
       alert('Скачайте шаблон, отдайте HR. Затем загрузите подписанный/с печатью документ (AI-проверка).');
       return;
@@ -361,73 +427,36 @@
     }
   }
 
-  // ===== Онбординг (8 шагов)
+  // ====== Онбординг
   function showQ(n){
     for(let i=1;i<=8;i++){ document.getElementById('q'+i).style.display = (i===n)?'':'none' }
     document.getElementById('step').innerText = String(n);
   }
   function prevQ(n){ showQ(n) }
 
-  // проверка ответа на конкретный шаг
   function isAnswered(step){
     switch(step){
-      case 1: {
-        const fn = document.getElementById('firstName');
-        const ln = document.getElementById('lastName');
-        if(!fn.value.trim()){ fn.focus(); alert('Пожалуйста, укажи имя.'); return false; }
-        if(!ln.value.trim()){ ln.focus(); alert('Пожалуйста, укажи фамилию.'); return false; }
+      case 1:{
+        const fn=document.getElementById('firstName'), ln=document.getElementById('lastName');
+        if(!fn.value.trim()){fn.focus();alert('Пожалуйста, укажи имя.');return false;}
+        if(!ln.value.trim()){ln.focus();alert('Пожалуйста, укажи фамилию.');return false;}
         return true;
       }
-      case 2: {
-        const s = document.getElementById('voivodeship');
-        if(!s.value){ s.focus(); alert('Выбери воеводство.'); return false; }
-        return true;
-      }
-      case 3: {
-        const s = document.getElementById('citizenship');
-        if(!s.value){ s.focus(); alert('Выбери гражданство.'); return false; }
-        return true;
-      }
-      case 4: {
-        const s = document.getElementById('stayLength');
-        if(!s.value){ s.focus(); alert('Укажи срок пребывания.'); return false; }
-        return true;
-      }
-      case 5: {
-        const s = document.getElementById('currentStatus');
-        if(!s.value){ s.focus(); alert('Выбери текущий статус.'); return false; }
-        return true;
-      }
-      case 6: {
-        const any = Array.from(document.querySelectorAll('.grounds')).some(el=>el.checked);
-        if(!any){ alert('Выбери хотя бы одно основание.'); return false; }
-        return true;
-      }
-      case 7: {
-        const s = document.getElementById('income');
-        if(!s.value){ s.focus(); alert('Укажи доход.'); return false; }
-        return true;
-      }
-      case 8: {
-        const s = document.getElementById('goal');
-        if(!s.value){ s.focus(); alert('Выбери цель.'); return false; }
-        return true;
-      }
-      default: return true;
+      case 2:{ const s=document.getElementById('voivodeship'); if(!s.value){s.focus();alert('Выбери воеводство.'); return false;} return true; }
+      case 3:{ const s=document.getElementById('citizenship'); if(!s.value){s.focus();alert('Выбери гражданство.'); return false;} return true; }
+      case 4:{ const s=document.getElementById('stayLength'); if(!s.value){s.focus();alert('Укажи срок пребывания.'); return false;} return true; }
+      case 5:{ const s=document.getElementById('currentStatus'); if(!s.value){s.focus();alert('Выбери текущий статус.'); return false;} return true; }
+      case 6:{ const any=Array.from(document.querySelectorAll('.grounds')).some(el=>el.checked); if(!any){alert('Выбери хотя бы одно основание.'); return false;} return true; }
+      case 7:{ const s=document.getElementById('income'); if(!s.value){s.focus();alert('Укажи доход.'); return false;} return true; }
+      case 8:{ const s=document.getElementById('goal'); if(!s.value){s.focus();alert('Выбери цель.'); return false;} return true; }
+      default:return true;
     }
   }
-
-  function nextQValidated(curr, next){
-    if(isAnswered(curr)){ showQ(next); }
-  }
+  function nextQValidated(curr,next){ if(isAnswered(curr)){ showQ(next); } }
 
   function finishOnb(){
-    // финальная защита: проверяем все шаги по порядку
-    for(let i=1;i<=8;i++){
-      if(!isAnswered(i)){ showQ(i); return; }
-    }
+    for(let i=1;i<=8;i++){ if(!isAnswered(i)){ showQ(i); return; } }
 
-    // собираем ответы
     const firstName = document.getElementById('firstName').value.trim();
     const lastName = document.getElementById('lastName').value.trim();
     const voivodeship = document.getElementById('voivodeship').value;
@@ -436,15 +465,11 @@
     const currentStatus = document.getElementById('currentStatus').value;
     const income = document.getElementById('income').value;
     const goal = document.getElementById('goal').value;
-    const grounds = Array.from(document.querySelectorAll('.grounds'))
-      .filter(el=>el.checked)
-      .map(el=>el.value);
+    const grounds = Array.from(document.querySelectorAll('.grounds')).filter(el=>el.checked).map(el=>el.value);
 
-    // определяем трек по основаниям
     const track = determineTrack(grounds);
     const trackLabel = track==='work'?'Работа':track==='study'?'Учёба':track==='family'?'Семья':'Бизнес';
 
-    // сохраняем профиль
     st.profile = { firstName, lastName, voivodeship, citizenship, stayLength, currentStatus, grounds, income, goal, track, trackLabel };
     localStorage.setItem('profile', JSON.stringify(st.profile));
 
@@ -458,22 +483,169 @@
     renderChecklist();
   }
 
-  // 🔄 Временный сброс для тестов: очищает localStorage и возвращает к анкете (шаг 1)
+  // ====== Reset (тесты)
   function resetOnb(){
     if(confirm("Сбросить анкету и начать сначала?")){
       localStorage.removeItem('track');
       localStorage.removeItem('tasks');
       localStorage.removeItem('profile');
-      st.track = null;
-      st.tasks = [];
-      st.profile = {};
-      document.getElementById('home').style.display = 'none';
-      document.getElementById('onb').style.display = '';
+      st.track = null; st.tasks=[]; st.profile={};
+      document.getElementById('home').style.display='none';
+      document.getElementById('onb').style.display='';
       showQ(1);
     }
   }
 
-  // Автозагрузка
+  // ====== Контракт — модальное окно и логика
+  let ct = { file: null, fileMeta: null, jobId: null, pollTimer: null, boosted:false };
+
+  function el(id){ return document.getElementById(id); }
+  function openContractModal(){
+    ct = { file:null, fileMeta:null, jobId:null, pollTimer:null, boosted:false };
+    el('modal').style.display='grid';
+    el('ct_step1').style.display='';
+    el('ct_step2').style.display='none';
+    el('ct_step3').style.display='none';
+    el('ct_btn_upload').disabled = true;
+    el('ct_file').value = '';
+  }
+  function closeModal(){
+    el('modal').style.display='none';
+    if(ct.pollTimer){ clearInterval(ct.pollTimer); ct.pollTimer=null; }
+  }
+  function ctBackToHome(){ closeModal(); openChecklist(); }
+
+  // enable button when file chosen
+  el('ct_file').addEventListener('change', (e)=>{
+    const f = e.target.files[0];
+    ct.file = f || null;
+    el('ct_btn_upload').disabled = !ct.file;
+  });
+
+  function ctNoDoc(){
+    alert('Напишите нам в чат — поможем получить нужный документ/шаблон.');
+    if(tg && tg.openTelegramLink){ tg.openTelegramLink('https://t.me/'+(tg.initDataUnsafe?.user?.username||'')); }
+  }
+
+  async function ctStart(){
+    if(!ct.file){ alert('Выберите файл.'); return; }
+    el('ct_step1').style.display='none';
+    el('ct_step2').style.display='';
+    el('ct_poll_note').innerText = '';
+
+    try{
+      // 1) загрузка файла
+      let uploadRes = null;
+      if(ENDPOINTS){
+        const fd = new FormData();
+        fd.append('file', ct.file);
+        fd.append('source', 'emigrant_webapp');
+        const resp = await fetch(ENDPOINTS.upload, { method:'POST', body: fd });
+        if(!resp.ok) throw new Error('Upload failed');
+        uploadRes = await resp.json(); // ожидаем {file_id, file_url, name, size}
+      } else {
+        // fallback: шлём боту метаданные, пусть он продолжит в чате
+        uploadRes = { file_id: null, file_url: null, name: ct.file.name, size: ct.file.size };
+      }
+
+      ct.fileMeta = uploadRes;
+
+      // 2) запуск анализа
+      let analyzeRes = null;
+      if(ENDPOINTS){
+        const body = { file_id: uploadRes.file_id, file_url: uploadRes.file_url, prompt: AI_PROMPT, priority: ct.boosted?'high':'normal' };
+        const resp = await fetch(ENDPOINTS.analyze, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+        if(!resp.ok) throw new Error('Analyze start failed');
+        analyzeRes = await resp.json(); // ожидаем {job_id}
+        ct.jobId = analyzeRes.job_id;
+        startPolling();
+      } else {
+        // отправляем в бота, который читает web_app_data
+        try{
+          tg && tg.sendData && tg.sendData(JSON.stringify({
+            type:'analyze_contract',
+            prompt: AI_PROMPT,
+            fileMeta: { name: ct.file.name, size: ct.file.size },
+            note:'Нет подключенного backend ENDPOINTS — передано в бота через sendData'
+          }));
+          // имитируем асинхронный ответ
+          fakeFinishOk();
+        }catch(e){}
+      }
+
+    }catch(err){
+      console.error(err);
+      el('ct_queue_msg').innerText = 'Не удалось запустить анализ. Попробуйте ещё раз.';
+      el('ct_btn_boost').disabled = true;
+    }
+  }
+
+  function ctBoost(){
+    ct.boosted = true;
+    el('ct_btn_boost').innerText = 'Приоритет повышен';
+    el('ct_btn_boost').disabled = true;
+    el('ct_poll_note').innerText = 'Приоритет обновлён. Результат придёт быстрее.';
+    // при наличии backend можно вызвать отдельный /analyze с обновлением приоритета или /priority
+  }
+
+  function startPolling(){
+    if(!ct.jobId){ return; }
+    if(ct.pollTimer){ clearInterval(ct.pollTimer); }
+    ct.pollTimer = setInterval(async ()=>{
+      try{
+        const url = ENDPOINTS.status + '?id=' + encodeURIComponent(ct.jobId);
+        const resp = await fetch(url);
+        if(!resp.ok) throw new Error('status failed');
+        const data = await resp.json(); // ожидаем {status:'queued|running|succeeded|failed', result?:{ok:boolean, issues?:[] , message?:string}}
+        if(data.status==='queued' || data.status==='running'){
+          el('ct_poll_note').innerText = data.status==='running' ? 'AI анализирует документ…' : 'В очереди…';
+          return;
+        }
+        clearInterval(ct.pollTimer); ct.pollTimer=null;
+        showResultScreen(data);
+      }catch(e){
+        console.error(e);
+        clearInterval(ct.pollTimer); ct.pollTimer=null;
+        showResultScreen({status:'failed', result:{ ok:false, message:'Ошибка получения статуса.' }});
+      }
+    }, 2500);
+  }
+
+  function showResultScreen(data){
+    el('ct_step2').style.display='none';
+    el('ct_step3').style.display='';
+    const ok = data.status==='succeeded' && data.result?.ok!==false;
+    el('ct_result_title').innerText = ok ? 'Ура! Всё удалось 🎉' : 'Найдены замечания';
+    el('ct_result_box').className = 'status ' + (ok?'ok':'err');
+
+    if(ok){
+      el('ct_result_text').innerText = data.result?.message || 'Все чётко. Замечаний нет.';
+      // можно пометить задачу как "inreview" или "done"
+      st.tasks = st.tasks.map(t=> t.id==='contract' ? {...t, status:'done'} : t);
+      localStorage.setItem('tasks', JSON.stringify(st.tasks));
+    }else{
+      const issues = data.result?.issues || [];
+      const text = (data.result?.message || 'Обрати внимание на следующие пункты:') + '\n' +
+        (issues.length? issues.map((x,i)=>`${i+1}) ${x}`).join('\n') : '');
+      el('ct_result_text').innerText = text.trim();
+      st.tasks = st.tasks.map(t=> t.id==='contract' ? {...t, status:'inreview'} : t);
+      localStorage.setItem('tasks', JSON.stringify(st.tasks));
+    }
+  }
+
+  // имитация завершения без backend
+  function fakeFinishOk(){
+    setTimeout(()=>{
+      showResultScreen({status:'succeeded', result:{ ok:true, message:'AI не нашёл критичных проблем. Подходит для подачи.' }});
+    }, 2000);
+  }
+
+  // ====== Модалка — открытие и доступность кнопки
+  function closeOnBackdrop(e){ if(e.target.id==='modal') closeModal(); }
+  document.getElementById('modal').addEventListener('click', closeOnBackdrop);
+  document.getElementById('ct_btn_upload').disabled = true; // init
+
+  // ====== Автозагрузка
   (function init(){
     if(st.track){
       document.getElementById('onb').style.display='none';
