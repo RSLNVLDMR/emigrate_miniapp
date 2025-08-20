@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <title>eMigrant — Miniapp MVP</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Telegram Web Apps SDK (безопасно подключать; в обычном браузере просто не используется) -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root{--bg:#0f1115;--card:#171a21;--text:#e7eaf0;--muted:#9aa3b2;--accent:#7cdfff;--line:#242936;--ok:#33d69e;--warn:#ffb84d;}
@@ -163,6 +164,11 @@
     </div>
 
     <div id="tasks"></div>
+
+    <!-- 🔄 ВРЕМЕННАЯ КНОПКА СБРОСА ДЛЯ ТЕСТОВ -->
+    <div style="margin-top:16px; text-align:center">
+      <button onclick="resetOnb()">🔄 Reset (для тестов)</button>
+    </div>
   </div>
 </div>
 
@@ -175,15 +181,18 @@
 </div>
 
 <script>
+  // ===== ИНИЦ Telegram WebApp (мягко, чтобы работало и в браузере)
   const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
   try { tg && tg.ready(); tg && tg.expand(); } catch(e) {}
 
+  // ===== ПРОСТЕЙШЕЕ СОСТОЯНИЕ (localStorage)
   const st = {
     track: localStorage.getItem('track') || null,
     tasks: JSON.parse(localStorage.getItem('tasks')||'[]'),
     profile: JSON.parse(localStorage.getItem('profile')||'{}')
   };
 
+  // Базовые задачи по треку (упрощённо под твои правила)
   function baseTasks(track){
     const common = [
       {id:'wniosek', title:'Wniosek (PDF)', status:'todo', requiresAI:true, kind:'wniosek'},
@@ -206,6 +215,7 @@
     return common;
   }
 
+  // Маппинг воеводства → подсказка/ссылка (заглушки)
   function officeHintByVoiv(v){
     const map = {
       'Mazowieckie': 'Ваш ужонд: Mazowiecki. Подсказка по формулярам: https://mazowieckie.example',
@@ -217,15 +227,18 @@
     return map[v] || '';
   }
 
+  // Определяем трек по основаниям (Q6)
   function determineTrack(groundValues){
     const has = k => groundValues.includes(k);
     if (has('Study')) return 'study';
     if (has('Family')) return 'family';
     if (has('Dzialalnosc')) return 'business';
     if (has('UoP') || has('UoD') || has('UoZ')) return 'work';
+    // дефолт — работа (чтобы не оставлять пустым)
     return 'work';
   }
 
+  // Рендер прогресса и задач
   function renderChecklist(){
     const title = st.profile?.trackLabel ? `eMigrant · Чеклист (${st.profile.trackLabel})` : 'eMigrant · Чеклист';
     document.getElementById('title').innerText = title;
@@ -238,6 +251,7 @@
     document.getElementById('totalCount').innerText = total;
     document.getElementById('progressBar').style.width = Math.round(done/total*100)+'%';
 
+    // офис-хинт
     document.getElementById('officeHint').innerText = st.profile?.voivodeship ? officeHintByVoiv(st.profile.voivodeship) : '';
 
     st.tasks.forEach(t=>{
@@ -277,6 +291,7 @@
   }
 
   function openModule(kind){
+    // Заглушки модулей (как раньше)
     if(kind==='aiTranslator'){
       alert('AI Translator: Загрузите письмо/документ → перевод и краткое резюме. (В MVP-заглушке загрузка опущена)');
       return;
@@ -300,7 +315,7 @@
       const has = confirm('Есть действующая страховка? Нажмите OK если да, Отмена если пока нет.');
       if(!has){
         alert('Нажмите «Написать в чат», чтобы обсудить, как оформить страховку.');
-        if(tg && tg.openTelegramLink) tg.openTelegramLink('https://t.me/'+(tg.initDataUnsafe?.user?.username||'')); 
+        if(tg && tg.openTelegramLink) tg.openTelegramLink('https://t.me/'+(tg.initDataUnsafe?.user?.username||'')); // заглушка
       } else {
         alert('Загрузите полис. AI-проверка: срок действия и реквизиты.');
       }
@@ -425,9 +440,11 @@
       .filter(el=>el.checked)
       .map(el=>el.value);
 
+    // определяем трек по основаниям
     const track = determineTrack(grounds);
     const trackLabel = track==='work'?'Работа':track==='study'?'Учёба':track==='family'?'Семья':'Бизнес';
 
+    // сохраняем профиль
     st.profile = { firstName, lastName, voivodeship, citizenship, stayLength, currentStatus, grounds, income, goal, track, trackLabel };
     localStorage.setItem('profile', JSON.stringify(st.profile));
 
@@ -441,6 +458,22 @@
     renderChecklist();
   }
 
+  // 🔄 Временный сброс для тестов: очищает localStorage и возвращает к анкете (шаг 1)
+  function resetOnb(){
+    if(confirm("Сбросить анкету и начать сначала?")){
+      localStorage.removeItem('track');
+      localStorage.removeItem('tasks');
+      localStorage.removeItem('profile');
+      st.track = null;
+      st.tasks = [];
+      st.profile = {};
+      document.getElementById('home').style.display = 'none';
+      document.getElementById('onb').style.display = '';
+      showQ(1);
+    }
+  }
+
+  // Автозагрузка
   (function init(){
     if(st.track){
       document.getElementById('onb').style.display='none';
