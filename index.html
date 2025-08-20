@@ -3,63 +3,752 @@
 <head>
   <meta charset="UTF-8" />
   <title>eMigrant — Miniapp MVP</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="theme-color" content="#2563eb" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    :root{--bg:#0f1115;--card:#171a21;--text:#e7eaf0;--muted:#9aa3b2;--accent:#2a73ff;--line:#242936;--ok:#33d69e;--warn:#ffb84d;--danger:#ff6b6b}
-    *{box-sizing:border-box} html,body{height:100%}
-    body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-    .wrap{max-width:920px;margin:0 auto;padding:16px 16px 86px}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px}
-    h1,h2,h3{margin:0 0 10px} .small{color:var(--muted);font-size:13px}
-    input,select,button,textarea{width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:#0c0f14;color:var(--text);margin-top:6px}
-    button{cursor:pointer} button.primary{background:var(--accent);border-color:var(--accent)}
-    .row{display:flex;gap:8px;align-items:center} .row> *{flex:1}
-    .progress{height:10px;background:#0c0f14;border:1px solid var(--line);border-radius:999px;overflow:hidden}
-    .progress>span{display:block;height:100%;background:var(--accent)}
-    .badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;border:1px solid var(--line);color:var(--muted)}
-    .ok{color:var(--ok);border-color:var(--ok)} .warn{color:var(--warn);border-color:var(--warn)}
-    .bottom{position:fixed;left:0;right:0;bottom:0;background:#0c0f14;border-top:1px solid var(--line);display:flex;gap:6px;padding:8px}
-    .bottom button{flex:1}
-    header{position:sticky;top:0;background:linear-gradient(180deg,#0f1115,rgba(15,17,21,0.6));backdrop-filter:blur(6px);z-index:2;border-bottom:1px solid var(--line);padding:12px}
-    .hint{margin:8px 0 0}
+    :root{
+      --bg:#f8fafc;
+      --card:#ffffff;
+      --text:#1e293b;
+      --muted:#64748b;
+      --accent:#2563eb;
+      --accent-light:#3b82f6;
+      --line:#e2e8f0;
+      --ok:#10b981;
+      --warn:#f59e0b;
+      --danger:#ef4444;
+      --shadow:0 1px 3px 0 rgba(0,0,0,0.1),0 1px 2px -1px rgba(0,0,0,0.1);
+      --shadow-lg:0 10px 15px -3px rgba(0,0,0,0.1),0 4px 6px -4px rgba(0,0,0,0.1);
+    }
+    
+    *{box-sizing:border-box} 
+    html,body{height:100%}
+    
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font:16px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+    
+    .wrap{max-width:100%;margin:0 auto;padding:16px 16px 100px}
+    
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:20px;
+      margin-bottom:12px;
+      box-shadow:var(--shadow);
+      transition:all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      transform:translateY(0);
+      opacity:1;
+    }
+    
+    .card:hover{
+      box-shadow:var(--shadow-lg);
+      transform:translateY(-4px);
+    }
+    
+    .card.animate-in{
+      animation:slideInUp 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    }
+    
+    .card.animate-out{
+      animation:slideOutDown 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    }
+    
+    h1,h2,h3{
+      margin:0 0 16px;
+      font-weight:700;
+      line-height:1.2;
+    }
+    
+    h1{font-size:24px}
+    h2{font-size:20px}
+    h3{font-size:18px}
+    
+    .small{color:var(--muted);font-size:14px;line-height:1.5}
+    
+    input,select,button,textarea{
+      width:100%;
+      padding:14px 16px;
+      border-radius:12px;
+      border:2px solid var(--line);
+      background:var(--card);
+      color:var(--text);
+      margin-top:8px;
+      font-size:16px;
+      transition:all 0.2s ease;
+      -webkit-appearance:none;
+      -moz-appearance:none;
+      appearance:none;
+    }
+    
+    input:focus,select:focus,button:focus,textarea:focus{
+      outline:none;
+      border-color:var(--accent);
+      box-shadow:0 0 0 3px rgba(37,99,235,0.1);
+    }
+    
+    button{
+      cursor:pointer;
+      font-weight:600;
+      transition:all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      position:relative;
+      overflow:hidden;
+    }
+    
+    button::before{
+      content:'';
+      position:absolute;
+      top:0;
+      left:-100%;
+      width:100%;
+      height:100%;
+      background:linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent);
+      transition:left 0.5s;
+    }
+    
+    button:hover::before{
+      left:100%;
+    }
+    
+    button.primary{
+      background:linear-gradient(135deg,var(--accent),var(--accent-light));
+      border-color:var(--accent);
+      color:white;
+      box-shadow:0 2px 8px 0 rgba(37,99,235,0.25);
+      min-height:48px;
+    }
+    
+    button.primary:hover{
+      transform:translateY(-2px);
+      box-shadow:0 4px 16px 0 rgba(37,99,235,0.35);
+    }
+    
+    button.primary:active{
+      transform:translateY(0);
+      box-shadow:0 2px 8px 0 rgba(37,99,235,0.25);
+    }
+    
+    button.ghost{
+      background:transparent;
+      border-color:var(--line);
+      color:var(--text);
+    }
+    
+    button.ghost:hover{
+      background:var(--bg);
+      border-color:var(--accent);
+      transform:translateY(-1px);
+    }
+    
+    button.ghost:active{
+      transform:translateY(0);
+    }
+    
+    .row{display:flex;gap:12px;align-items:center} 
+    .row> *{flex:1}
+    
+    .progress{
+      height:12px;
+      background:var(--line);
+      border-radius:999px;
+      overflow:hidden;
+      box-shadow:inset 0 1px 2px rgba(0,0,0,0.1);
+    }
+    
+    .progress>span{
+      display:block;
+      height:100%;
+      background:linear-gradient(90deg,var(--accent),var(--accent-light));
+      border-radius:999px;
+      transition:width 0.3s ease;
+    }
+    
+    .badge{
+      display:inline-block;
+      padding:6px 12px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:600;
+      border:1px solid var(--line);
+      color:var(--muted);
+      background:var(--card);
+    }
+    
+    .ok{color:var(--ok);border-color:var(--ok);background:rgba(16,185,129,0.1)}
+    .warn{color:var(--warn);border-color:var(--warn);background:rgba(245,158,11,0.1)}
+    
+    .bottom{
+      position:fixed;
+      left:0;
+      right:0;
+      bottom:0;
+      background:rgba(255,255,255,0.98);
+      backdrop-filter:blur(20px);
+      border-top:1px solid var(--line);
+      display:flex;
+      gap:6px;
+      padding:12px 16px;
+      box-shadow:0 -2px 16px rgba(0,0,0,0.1);
+      z-index:100;
+    }
+    
+    .bottom button{
+      flex:1;
+      border-radius:12px;
+      padding:12px 8px;
+      font-weight:600;
+      font-size:13px;
+      background:var(--card);
+      border:1px solid var(--line);
+      color:var(--text);
+      transition:all 0.2s ease;
+      min-height:44px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    
+    .bottom button:hover{
+      background:var(--accent);
+      color:white;
+      border-color:var(--accent);
+      transform:translateY(-1px);
+    }
+    
+    header{
+      position:sticky;
+      top:0;
+      background:rgba(255,255,255,0.98);
+      backdrop-filter:blur(20px);
+      z-index:50;
+      border-bottom:1px solid var(--line);
+      padding:16px;
+      box-shadow:0 1px 12px rgba(0,0,0,0.05);
+    }
+    
+    .hint{margin:12px 0 0;color:var(--muted)}
+    
     /* modal */
-    .modal{position:fixed;inset:0;display:none;place-items:center;background:rgba(0,0,0,0.5);z-index:10}
-    .modal .sheet{width:min(720px,92vw);max-height:92vh;overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px}
-    .muted{color:var(--muted)} .center{text-align:center}
-    .ghost{background:transparent}
-    .danger{background:var(--danger);border-color:var(--danger)}
-    .hr{height:1px;background:var(--line);margin:12px 0}
-    .pill{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:12px;color:var(--muted)}
-    .spinner{width:26px;height:26px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;margin:10px auto}
+    .modal{
+      position:fixed;
+      inset:0;
+      display:none;
+      place-items:center;
+      background:rgba(0,0,0,0.4);
+      z-index:10;
+      backdrop-filter:blur(4px);
+      opacity:0;
+      transition:opacity 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    
+    .modal.show{
+      opacity:1;
+    }
+    
+    .modal .sheet{
+      width:min(100%,calc(100vw - 32px));
+      max-height:calc(100vh - 32px);
+      overflow:auto;
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:20px;
+      box-shadow:var(--shadow-lg);
+      transform:scale(0.95) translateY(20px);
+      opacity:0;
+      transition:all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    
+    .modal.show .sheet{
+      transform:scale(1) translateY(0);
+      opacity:1;
+    }
+    
+    .muted{color:var(--muted)} 
+    .center{text-align:center}
+    
+    .danger{background:var(--danger);border-color:var(--danger);color:white}
+    
+    .hr{height:1px;background:var(--line);margin:16px 0}
+    
+    .pill{
+      display:inline-block;
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:6px 12px;
+      font-size:12px;
+      font-weight:600;
+      color:var(--muted);
+      background:var(--bg);
+    }
+    
+    .spinner{
+      width:32px;
+      height:32px;
+      border:3px solid var(--line);
+      border-top-color:var(--accent);
+      border-radius:50%;
+      animation:spin 1s linear infinite;
+      margin:16px auto;
+    }
+    
     @keyframes spin{to{transform:rotate(360deg)}}
     
-    /* Timer styles */
-    .timer-display{display:flex;justify-content:center;align-items:center;gap:16px;margin:20px 0}
-    .timer-hours,.timer-minutes,.timer-seconds{font-size:42px;font-weight:bold;color:var(--accent);text-align:center;min-width:70px}
-    .timer-label{font-size:12px;color:var(--muted);text-align:center;margin-top:4px}
+    @keyframes slideInUp{
+      from{
+        opacity:0;
+        transform:translateY(30px);
+      }
+      to{
+        opacity:1;
+        transform:translateY(0);
+      }
+    }
     
-    .status{padding:10px;border-radius:10px;border:1px solid var(--line);background:#0c0f14}
-    .status.ok{border-color:var(--ok)}
-    .status.err{border-color:var(--danger)}
+    @keyframes slideOutDown{
+      from{
+        opacity:1;
+        transform:translateY(0);
+      }
+      to{
+        opacity:0;
+        transform:translateY(30px);
+      }
+    }
+    
+    @keyframes pulse{
+      0%, 100%{
+        transform:scale(1);
+        box-shadow:0 0 0 0 rgba(37,99,235,0.1);
+      }
+      50%{
+        transform:scale(1.02);
+        box-shadow:0 0 0 10px rgba(37,99,235,0.1);
+      }
+    }
+    
+    @keyframes numberChange{
+      0%{
+        transform:scale(1);
+      }
+      50%{
+        transform:scale(1.1);
+      }
+      100%{
+        transform:scale(1);
+      }
+    }
+    
+    @keyframes fadeIn{
+      from{
+        opacity:0;
+        transform:translateY(10px);
+      }
+      to{
+        opacity:1;
+        transform:translateY(0);
+      }
+    }
+    
+    @keyframes slideInRight{
+      from{
+        opacity:0;
+        transform:translateX(30px);
+      }
+      to{
+        opacity:1;
+        transform:translateX(0);
+      }
+    }
+    
+    /* Timer styles */
+    .timer-display{
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      gap:16px;
+      margin:20px 0;
+      background:var(--bg);
+      padding:20px;
+      border-radius:16px;
+      animation:pulse 2s ease-in-out infinite;
+    }
+    
+    .timer-hours,.timer-minutes,.timer-seconds{
+      font-size:36px;
+      font-weight:800;
+      color:var(--accent);
+      text-align:center;
+      min-width:60px;
+      text-shadow:0 2px 4px rgba(37,99,235,0.2);
+      transition:all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    
+    .timer-hours.animate,.timer-minutes.animate,.timer-seconds.animate{
+      animation:numberChange 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    
+    .timer-label{
+      font-size:14px;
+      color:var(--muted);
+      text-align:center;
+      margin-top:8px;
+      font-weight:600;
+    }
+    
+    .status{
+      padding:16px;
+      border-radius:16px;
+      border:1px solid var(--line);
+      background:var(--bg);
+      box-shadow:var(--shadow);
+    }
+    
+    .status.ok{
+      border-color:var(--ok);
+      background:rgba(16,185,129,0.05);
+    }
+    
+    .status.err{
+      border-color:var(--danger);
+      background:rgba(239,68,68,0.05);
+    }
     
     /* Payment styles */
-    .payment-details{margin:16px 0}
-    .payment-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0}
-    .payment-price{font-weight:bold;color:var(--accent)}
+    .payment-details{margin:20px 0}
+    .payment-item{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:10px 0;
+      border-bottom:1px solid var(--line);
+    }
+    
+    .payment-item:last-child{border-bottom:none}
+    
+    .payment-price{font-weight:700;color:var(--accent);font-size:15px}
     .payment-price.total{font-size:18px;color:var(--ok)}
     
     /* Photo module styles */
-    .photo-requirements{margin:16px 0}
-    .requirement-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0}
-    .requirement-value{font-weight:bold;color:var(--accent)}
+    .photo-requirements{margin:20px 0}
+    .requirement-item{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:10px 0;
+      border-bottom:1px solid var(--line);
+    }
     
-    .photo-studios{margin:16px 0}
-    .studio-item{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:12px}
-    .studio-info h4{margin:0 0 8px;color:var(--text)}
-    .studio-details{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
-    .studio-details span{font-size:13px;color:var(--muted)}
-    .studio-actions{display:flex;gap:8px}
+    .requirement-item:last-child{border-bottom:none}
+    
+    .requirement-value{
+      font-weight:700;
+      color:var(--accent);
+      font-size:15px;
+    }
+    
+    .photo-studios{margin:20px 0}
+    .studio-item{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:16px;
+      margin-bottom:12px;
+      box-shadow:var(--shadow);
+      transition:all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      transform:translateY(0);
+      opacity:1;
+    }
+    
+    .studio-item:hover{
+      box-shadow:var(--shadow-lg);
+      transform:translateY(-2px);
+    }
+    
+    .studio-item:nth-child(1){animation:fadeIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.1s both}
+    .studio-item:nth-child(2){animation:fadeIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s both}
+    .studio-item:nth-child(3){animation:fadeIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.3s both}
+    
+    .studio-info h4{
+      margin:0 0 10px;
+      color:var(--text);
+      font-size:16px;
+      font-weight:700;
+    }
+    
+    .studio-details{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      margin-bottom:12px;
+    }
+    
+    .studio-details span{
+      font-size:13px;
+      color:var(--muted);
+      display:flex;
+      align-items:center;
+      gap:6px;
+    }
+    
+    .studio-actions{
+      display:flex;
+      gap:8px;
+    }
+    
+    .studio-actions button{
+      flex:1;
+      padding:10px;
+      border-radius:12px;
+      font-weight:600;
+      font-size:14px;
+    }
+    
+    /* Mobile optimizations */
+    @media (max-width: 480px) {
+      .wrap {
+        padding: 12px 12px 100px;
+      }
+      
+      .card {
+        padding: 16px;
+        margin-bottom: 10px;
+        border-radius: 14px;
+      }
+      
+      h1 { font-size: 22px; }
+      h2 { font-size: 18px; }
+      h3 { font-size: 16px; }
+      
+      input, select, button, textarea {
+        padding: 12px 14px;
+        border-radius: 10px;
+        font-size: 16px;
+      }
+      
+      .timer-display {
+        gap: 12px;
+        padding: 16px;
+        border-radius: 14px;
+      }
+      
+      .timer-hours, .timer-minutes, .timer-seconds {
+        font-size: 32px;
+        min-width: 50px;
+      }
+      
+      .timer-label {
+        font-size: 12px;
+      }
+      
+      .status {
+        padding: 14px;
+        border-radius: 14px;
+      }
+      
+      .modal .sheet {
+        width: calc(100vw - 24px);
+        max-height: calc(100vh - 24px);
+        padding: 16px;
+        border-radius: 16px;
+      }
+      
+      .bottom {
+        padding: 10px 12px;
+        gap: 4px;
+      }
+      
+      .bottom button {
+        padding: 10px 6px;
+        font-size: 12px;
+        min-height: 40px;
+      }
+      
+      .row {
+        gap: 8px;
+      }
+      
+      .payment-item, .requirement-item {
+        padding: 8px 0;
+      }
+      
+      .studio-item {
+        padding: 14px;
+        margin-bottom: 10px;
+        border-radius: 14px;
+      }
+      
+      .studio-actions {
+        gap: 6px;
+      }
+      
+      .studio-actions button {
+        padding: 8px;
+        font-size: 13px;
+      }
+      
+      .custom-checkbox {
+        padding: 10px;
+        gap: 10px;
+        border-radius: 10px;
+        margin-bottom: 6px;
+      }
+      
+      .custom-checkbox input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+      }
+      
+      .custom-checkbox-text {
+        font-size: 15px;
+      }
+    }
+    
+    /* Custom checkbox styles */
+    .custom-checkbox {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border: 2px solid var(--line);
+      border-radius: 12px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: var(--card);
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      /* Ensure the entire area is clickable */
+      min-height: 44px;
+      /* Prevent text selection */
+      -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    .custom-checkbox:hover {
+      border-color: var(--accent);
+      background: rgba(37, 99, 235, 0.02);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
+    }
+    
+    .custom-checkbox.checked {
+      border-color: var(--accent);
+      background: rgba(37, 99, 235, 0.08);
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
+    }
+    
+    .custom-checkbox:active {
+      transform: translateY(0);
+      box-shadow: 0 1px 4px rgba(37, 99, 235, 0.1);
+    }
+    
+    .custom-checkbox:focus-within {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+    
+    .custom-checkbox input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      margin: 0;
+      appearance: none;
+      border: 2px solid var(--line);
+      border-radius: 4px;
+      background: var(--card);
+      position: relative;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      /* Ensure checkbox doesn't interfere with label clicks */
+      pointer-events: none;
+      /* Make it visually integrated */
+      flex-shrink: 0;
+    }
+    
+    .custom-checkbox input[type="checkbox"]:checked {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+    
+    .custom-checkbox input[type="checkbox"]:checked::before {
+      content: '✓';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 14px;
+      font-weight: bold;
+    }
+    
+    .custom-checkbox-text {
+      flex: 1;
+      font-size: 16px;
+      color: var(--text);
+    }
+    
+    .custom-checkbox.checked .custom-checkbox-text {
+      color: var(--accent);
+      font-weight: 600;
+    }
+    
+    /* Touch-friendly improvements */
+    @media (hover: none) and (pointer: coarse) {
+      button {
+        min-height: 44px;
+      }
+      
+      .custom-checkbox {
+        min-height: 48px;
+        padding: 14px;
+      }
+      
+      .custom-checkbox:active {
+        transform: scale(0.98);
+        background: rgba(37, 99, 235, 0.12);
+      }
+      
+      .card:hover {
+        transform: none;
+      }
+      
+      .studio-item:hover {
+        transform: none;
+      }
+      
+      button.primary:hover {
+        transform: none;
+      }
+      
+      button.ghost:hover {
+        transform: none;
+      }
+      
+      .custom-checkbox:hover {
+        border-color: var(--line);
+        background: var(--card);
+        transform: none;
+        box-shadow: none;
+      }
+      
+      .custom-checkbox:active {
+        transform: none;
+        box-shadow: none;
+      }
+    }
   </style>
 </head>
 <body>
@@ -72,12 +761,12 @@
 
     <!-- Q1 -->
     <div id="q1">
-      <h3>1) Как тебя зовут?</h3>
+      <h3>1) Имя и фамилия</h3>
       <label>Имя</label>
-      <input id="firstName" placeholder="Имя"/>
+      <input id="firstName" placeholder="Имя" autocomplete="given-name"/>
       <label>Фамилия</label>
-      <input id="lastName" placeholder="Фамилия"/>
-      <div class="row" style="margin-top:10px">
+      <input id="lastName" placeholder="Фамилия" autocomplete="family-name"/>
+      <div class="row" style="margin-top:16px">
         <span></span>
         <button class="primary" onclick="nextQValidated(1,2)">Далее</button>
       </div>
@@ -85,7 +774,7 @@
 
     <!-- Q2 -->
     <div id="q2" style="display:none">
-      <h3>2) Где ты живёшь?</h3>
+      <h3>2) Место жительства</h3>
       <select id="voivodeship">
         <option value="Mazowieckie">Mazowieckie</option>
         <option value="Małopolskie">Małopolskie</option>
@@ -93,7 +782,7 @@
         <option value="Dolnośląskie">Dolnośląskie</option>
         <option value="Inne">Inne</option>
       </select>
-      <div class="row" style="margin-top:10px">
+      <div class="row" style="margin-top:16px">
         <button onclick="prevQ(1)">Назад</button>
         <button class="primary" onclick="nextQValidated(2,3)">Далее</button>
       </div>
@@ -108,7 +797,7 @@
         <option value="RUS">Рус</option>
         <option value="Other">Другое</option>
       </select>
-      <div class="row" style="margin-top:10px">
+      <div class="row" style="margin-top:16px">
         <button onclick="prevQ(2)">Назад</button>
         <button class="primary" onclick="nextQValidated(3,4)">Далее</button>
       </div>
@@ -116,14 +805,14 @@
 
     <!-- Q4 -->
     <div id="q4" style="display:none">
-      <h3>4) Сколько времени ты в Польше?</h3>
+      <h3>4) Время в Польше</h3>
       <select id="stayLength">
         <option value="2-3">2–3 года</option>
         <option value="<=1">год и меньше</option>
         <option value=">=4">больше 4 лет</option>
         <option value="new">только приехал</option>
       </select>
-      <div class="row" style="margin-top:10px">
+      <div class="row" style="margin-top:16px">
         <button onclick="prevQ(3)">Назад</button>
         <button class="primary" onclick="nextQValidated(4,5)">Далее</button>
       </div>
@@ -131,7 +820,7 @@
 
     <!-- Q5 -->
     <div id="q5" style="display:none">
-      <h3>5) Твой текущий статус</h3>
+      <h3>5) Текущий статус</h3>
       <select id="currentStatus">
         <option value="waiting">Жду</option>
         <option value="refused">Получил отказ</option>
@@ -139,7 +828,7 @@
         <option value="pobytCzasowy">Pobyt Czasowy</option>
         <option value="other">Inne (Karta Polaka, Karta Rezydenta UE)</option>
       </select>
-      <div class="row" style="margin-top:10px">
+      <div class="row" style="margin-top:16px">
         <button onclick="prevQ(4)">Назад</button>
         <button class="primary" onclick="nextQValidated(5,6)">Далее</button>
       </div>
@@ -147,15 +836,35 @@
 
     <!-- Q6 -->
     <div id="q6" style="display:none">
-      <h3>6) Какие у тебя могут быть основания для ВНЖ?</h3>
+      <h3>6) Основания для ВНЖ</h3>
       <div class="small">Можно выбрать несколько.</div>
-      <label><input type="checkbox" class="grounds" value="UoP"> Работа (UoP)</label>
-      <label><input type="checkbox" class="grounds" value="UoD"> Работа (UoD)</label>
-      <label><input type="checkbox" class="grounds" value="UoZ"> Работа (UoZ)</label>
-      <label><input type="checkbox" class="grounds" value="Dzialalnosc"> Работа (Działalność)</label>
-      <label><input type="checkbox" class="grounds" value="Study"> Учёба</label>
-      <label><input type="checkbox" class="grounds" value="Family"> Семья</label>
-      <div class="row" style="margin-top:10px">
+      <div style="margin:16px 0">
+        <label class="custom-checkbox" data-value="UoP">
+          <input type="checkbox" class="grounds" value="UoP">
+          <span class="custom-checkbox-text">Работа (UoP)</span>
+        </label>
+        <label class="custom-checkbox" data-value="UoD">
+          <input type="checkbox" class="grounds" value="UoD">
+          <span class="custom-checkbox-text">Работа (UoD)</span>
+        </label>
+        <label class="custom-checkbox" data-value="UoZ">
+          <input type="checkbox" class="grounds" value="UoZ">
+          <span class="custom-checkbox-text">Работа (UoZ)</span>
+        </label>
+        <label class="custom-checkbox" data-value="Dzialalnosc">
+          <input type="checkbox" class="grounds" value="Dzialalnosc">
+          <span class="custom-checkbox-text">Работа (Działalność)</span>
+        </label>
+        <label class="custom-checkbox" data-value="Study">
+          <input type="checkbox" class="grounds" value="Study">
+          <span class="custom-checkbox-text">Учёба</span>
+        </label>
+        <label class="custom-checkbox" data-value="Family">
+          <input type="checkbox" class="grounds" value="Family">
+          <span class="custom-checkbox-text">Семья</span>
+        </label>
+      </div>
+      <div class="row" style="margin-top:16px">
         <button onclick="prevQ(5)">Назад</button>
         <button class="primary" onclick="nextQValidated(6,7)">Далее</button>
       </div>
@@ -163,13 +872,13 @@
 
     <!-- Q7 -->
     <div id="q7" style="display:none">
-      <h3>7) Твой ежемесячный доход (brutto)</h3>
+      <h3>7) Ежемесячный доход (brutto)</h3>
       <select id="income">
         <option value="<4700">до 4700</option>
         <option value="4800-10000">4800–10000</option>
         <option value=">10000">10000+</option>
       </select>
-      <div class="row" style="margin-top:10px">
+      <div class="row" style="margin-top:16px">
         <button onclick="prevQ(6)">Назад</button>
         <button class="primary" onclick="nextQValidated(7,8)">Далее</button>
       </div>
@@ -177,17 +886,17 @@
 
     <!-- Q8 -->
     <div id="q8" style="display:none">
-      <h3>8) Твоя долгосрочная цель в Польше</h3>
+      <h3>8) Долгосрочная цель в Польше</h3>
       <select id="goal">
         <option value="wait">Переждать бурю</option>
         <option value="euResidentMaybe">Получить резидента, но насчёт паспорта неуверен</option>
         <option value="passport">Получить паспорт</option>
       </select>
-      <div class="row" style="margin-top:10px">
+      <div class="row" style="margin-top:16px">
         <button onclick="prevQ(7)">Назад</button>
         <button class="primary" onclick="finishOnb()">Продолжить</button>
       </div>
-      <div class="small" style="margin-top:8px">Кнопка «Продолжить» просто перейдёт к чеклисту (PDF не генерируется на этом этапе).</div>
+      <div class="small" style="margin-top:8px">PDF не генерируется на этом этапе</div>
     </div>
   </div>
 
@@ -240,25 +949,28 @@
     <!-- экран 2: таймер на 24 часа -->
     <div id="ct_step2" style="display:none">
       <h3>AI анализ запущен</h3>
-      <div class="center">
-        <div class="timer-display" id="ct_timer_display">
+      <div class="timer-display" id="ct_timer_display">
+        <div>
           <div class="timer-hours" id="ct_timer_hours">24</div>
           <div class="timer-label">часов</div>
         </div>
-        <div class="timer-minutes" id="ct_timer_minutes">00</div>
-        <div class="timer-label">минут</div>
-        <div class="timer-seconds" id="ct_timer_seconds">00</div>
-        <div class="timer-label">секунд</div>
+        <div>
+          <div class="timer-minutes" id="ct_timer_minutes">00</div>
+          <div class="timer-label">минут</div>
+        </div>
+        <div>
+          <div class="timer-seconds" id="ct_timer_seconds">00</div>
+          <div class="timer-label">секунд</div>
+        </div>
       </div>
       <div class="status" id="ct_queue_msg" style="margin-top:16px">
-        Твой анализ будет готов через <span id="ct_time_remaining">24 часа</span>. 
-        Мы пришлём результат здесь.
+        Твой анализ будет готов через <span id="ct_time_remaining">24 часа</span>
       </div>
       <div class="small muted" style="margin-top:12px">
-        Ты также можешь ускорить AI и получить результат быстрее.
+        Можешь ускорить AI и получить результат быстрее
       </div>
-      <div class="row" style="margin-top:16px">
-        <button id="ct_btn_boost" class="primary" onclick="ctBoost()">Ускоряю!</button>
+      <div style="margin-top:20px">
+        <button id="ct_btn_boost" class="primary" onclick="ctBoost()" style="width:100%">Ускоряю!</button>
       </div>
       <div class="small muted" id="ct_poll_note" style="margin-top:8px"></div>
     </div>
@@ -269,7 +981,7 @@
       <div class="status" style="margin-top:16px">
         <div class="center">
           <div style="font-size:24px;color:var(--accent);margin-bottom:8px">⚡</div>
-          <div>Получи результат за 1 час вместо 24 часов</div>
+          <div>Результат за 1 час вместо 24 часов</div>
         </div>
       </div>
       
@@ -291,9 +1003,9 @@
         </div>
       </div>
       
-      <div class="row" style="margin-top:20px">
-        <button class="ghost" onclick="ctBackToTimer()">Отмена</button>
-        <button class="primary" onclick="ctProcessPayment()">Оплатить</button>
+      <div style="margin-top:20px">
+        <button class="primary" onclick="ctProcessPayment()" style="width:100%;margin-bottom:12px">Оплатить</button>
+        <button class="ghost" onclick="ctBackToTimer()" style="width:100%">Отмена</button>
       </div>
     </div>
 
@@ -303,9 +1015,9 @@
       <div id="ct_result_box" class="status ok" style="margin-top:10px">
         <div id="ct_result_text">Все чётко. Замечаний нет.</div>
       </div>
-      <div class="row" style="margin-top:12px">
-        <button class="primary" onclick="ctBackToHome()">Вернуться в главное меню</button>
-        <button class="ghost" onclick="closeModal()">Остаться здесь</button>
+      <div style="margin-top:20px">
+        <button class="primary" onclick="ctBackToHome()" style="width:100%;margin-bottom:12px">Вернуться в главное меню</button>
+        <button class="ghost" onclick="closeModal()" style="width:100%">Остаться здесь</button>
       </div>
     </div>
   </div>
@@ -326,7 +1038,7 @@
       <div class="status" style="margin-top:16px">
         <div class="center">
           <div style="font-size:24px;margin-bottom:8px">📸</div>
-          <div>От тебя требуется 4 таких фотки. Найди фото ателье рядом</div>
+          <div>Требуется 4 фотографии. Найди фото ателье рядом</div>
         </div>
       </div>
       
@@ -343,16 +1055,16 @@
         </div>
         <div class="requirement-item">
           <span>Количество:</span>
-          <span class="requirement-value">4 штуки</span>
+          <span class="requirement-value">4 шт</span>
         </div>
         <div class="requirement-item">
           <span>Срок действия:</span>
-          <span class="requirement-value">Не старше 6 месяцев</span>
+          <span class="requirement-value">Не старше 6 мес</span>
         </div>
       </div>
       
-      <div class="row" style="margin-top:20px">
-        <button class="primary" onclick="findPhotoStudios()">Найти фото ателье рядом</button>
+      <div style="margin-top:20px">
+        <button class="primary" onclick="findPhotoStudios()" style="width:100%">Найти фото ателье рядом</button>
       </div>
       
       <div class="center" style="margin-top:20px">
@@ -413,9 +1125,29 @@
         </div>
       </div>
       
-      <div class="row" style="margin-top:20px">
-        <button class="ghost" onclick="backToPhotosStep1()">Назад к требованиям</button>
-        <button class="primary" onclick="markPhotosDone()">Я сделал фотографии</button>
+      <div style="margin-top:20px">
+        <button class="primary" onclick="markPhotosDone()" style="width:100%;margin-bottom:12px">Готово</button>
+        <button class="ghost" onclick="backToPhotosStep1()" style="width:100%">Назад к требованиям</button>
+      </div>
+    </div>
+    
+    <!-- экран 3: фотографии уже сделаны -->
+    <div id="photos_step3" style="display:none">
+      <div class="status ok" style="margin-top:16px">
+        <div class="center">
+          <div style="font-size:48px;margin-bottom:16px">✅</div>
+          <div style="font-size:18px;font-weight:600;margin-bottom:8px">Фотографии готовы!</div>
+          <div style="color:var(--muted)">Ты уже отметил фотографии как выполненные</div>
+        </div>
+      </div>
+      
+      <div class="hr"></div>
+      
+      <div style="margin-top:20px">
+        <button class="ghost" onclick="closePhotosModal()" style="width:100%;margin-bottom:12px">Закрыть</button>
+        <button class="ghost" onclick="resetPhotosStatus()" style="width:100%;font-size:14px;color:var(--muted)">
+          Сбросить статус (для тестирования)
+        </button>
       </div>
     </div>
   </div>
@@ -425,6 +1157,47 @@
   // ====== Telegram init
   const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
   try { tg && tg.ready(); tg && tg.expand(); } catch(e) {}
+
+  // ====== Custom checkbox handling
+  document.addEventListener('DOMContentLoaded', function() {
+    // Handle custom checkbox clicks - improved version
+    document.addEventListener('click', function(e) {
+      const label = e.target.closest('.custom-checkbox');
+      if (label) {
+        const checkbox = label.querySelector('input[type="checkbox"]');
+        if (checkbox) {
+          // Toggle checkbox state
+          checkbox.checked = !checkbox.checked;
+          
+          // Update visual state
+          if (checkbox.checked) {
+            label.classList.add('checked');
+          } else {
+            label.classList.remove('checked');
+          }
+          
+          // Trigger change event for form validation
+          checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+          
+
+        }
+      }
+    });
+    
+    // Also handle direct checkbox changes
+    document.addEventListener('change', function(e) {
+      if (e.target.classList.contains('grounds')) {
+        const checkbox = e.target;
+        const label = checkbox.closest('.custom-checkbox');
+        
+        if (checkbox.checked) {
+          label.classList.add('checked');
+        } else {
+          label.classList.remove('checked');
+        }
+      }
+    });
+  });
 
   // ====== Простое состояние
   const st = {
@@ -507,9 +1280,13 @@
     document.getElementById('progressBar').style.width = Math.round(done/total*100)+'%';
     document.getElementById('officeHint').innerText = st.profile?.voivodeship ? officeHintByVoiv(st.profile.voivodeship) : '';
 
-    st.tasks.forEach(t=>{
+    st.tasks.forEach((t, index)=>{
       const card = document.createElement('div');
       card.className='card';
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(20px)';
+      card.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+      
       const badgeClass = t.status==='done'?'ok':(t.status==='inreview'?'warn':'');
       card.innerHTML = `
         <div class="row" style="align-items:center">
@@ -527,6 +1304,12 @@
         </div>
       `;
       tasksDiv.appendChild(card);
+      
+      // Анимация появления карточки с задержкой
+      setTimeout(() => {
+        card.style.opacity = '1';
+        card.style.transform = 'translateY(0)';
+      }, index * 100);
     });
   }
 
@@ -538,9 +1321,26 @@
 
   // ====== Навигация
   function openChecklist(){
-    document.getElementById('onb').style.display = 'none';
-    document.getElementById('home').style.display = 'block';
+    const onb = document.getElementById('onb');
+    const home = document.getElementById('home');
+    
+    onb.style.opacity = '0';
+    onb.style.transform = 'translateY(-20px)';
+    onb.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    
+    setTimeout(() => {
+      onb.style.display = 'none';
+      home.style.display = 'block';
+      home.style.opacity = '0';
+      home.style.transform = 'translateY(20px)';
+      home.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+      
+      setTimeout(() => {
+        home.style.opacity = '1';
+        home.style.transform = 'translateY(0)';
     renderChecklist();
+      }, 10);
+    }, 400);
   }
 
   function openModule(kind){
@@ -612,7 +1412,40 @@
 
   // ====== Онбординг
   function showQ(n){
+    // Анимация перехода между вопросами
+    const currentQ = document.querySelector('#onb [id^="q"]:not([style*="display: none"])');
+    const nextQ = document.getElementById('q'+n);
+    
+    if(currentQ && nextQ && currentQ !== nextQ){
+      // Анимация исчезновения текущего вопроса
+      currentQ.style.opacity = '0';
+      currentQ.style.transform = 'translateX(-20px)';
+      currentQ.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+      
+      setTimeout(() => {
+        // Скрываем все вопросы
+        for(let i=1;i<=8;i++){ 
+          const q = document.getElementById('q'+i);
+          q.style.display = (i===n)?'':'none';
+          q.style.opacity = '1';
+          q.style.transform = 'translateX(0)';
+        }
+        
+        // Анимация появления следующего вопроса
+        nextQ.style.opacity = '0';
+        nextQ.style.transform = 'translateX(20px)';
+        nextQ.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+        
+        setTimeout(() => {
+          nextQ.style.opacity = '1';
+          nextQ.style.transform = 'translateX(0)';
+        }, 10);
+      }, 300);
+    } else {
+      // Простое переключение без анимации
     for(let i=1;i<=8;i++){ document.getElementById('q'+i).style.display = (i===n)?'':'none' }
+    }
+    
     document.getElementById('step').innerText = String(n);
   }
   function prevQ(n){ showQ(n) }
@@ -661,9 +1494,27 @@
     localStorage.setItem('track', track);
     localStorage.setItem('tasks', JSON.stringify(st.tasks));
 
-    document.getElementById('onb').style.display='none';
-    document.getElementById('home').style.display='';
+    // Анимация завершения онбординга
+    const onb = document.getElementById('onb');
+    const home = document.getElementById('home');
+    
+    onb.style.opacity = '0';
+    onb.style.transform = 'translateY(-20px)';
+    onb.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    
+    setTimeout(() => {
+      onb.style.display='none';
+      home.style.display='';
+      home.style.opacity = '0';
+      home.style.transform = 'translateY(20px)';
+      home.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+      
+      setTimeout(() => {
+        home.style.opacity = '1';
+        home.style.transform = 'translateY(0)';
     renderChecklist();
+      }, 10);
+    }, 400);
   }
 
   // ====== Reset (тесты)
@@ -673,9 +1524,26 @@
       localStorage.removeItem('tasks');
       localStorage.removeItem('profile');
       st.track = null; st.tasks=[]; st.profile={};
-      document.getElementById('home').style.display='none';
-      document.getElementById('onb').style.display='';
+      const home = document.getElementById('home');
+      const onb = document.getElementById('onb');
+      
+      home.style.opacity = '0';
+      home.style.transform = 'translateY(20px)';
+      home.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+      
+      setTimeout(() => {
+        home.style.display='none';
+        onb.style.display='';
+        onb.style.opacity = '0';
+        onb.style.transform = 'translateY(-20px)';
+        onb.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+        
+        setTimeout(() => {
+          onb.style.opacity = '1';
+          onb.style.transform = 'translateY(0)';
       showQ(1);
+        }, 10);
+      }, 400);
     }
   }
 
@@ -685,7 +1553,11 @@
   function el(id){ return document.getElementById(id); }
   function openContractModal(){
     ct = { file:null, fileMeta:null, jobId:null, pollTimer:null, boosted:false };
-    el('modal').style.display='grid';
+    const modal = el('modal');
+    modal.style.display='grid';
+    setTimeout(() => {
+      modal.classList.add('show');
+    }, 10);
     el('ct_step1').style.display='';
     el('ct_step2').style.display='none';
     el('ct_step3').style.display='none';
@@ -707,30 +1579,98 @@
     el('ct_file').value = '';
   }
   function closeModal(){
-    el('modal').style.display='none';
+    const modal = el('modal');
+    modal.classList.remove('show');
+    setTimeout(() => {
+      modal.style.display='none';
     if(ct.pollTimer){ clearInterval(ct.pollTimer); ct.pollTimer=null; }
+    }, 300);
   }
   function ctBackToHome(){ closeModal(); openChecklist(); }
 
   // ====== Фотографии — функции модуля
   function openPhotosModal(){
-    el('photos_modal').style.display='grid';
-    el('photos_step1').style.display='';
-    el('photos_step2').style.display='none';
+    const modal = el('photos_modal');
+    modal.style.display='grid';
+    setTimeout(() => {
+      modal.classList.add('show');
+    }, 10);
+    
+    // Проверяем статус задачи фотографий
+    const photosTask = st.tasks.find(t => t.id === 'photos');
+    
+    if (photosTask && photosTask.status === 'done') {
+      // Если фотографии уже сделаны, показываем экран завершения
+      el('photos_step1').style.display='none';
+      el('photos_step2').style.display='none';
+      showPhotosCompletedScreen();
+    } else {
+      // Если фотографии еще не сделаны, показываем обычный экран
+      el('photos_step1').style.display='';
+      el('photos_step2').style.display='none';
+      
+      // Сбрасываем анимацию для первого экрана
+      const step1 = el('photos_step1');
+      step1.style.opacity = '1';
+      step1.style.transform = 'translateX(0)';
+    }
   }
   
   function closePhotosModal(){
-    el('photos_modal').style.display='none';
+    const modal = el('photos_modal');
+    modal.classList.remove('show');
+    setTimeout(() => {
+      modal.style.display='none';
+      
+      // Сбрасываем все экраны для следующего открытия
+      el('photos_step1').style.display='none';
+      el('photos_step2').style.display='none';
+      el('photos_step3').style.display='none';
+    }, 300);
   }
   
   function findPhotoStudios(){
-    el('photos_step1').style.display='none';
-    el('photos_step2').style.display='';
+    const step1 = el('photos_step1');
+    const step2 = el('photos_step2');
+    
+    step1.style.opacity = '0';
+    step1.style.transform = 'translateX(-20px)';
+    step1.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    
+    setTimeout(() => {
+      step1.style.display='none';
+      step2.style.display='';
+      step2.style.opacity = '0';
+      step2.style.transform = 'translateX(20px)';
+      step2.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+      
+      setTimeout(() => {
+        step2.style.opacity = '1';
+        step2.style.transform = 'translateX(0)';
+      }, 10);
+    }, 300);
   }
   
   function backToPhotosStep1(){
-    el('photos_step2').style.display='none';
-    el('photos_step1').style.display='';
+    const step2 = el('photos_step2');
+    const step1 = el('photos_step1');
+    
+    step2.style.opacity = '0';
+    step2.style.transform = 'translateX(20px)';
+    step2.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    
+    setTimeout(() => {
+      step2.style.display='none';
+      step1.style.display='';
+      step1.style.opacity = '0';
+      step1.style.transform = 'translateX(-20px)';
+      step1.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+      
+      setTimeout(() => {
+        step1.style.opacity = '1';
+        step1.style.transform = 'translateX(0)';
+      }, 10);
+    }, 300);
   }
   
   function markPhotosDone(){
@@ -746,6 +1686,48 @@
     
     // Показываем уведомление
     alert('Отлично! Фотографии отмечены как выполненные. 🎉');
+  }
+  
+  function showPhotosCompletedScreen(){
+    // Скрываем все экраны
+    el('photos_step1').style.display='none';
+    el('photos_step2').style.display='none';
+    
+    // Показываем экран завершения
+    const step3 = el('photos_step3');
+    step3.style.display='';
+    step3.style.opacity = '0';
+    step3.style.transform = 'translateY(20px)';
+    step3.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    
+    setTimeout(() => {
+      step3.style.opacity = '1';
+      step3.style.transform = 'translateY(0)';
+    }, 10);
+  }
+  
+  function resetPhotosStatus(){
+    // Сбрасываем статус задачи фотографий
+    st.tasks = st.tasks.map(t=> t.id==='photos' ? {...t, status:'todo'} : t);
+    localStorage.setItem('tasks', JSON.stringify(st.tasks));
+    
+    // Обновляем чеклист
+    try { renderChecklist(); } catch(e) {}
+    
+    // Показываем первый экран
+    el('photos_step3').style.display='none';
+    el('photos_step2').style.display='none';
+    
+    const step1 = el('photos_step1');
+    step1.style.display='';
+    step1.style.opacity = '0';
+    step1.style.transform = 'translateY(20px)';
+    step1.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    
+    setTimeout(() => {
+      step1.style.opacity = '1';
+      step1.style.transform = 'translateY(0)';
+    }, 10);
   }
   
   function callStudio(phone){
@@ -800,8 +1782,28 @@
 
   async function ctStart(){
     if(!ct.file){ alert('Выберите файл.'); return; }
-    el('ct_step1').style.display='none';
-    el('ct_step2').style.display='';
+    
+    // Анимация перехода между экранами
+    const step1 = el('ct_step1');
+    const step2 = el('ct_step2');
+    
+    step1.style.opacity = '0';
+    step1.style.transform = 'translateX(-20px)';
+    step1.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    
+    setTimeout(() => {
+      step1.style.display='none';
+      step2.style.display='';
+      step2.style.opacity = '0';
+      step2.style.transform = 'translateX(20px)';
+      step2.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+      
+      setTimeout(() => {
+        step2.style.opacity = '1';
+        step2.style.transform = 'translateX(0)';
+      }, 10);
+    }, 300);
+    
     el('ct_step3').style.display='none';
     el('ct_step4').style.display='none';
     el('ct_poll_note').innerText = '';
@@ -912,10 +1914,28 @@
     const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
     
-    // Обновляем UI
-    el('ct_timer_hours').innerText = hours.toString().padStart(2, '0');
-    el('ct_timer_minutes').innerText = minutes.toString().padStart(2, '0');
-    el('ct_timer_seconds').innerText = seconds.toString().padStart(2, '0');
+    // Обновляем UI с анимацией
+    const hoursEl = el('ct_timer_hours');
+    const minutesEl = el('ct_timer_minutes');
+    const secondsEl = el('ct_timer_seconds');
+    
+    if(hoursEl.innerText !== hours.toString().padStart(2, '0')){
+      hoursEl.innerText = hours.toString().padStart(2, '0');
+      hoursEl.classList.add('animate');
+      setTimeout(() => hoursEl.classList.remove('animate'), 300);
+    }
+    
+    if(minutesEl.innerText !== minutes.toString().padStart(2, '0')){
+      minutesEl.innerText = minutes.toString().padStart(2, '0');
+      minutesEl.classList.add('animate');
+      setTimeout(() => minutesEl.classList.remove('animate'), 300);
+    }
+    
+    if(secondsEl.innerText !== seconds.toString().padStart(2, '0')){
+      secondsEl.innerText = seconds.toString().padStart(2, '0');
+      secondsEl.classList.add('animate');
+      setTimeout(() => secondsEl.classList.remove('animate'), 300);
+    }
     
     // Обновляем текст
     if(hours > 0){
@@ -926,15 +1946,49 @@
   }
 
   function ctBoost(){
-    // Показываем экран оплаты
-    el('ct_step2').style.display='none';
-    el('ct_step3').style.display='';
-    }
+    // Показываем экран оплаты с анимацией
+    const step2 = el('ct_step2');
+    const step3 = el('ct_step3');
+    
+    step2.style.opacity = '0';
+    step2.style.transform = 'translateX(-20px)';
+    step2.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    
+    setTimeout(() => {
+      step2.style.display='none';
+      step3.style.display='';
+      step3.style.opacity = '0';
+      step3.style.transform = 'translateX(20px)';
+      step3.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+      
+      setTimeout(() => {
+        step3.style.opacity = '1';
+        step3.style.transform = 'translateX(0)';
+      }, 10);
+    }, 300);
+  }
   
   // Функция возврата к таймеру
   function ctBackToTimer(){
-    el('ct_step3').style.display='none';
-    el('ct_step2').style.display='';
+    const step3 = el('ct_step3');
+    const step2 = el('ct_step2');
+    
+    step3.style.opacity = '0';
+    step3.style.transform = 'translateX(20px)';
+    step3.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    
+    setTimeout(() => {
+      step3.style.display='none';
+      step2.style.display='';
+      step2.style.opacity = '0';
+      step2.style.transform = 'translateX(-20px)';
+      step2.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+      
+      setTimeout(() => {
+        step2.style.opacity = '1';
+        step2.style.transform = 'translateX(0)';
+      }, 10);
+    }, 300);
   }
   
   // Функция обработки оплаты
@@ -944,7 +1998,7 @@
     
     setTimeout(() => {
       // После успешной оплаты сразу показываем результат
-      ct.boosted = true;
+    ct.boosted = true;
       
       // Очищаем таймер
       if(ct.timerInterval){
@@ -952,9 +2006,26 @@
         ct.timerInterval = null;
       }
       
-      // Показываем экран загрузки
-      el('ct_step3').style.display='none';
-      el('ct_step4').style.display='';
+      // Показываем экран загрузки с анимацией
+      const step3 = el('ct_step3');
+      const step4 = el('ct_step4');
+      
+      step3.style.opacity = '0';
+      step3.style.transform = 'translateX(-20px)';
+      step3.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+      
+      setTimeout(() => {
+        step3.style.display='none';
+        step4.style.display='';
+        step4.style.opacity = '0';
+        step4.style.transform = 'translateX(20px)';
+        step4.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+        
+        setTimeout(() => {
+          step4.style.opacity = '1';
+          step4.style.transform = 'translateX(0)';
+        }, 10);
+      }, 300);
       
       // Имитируем загрузку результата
       el('ct_result_title').innerText = 'Обрабатываем результат...';
@@ -1063,7 +2134,7 @@
     // Обновляем чеклист
     try { renderChecklist(); } catch(e) {}
   }
-  
+
   function startPolling(){
     if(!ct.jobId){ return; }
     if(ct.pollTimer){ clearInterval(ct.pollTimer); }
