@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <title>eMigrant — Miniapp MVP</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- Telegram Web Apps SDK (безопасно подключать; в обычном браузере просто не используется) -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root{--bg:#0f1115;--card:#171a21;--text:#e7eaf0;--muted:#9aa3b2;--accent:#7cdfff;--line:#242936;--ok:#33d69e;--warn:#ffb84d;}
@@ -42,7 +41,7 @@
       <input id="lastName" placeholder="Фамилия"/>
       <div class="row" style="margin-top:10px">
         <span></span>
-        <button class="primary" onclick="nextQ(2)">Далее</button>
+        <button class="primary" onclick="nextQValidated(1,2)">Далее</button>
       </div>
     </div>
 
@@ -58,7 +57,7 @@
       </select>
       <div class="row" style="margin-top:10px">
         <button onclick="prevQ(1)">Назад</button>
-        <button class="primary" onclick="nextQ(3)">Далее</button>
+        <button class="primary" onclick="nextQValidated(2,3)">Далее</button>
       </div>
     </div>
 
@@ -73,7 +72,7 @@
       </select>
       <div class="row" style="margin-top:10px">
         <button onclick="prevQ(2)">Назад</button>
-        <button class="primary" onclick="nextQ(4)">Далее</button>
+        <button class="primary" onclick="nextQValidated(3,4)">Далее</button>
       </div>
     </div>
 
@@ -88,7 +87,7 @@
       </select>
       <div class="row" style="margin-top:10px">
         <button onclick="prevQ(3)">Назад</button>
-        <button class="primary" onclick="nextQ(5)">Далее</button>
+        <button class="primary" onclick="nextQValidated(4,5)">Далее</button>
       </div>
     </div>
 
@@ -104,7 +103,7 @@
       </select>
       <div class="row" style="margin-top:10px">
         <button onclick="prevQ(4)">Назад</button>
-        <button class="primary" onclick="nextQ(6)">Далее</button>
+        <button class="primary" onclick="nextQValidated(5,6)">Далее</button>
       </div>
     </div>
 
@@ -120,7 +119,7 @@
       <label><input type="checkbox" class="grounds" value="Family"> Семья</label>
       <div class="row" style="margin-top:10px">
         <button onclick="prevQ(5)">Назад</button>
-        <button class="primary" onclick="nextQ(7)">Далее</button>
+        <button class="primary" onclick="nextQValidated(6,7)">Далее</button>
       </div>
     </div>
 
@@ -134,7 +133,7 @@
       </select>
       <div class="row" style="margin-top:10px">
         <button onclick="prevQ(6)">Назад</button>
-        <button class="primary" onclick="nextQ(8)">Далее</button>
+        <button class="primary" onclick="nextQValidated(7,8)">Далее</button>
       </div>
     </div>
 
@@ -176,18 +175,15 @@
 </div>
 
 <script>
-  // ===== ИНИЦ Telegram WebApp (мягко, чтобы работало и в браузере)
   const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
   try { tg && tg.ready(); tg && tg.expand(); } catch(e) {}
 
-  // ===== ПРОСТЕЙШЕЕ СОСТОЯНИЕ (localStorage)
   const st = {
     track: localStorage.getItem('track') || null,
     tasks: JSON.parse(localStorage.getItem('tasks')||'[]'),
     profile: JSON.parse(localStorage.getItem('profile')||'{}')
   };
 
-  // Базовые задачи по треку (упрощённо под твои правила)
   function baseTasks(track){
     const common = [
       {id:'wniosek', title:'Wniosek (PDF)', status:'todo', requiresAI:true, kind:'wniosek'},
@@ -210,7 +206,6 @@
     return common;
   }
 
-  // Маппинг воеводства → подсказка/ссылка (заглушки)
   function officeHintByVoiv(v){
     const map = {
       'Mazowieckie': 'Ваш ужонд: Mazowiecki. Подсказка по формулярам: https://mazowieckie.example',
@@ -222,18 +217,15 @@
     return map[v] || '';
   }
 
-  // Определяем трек по основаниям (Q6)
   function determineTrack(groundValues){
     const has = k => groundValues.includes(k);
     if (has('Study')) return 'study';
     if (has('Family')) return 'family';
     if (has('Dzialalnosc')) return 'business';
     if (has('UoP') || has('UoD') || has('UoZ')) return 'work';
-    // дефолт — работа (чтобы не оставлять пустым)
     return 'work';
   }
 
-  // Рендер прогресса и задач
   function renderChecklist(){
     const title = st.profile?.trackLabel ? `eMigrant · Чеклист (${st.profile.trackLabel})` : 'eMigrant · Чеклист';
     document.getElementById('title').innerText = title;
@@ -246,7 +238,6 @@
     document.getElementById('totalCount').innerText = total;
     document.getElementById('progressBar').style.width = Math.round(done/total*100)+'%';
 
-    // офис-хинт
     document.getElementById('officeHint').innerText = st.profile?.voivodeship ? officeHintByVoiv(st.profile.voivodeship) : '';
 
     st.tasks.forEach(t=>{
@@ -286,7 +277,6 @@
   }
 
   function openModule(kind){
-    // Заглушки модулей (как раньше)
     if(kind==='aiTranslator'){
       alert('AI Translator: Загрузите письмо/документ → перевод и краткое резюме. (В MVP-заглушке загрузка опущена)');
       return;
@@ -310,7 +300,7 @@
       const has = confirm('Есть действующая страховка? Нажмите OK если да, Отмена если пока нет.');
       if(!has){
         alert('Нажмите «Написать в чат», чтобы обсудить, как оформить страховку.');
-        if(tg && tg.openTelegramLink) tg.openTelegramLink('https://t.me/'+(tg.initDataUnsafe?.user?.username||'')); // заглушка
+        if(tg && tg.openTelegramLink) tg.openTelegramLink('https://t.me/'+(tg.initDataUnsafe?.user?.username||'')); 
       } else {
         alert('Загрузите полис. AI-проверка: срок действия и реквизиты.');
       }
@@ -361,10 +351,67 @@
     for(let i=1;i<=8;i++){ document.getElementById('q'+i).style.display = (i===n)?'':'none' }
     document.getElementById('step').innerText = String(n);
   }
-  function nextQ(n){ showQ(n) }
   function prevQ(n){ showQ(n) }
 
+  // проверка ответа на конкретный шаг
+  function isAnswered(step){
+    switch(step){
+      case 1: {
+        const fn = document.getElementById('firstName');
+        const ln = document.getElementById('lastName');
+        if(!fn.value.trim()){ fn.focus(); alert('Пожалуйста, укажи имя.'); return false; }
+        if(!ln.value.trim()){ ln.focus(); alert('Пожалуйста, укажи фамилию.'); return false; }
+        return true;
+      }
+      case 2: {
+        const s = document.getElementById('voivodeship');
+        if(!s.value){ s.focus(); alert('Выбери воеводство.'); return false; }
+        return true;
+      }
+      case 3: {
+        const s = document.getElementById('citizenship');
+        if(!s.value){ s.focus(); alert('Выбери гражданство.'); return false; }
+        return true;
+      }
+      case 4: {
+        const s = document.getElementById('stayLength');
+        if(!s.value){ s.focus(); alert('Укажи срок пребывания.'); return false; }
+        return true;
+      }
+      case 5: {
+        const s = document.getElementById('currentStatus');
+        if(!s.value){ s.focus(); alert('Выбери текущий статус.'); return false; }
+        return true;
+      }
+      case 6: {
+        const any = Array.from(document.querySelectorAll('.grounds')).some(el=>el.checked);
+        if(!any){ alert('Выбери хотя бы одно основание.'); return false; }
+        return true;
+      }
+      case 7: {
+        const s = document.getElementById('income');
+        if(!s.value){ s.focus(); alert('Укажи доход.'); return false; }
+        return true;
+      }
+      case 8: {
+        const s = document.getElementById('goal');
+        if(!s.value){ s.focus(); alert('Выбери цель.'); return false; }
+        return true;
+      }
+      default: return true;
+    }
+  }
+
+  function nextQValidated(curr, next){
+    if(isAnswered(curr)){ showQ(next); }
+  }
+
   function finishOnb(){
+    // финальная защита: проверяем все шаги по порядку
+    for(let i=1;i<=8;i++){
+      if(!isAnswered(i)){ showQ(i); return; }
+    }
+
     // собираем ответы
     const firstName = document.getElementById('firstName').value.trim();
     const lastName = document.getElementById('lastName').value.trim();
@@ -378,11 +425,9 @@
       .filter(el=>el.checked)
       .map(el=>el.value);
 
-    // определяем трек по основаниям
     const track = determineTrack(grounds);
     const trackLabel = track==='work'?'Работа':track==='study'?'Учёба':track==='family'?'Семья':'Бизнес';
 
-    // сохраняем профиль
     st.profile = { firstName, lastName, voivodeship, citizenship, stayLength, currentStatus, grounds, income, goal, track, trackLabel };
     localStorage.setItem('profile', JSON.stringify(st.profile));
 
@@ -396,7 +441,6 @@
     renderChecklist();
   }
 
-  // Автозагрузка
   (function init(){
     if(st.track){
       document.getElementById('onb').style.display='none';
