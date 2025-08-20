@@ -22,32 +22,135 @@
     .bottom{position:fixed;left:0;right:0;bottom:0;background:#0c0f14;border-top:1px solid var(--line);display:flex;gap:6px;padding:8px}
     .bottom button{flex:1}
     header{position:sticky;top:0;background:linear-gradient(180deg,#0f1115,rgba(15,17,21,0.6));backdrop-filter:blur(6px);z-index:2;border-bottom:1px solid var(--line);padding:12px}
+    .hint{margin:8px 0 0}
   </style>
 </head>
 <body>
 <div class="wrap">
   <header><h2 id="title">eMigrant · Онбординг</h2></header>
 
-  <!-- Онбординг -->
+  <!-- Онбординг (8 вопросов) -->
   <div id="onb" class="card">
-    <div class="badge">Шаг <span id="step">1</span>/2</div>
-    <div id="onb1">
-      <h3>Intro & Disclaimer</h3>
-      <p class="small">Мы помогаем собрать пакет документов и пройти шаги подачи. Это не юридическая консультация. Слот в ужонде не гарантируем.</p>
-      <button class="primary" onclick="nextOnb()">Далее</button>
+    <div class="badge">Шаг <span id="step">1</span>/8</div>
+
+    <!-- Q1: Имя/Фамилия -->
+    <div id="q1">
+      <h3>1) Как тебя зовут?</h3>
+      <label>Имя</label>
+      <input id="firstName" placeholder="Имя"/>
+      <label>Фамилия</label>
+      <input id="lastName" placeholder="Фамилия"/>
+      <div class="row" style="margin-top:10px">
+        <span></span>
+        <button class="primary" onclick="nextQ(2)">Далее</button>
+      </div>
     </div>
-    <div id="onb2" style="display:none">
-      <h3>Выберите трек</h3>
-      <select id="track">
-        <option value="work">Работа</option>
-        <option value="study">Учёба</option>
-        <option value="family">Семья</option>
-        <option value="business">Бизнес</option>
+
+    <!-- Q2: Воеводство -->
+    <div id="q2" style="display:none">
+      <h3>2) Где ты живёшь?</h3>
+      <select id="voivodeship">
+        <option value="Mazowieckie">Mazowieckie</option>
+        <option value="Małopolskie">Małopolskie</option>
+        <option value="Pomorskie">Pomorskie</option>
+        <option value="Dolnośląskie">Dolnośląskie</option>
+        <option value="Inne">Inne</option>
       </select>
       <div class="row" style="margin-top:10px">
-        <button onclick="prevOnb()">Назад</button>
-        <button class="primary" onclick="finishOnb()">Завершить</button>
+        <button onclick="prevQ(1)">Назад</button>
+        <button class="primary" onclick="nextQ(3)">Далее</button>
       </div>
+    </div>
+
+    <!-- Q3: Гражданство -->
+    <div id="q3" style="display:none">
+      <h3>3) Гражданство</h3>
+      <select id="citizenship">
+        <option value="UKR">Укр</option>
+        <option value="BLR">Бел</option>
+        <option value="RUS">Рус</option>
+        <option value="Other">Другое</option>
+      </select>
+      <div class="row" style="margin-top:10px">
+        <button onclick="prevQ(2)">Назад</button>
+        <button class="primary" onclick="nextQ(4)">Далее</button>
+      </div>
+    </div>
+
+    <!-- Q4: Срок пребывания -->
+    <div id="q4" style="display:none">
+      <h3>4) Сколько времени ты в Польше?</h3>
+      <select id="stayLength">
+        <option value="2-3">2–3 года</option>
+        <option value="<=1">год и меньше</option>
+        <option value=">=4">больше 4 лет</option>
+        <option value="new">только приехал</option>
+      </select>
+      <div class="row" style="margin-top:10px">
+        <button onclick="prevQ(3)">Назад</button>
+        <button class="primary" onclick="nextQ(5)">Далее</button>
+      </div>
+    </div>
+
+    <!-- Q5: Текущий статус -->
+    <div id="q5" style="display:none">
+      <h3>5) Твой текущий статус</h3>
+      <select id="currentStatus">
+        <option value="waiting">Жду</option>
+        <option value="refused">Получил отказ</option>
+        <option value="statusUKR">Status UKR</option>
+        <option value="pobytCzasowy">Pobyt Czasowy</option>
+        <option value="other">Inne (Karta Polaka, Karta Rezydenta UE)</option>
+      </select>
+      <div class="row" style="margin-top:10px">
+        <button onclick="prevQ(4)">Назад</button>
+        <button class="primary" onclick="nextQ(6)">Далее</button>
+      </div>
+    </div>
+
+    <!-- Q6: Основания (множественный выбор) -->
+    <div id="q6" style="display:none">
+      <h3>6) Какие у тебя могут быть основания для ВНЖ?</h3>
+      <div class="small">Можно выбрать несколько.</div>
+      <label><input type="checkbox" class="grounds" value="UoP"> Работа (UoP)</label>
+      <label><input type="checkbox" class="grounds" value="UoD"> Работа (UoD)</label>
+      <label><input type="checkbox" class="grounds" value="UoZ"> Работа (UoZ)</label>
+      <label><input type="checkbox" class="grounds" value="Dzialalnosc"> Работа (Działalność)</label>
+      <label><input type="checkbox" class="grounds" value="Study"> Учёба</label>
+      <label><input type="checkbox" class="grounds" value="Family"> Семья</label>
+      <div class="row" style="margin-top:10px">
+        <button onclick="prevQ(5)">Назад</button>
+        <button class="primary" onclick="nextQ(7)">Далее</button>
+      </div>
+    </div>
+
+    <!-- Q7: Доход -->
+    <div id="q7" style="display:none">
+      <h3>7) Твой ежемесячный доход (brutto)</h3>
+      <select id="income">
+        <option value="<4700">до 4700</option>
+        <option value="4800-10000">4800–10000</option>
+        <option value=">10000">10000+</option>
+      </select>
+      <div class="row" style="margin-top:10px">
+        <button onclick="prevQ(6)">Назад</button>
+        <button class="primary" onclick="nextQ(8)">Далее</button>
+      </div>
+    </div>
+
+    <!-- Q8: Долгосрочная цель -->
+    <div id="q8" style="display:none">
+      <h3>8) Твоя долгосрочная цель в Польше</h3>
+      <select id="goal">
+        <option value="wait">Переждать бурю</option>
+        <option value="euResidentMaybe">Получить резидента, но насчёт паспорта неуверен</option>
+        <option value="passport">Получить паспорт</option>
+      </select>
+      <div class="row" style="margin-top:10px">
+        <button onclick="prevQ(7)">Назад</button>
+        <button class="primary" onclick="finishOnb()">Продолжить</button>
+      </div>
+      <div class="small" style="margin-top:8px">Кнопка «Продолжить» просто перейдёт к чеклисту (PDF не генерируется на этом этапе).</div>
     </div>
   </div>
 
@@ -57,6 +160,7 @@
       <h3>Прогресс</h3>
       <div class="progress"><span id="progressBar" style="width:0%"></span></div>
       <div class="small" style="margin-top:6px">Готово: <span id="doneCount">0</span>/<span id="totalCount">0</span></div>
+      <div id="officeHint" class="small hint"></div>
     </div>
 
     <div id="tasks"></div>
@@ -79,7 +183,8 @@
   // ===== ПРОСТЕЙШЕЕ СОСТОЯНИЕ (localStorage)
   const st = {
     track: localStorage.getItem('track') || null,
-    tasks: JSON.parse(localStorage.getItem('tasks')||'[]')
+    tasks: JSON.parse(localStorage.getItem('tasks')||'[]'),
+    profile: JSON.parse(localStorage.getItem('profile')||'{}')
   };
 
   // Базовые задачи по треку (упрощённо под твои правила)
@@ -105,9 +210,34 @@
     return common;
   }
 
+  // Маппинг воеводства → подсказка/ссылка (заглушки)
+  function officeHintByVoiv(v){
+    const map = {
+      'Mazowieckie': 'Ваш ужонд: Mazowiecki. Подсказка по формулярам: https://mazowieckie.example',
+      'Małopolskie': 'Ваш ужонд: Małopolski. Подсказка по формулярам: https://malopolskie.example',
+      'Pomorskie': 'Ваш ужонд: Pomorski. Подсказка по формулярам: https://pomorskie.example',
+      'Dolnośląskie': 'Ваш ужонд: Dolnośląski. Подсказка по формулярам: https://dolnoslaskie.example',
+      'Inne': 'Подсказки по ужондам для вашего региона: https://gov.example'
+    };
+    return map[v] || '';
+  }
+
+  // Определяем трек по основаниям (Q6)
+  function determineTrack(groundValues){
+    const has = k => groundValues.includes(k);
+    if (has('Study')) return 'study';
+    if (has('Family')) return 'family';
+    if (has('Dzialalnosc')) return 'business';
+    if (has('UoP') || has('UoD') || has('UoZ')) return 'work';
+    // дефолт — работа (чтобы не оставлять пустым)
+    return 'work';
+  }
+
   // Рендер прогресса и задач
   function renderChecklist(){
-    document.getElementById('title').innerText = 'eMigrant · Чеклист';
+    const title = st.profile?.trackLabel ? `eMigrant · Чеклист (${st.profile.trackLabel})` : 'eMigrant · Чеклист';
+    document.getElementById('title').innerText = title;
+
     const tasksDiv = document.getElementById('tasks');
     tasksDiv.innerHTML = '';
     const done = st.tasks.filter(t=>t.status==='done').length;
@@ -115,6 +245,9 @@
     document.getElementById('doneCount').innerText = done;
     document.getElementById('totalCount').innerText = total;
     document.getElementById('progressBar').style.width = Math.round(done/total*100)+'%';
+
+    // офис-хинт
+    document.getElementById('officeHint').innerText = st.profile?.voivodeship ? officeHintByVoiv(st.profile.voivodeship) : '';
 
     st.tasks.forEach(t=>{
       const card = document.createElement('div');
@@ -153,10 +286,9 @@
   }
 
   function openModule(kind){
-    // Для простоты показываем попапы и быстрые действия,
-    // без сложной логики — достаточно для MVP проверки.
+    // Заглушки модулей (как раньше)
     if(kind==='aiTranslator'){
-      alert('AI Translator: Загрузите письмо/документ → получаете перевод и краткое резюме. (В MVP-заглушке загрузка опущена)');
+      alert('AI Translator: Загрузите письмо/документ → перевод и краткое резюме. (В MVP-заглушке загрузка опущена)');
       return;
     }
     if(kind==='findSlot'){
@@ -171,7 +303,7 @@
       return;
     }
     if(kind==='photos'){
-      alert('Фото: смотрите гайд по размеру/фону. Загрузите фото (AI-проверка качества отключена в MVP).');
+      alert('Фото: гайд по размеру/фону. Загрузите фото (AI-проверка качества отключена в MVP).');
       return;
     }
     if(kind==='insurance'){
@@ -194,7 +326,7 @@
       return;
     }
     if(kind==='contract'){
-      alert('Загрузите договор (UoP/UoD/B2B). AI-проверка: NIP, даты, подписи. Можно завершить вручную.');
+      alert('Загрузите договор (UoP/UoD/UoZ/B2B). AI-проверка: NIP, даты, подписи. Можно завершить вручную.');
       return;
     }
     if(kind==='attachmentHR'){
@@ -224,26 +356,43 @@
     }
   }
 
-  // ===== Онбординг
-  function nextOnb(){
-    document.getElementById('step').innerText = '2';
-    document.getElementById('onb1').style.display='none';
-    document.getElementById('onb2').style.display='';
+  // ===== Онбординг (8 шагов)
+  function showQ(n){
+    for(let i=1;i<=8;i++){ document.getElementById('q'+i).style.display = (i===n)?'':'none' }
+    document.getElementById('step').innerText = String(n);
   }
-  function prevOnb(){
-    document.getElementById('step').innerText = '1';
-    document.getElementById('onb1').style.display='';
-    document.getElementById('onb2').style.display='none';
-  }
+  function nextQ(n){ showQ(n) }
+  function prevQ(n){ showQ(n) }
+
   function finishOnb(){
-    const tr = document.getElementById('track').value;
-    st.track = tr;
-    st.tasks = baseTasks(tr);
-    localStorage.setItem('track', tr);
+    // собираем ответы
+    const firstName = document.getElementById('firstName').value.trim();
+    const lastName = document.getElementById('lastName').value.trim();
+    const voivodeship = document.getElementById('voivodeship').value;
+    const citizenship = document.getElementById('citizenship').value;
+    const stayLength = document.getElementById('stayLength').value;
+    const currentStatus = document.getElementById('currentStatus').value;
+    const income = document.getElementById('income').value;
+    const goal = document.getElementById('goal').value;
+    const grounds = Array.from(document.querySelectorAll('.grounds'))
+      .filter(el=>el.checked)
+      .map(el=>el.value);
+
+    // определяем трек по основаниям
+    const track = determineTrack(grounds);
+    const trackLabel = track==='work'?'Работа':track==='study'?'Учёба':track==='family'?'Семья':'Бизнес';
+
+    // сохраняем профиль
+    st.profile = { firstName, lastName, voivodeship, citizenship, stayLength, currentStatus, grounds, income, goal, track, trackLabel };
+    localStorage.setItem('profile', JSON.stringify(st.profile));
+
+    st.track = track;
+    st.tasks = baseTasks(track);
+    localStorage.setItem('track', track);
     localStorage.setItem('tasks', JSON.stringify(st.tasks));
+
     document.getElementById('onb').style.display='none';
     document.getElementById('home').style.display='';
-    document.getElementById('title').innerText = 'eMigrant · Чеклист';
     renderChecklist();
   }
 
@@ -252,8 +401,9 @@
     if(st.track){
       document.getElementById('onb').style.display='none';
       document.getElementById('home').style.display='';
-      document.getElementById('title').innerText = 'eMigrant · Чеклист';
       renderChecklist();
+    } else {
+      showQ(1);
     }
   })();
 </script>
