@@ -33,6 +33,12 @@
     .pill{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:12px;color:var(--muted)}
     .spinner{width:26px;height:26px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;margin:10px auto}
     @keyframes spin{to{transform:rotate(360deg)}}
+    
+    /* Timer styles */
+    .timer-display{display:flex;justify-content:center;align-items:center;gap:20px;margin:20px 0}
+    .timer-hours,.timer-minutes{font-size:48px;font-weight:bold;color:var(--accent);text-align:center;min-width:80px}
+    .timer-label{font-size:14px;color:var(--muted);text-align:center;margin-top:4px}
+    
     .status{padding:10px;border-radius:10px;border:1px solid var(--line);background:#0c0f14}
     .status.ok{border-color:var(--ok)}
     .status.err{border-color:var(--danger)}
@@ -212,13 +218,25 @@
       <div class="small muted" style="margin-top:8px"><a href="javascript:void(0)" onclick="ctNoDoc()">У меня нет — помогите</a></div>
     </div>
 
-    <!-- экран 2: ожидание -->
+    <!-- экран 2: таймер на 24 часа -->
     <div id="ct_step2" style="display:none">
-      <h3>Анализ запущен</h3>
-      <div class="spinner"></div>
-      <div class="status" id="ct_queue_msg" style="margin-top:10px">Твой анализ будет готов в течение часа. Мы пришлём результат здесь.</div>
-      <div class="small muted" style="margin-top:12px">Ты также можешь ускорить AI и получить результат быстрее.</div>
-      <div class="row" style="margin-top:10px">
+      <h3>AI анализ запущен</h3>
+      <div class="center">
+        <div class="timer-display" id="ct_timer_display">
+          <div class="timer-hours" id="ct_timer_hours">24</div>
+          <div class="timer-label">часов</div>
+        </div>
+        <div class="timer-minutes" id="ct_timer_minutes">00</div>
+        <div class="timer-label">минут</div>
+      </div>
+      <div class="status" id="ct_queue_msg" style="margin-top:16px">
+        Твой анализ будет готов через <span id="ct_time_remaining">24 часа</span>. 
+        Мы пришлём результат здесь.
+      </div>
+      <div class="small muted" style="margin-top:12px">
+        Ты также можешь ускорить AI и получить результат быстрее.
+      </div>
+      <div class="row" style="margin-top:16px">
         <button id="ct_btn_boost" class="primary" onclick="ctBoost()">Ускоряю!</button>
       </div>
       <div class="small muted" id="ct_poll_note" style="margin-top:8px"></div>
@@ -568,8 +586,7 @@
             fileMeta: { name: ct.file.name, size: ct.file.size },
             note:'Нет подключенного backend ENDPOINTS — передано в бота через sendData'
           }));
-          // имитируем асинхронный ответ
-          fakeFinishOk();
+          // НЕ запускаем fakeFinishOk() сразу - ждем таймер на 24 часа
         }catch(e){}
       }
 
@@ -580,11 +597,93 @@
     }
   }
 
+  // Функция запуска таймера на 24 часа
+  function startContractTimer(){
+    // Устанавливаем время окончания: текущее время + 24 часа
+    const endTime = new Date().getTime() + (24 * 60 * 60 * 1000);
+    
+    // Сохраняем время окончания в localStorage
+    localStorage.setItem('contractTimerEnd', endTime.toString());
+    
+    // Запускаем обновление таймера каждую секунду
+    if(ct.timerInterval) clearInterval(ct.timerInterval);
+    ct.timerInterval = setInterval(() => {
+      updateContractTimer(endTime);
+    }, 1000);
+    
+    // Сразу обновляем таймер
+    updateContractTimer(endTime);
+    
+    console.log('Таймер контракта запущен, окончание:', new Date(endTime).toLocaleString());
+  }
+
+  // Функция обновления таймера
+  function updateContractTimer(endTime){
+    const now = new Date().getTime();
+    const timeLeft = endTime - now;
+    
+    if(timeLeft <= 0){
+      // Время истекло - показываем результат
+      clearInterval(ct.timerInterval);
+      ct.timerInterval = null;
+      
+      console.log('Таймер контракта истек, показываем результат');
+      
+      // Если нет backend, показываем фиктивный результат
+      if(!ENDPOINTS){
+        showResultScreen({status:'succeeded', result:{ ok:true, message:'AI анализ завершён. Документ проверен.' }});
+      }
+      
+      // Обновляем UI
+      el('ct_timer_hours').innerText = '00';
+      el('ct_timer_minutes').innerText = '00';
+      el('ct_time_remaining').innerText = '0 минут';
+      el('ct_queue_msg').innerText = 'Анализ завершён! Результат готов.';
+      return;
+    }
+    
+    // Вычисляем оставшееся время
+    const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+    const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+    
+    // Обновляем UI
+    el('ct_timer_hours').innerText = hours.toString().padStart(2, '0');
+    el('ct_timer_minutes').innerText = minutes.toString().padStart(2, '0');
+    
+    // Обновляем текст
+    if(hours > 0){
+      el('ct_time_remaining').innerText = `${hours} час${hours === 1 ? '' : hours < 5 ? 'а' : 'ов'} ${minutes} минут`;
+    } else {
+      el('ct_time_remaining').innerText = `${minutes} минут`;
+    }
+  }
+
   function ctBoost(){
     ct.boosted = true;
     el('ct_btn_boost').innerText = 'Приоритет повышен';
     el('ct_btn_boost').disabled = true;
     el('ct_poll_note').innerText = 'Приоритет обновлён. Результат придёт быстрее.';
+    
+    // Ускоряем таймер - сокращаем время до 1 часа
+    if(ct.timerInterval){
+      clearInterval(ct.timerInterval);
+      ct.timerInterval = null;
+    }
+    
+    // Устанавливаем новое время окончания: текущее время + 1 час
+    const endTime = new Date().getTime() + (1 * 60 * 60 * 1000);
+    localStorage.setItem('contractTimerEnd', endTime.toString());
+    
+    console.log('Таймер ускорен, новое окончание:', new Date(endTime).toLocaleString());
+    
+    // Запускаем обновление таймера каждую секунду
+    ct.timerInterval = setInterval(() => {
+      updateContractTimer(endTime);
+    }, 1000);
+    
+    // Сразу обновляем таймер
+    updateContractTimer(endTime);
+    
     // при наличии backend можно вызвать отдельный /analyze с обновлением приоритета или /priority
   }
 
@@ -651,6 +750,24 @@
       document.getElementById('onb').style.display='none';
       document.getElementById('home').style.display='';
       renderChecklist();
+      
+      // Проверяем, есть ли активный таймер контракта
+      const contractTimerEnd = localStorage.getItem('contractTimerEnd');
+      if(contractTimerEnd){
+        const endTime = parseInt(contractTimerEnd);
+        const now = new Date().getTime();
+        if(endTime > now){
+          // Таймер еще активен - восстанавливаем его
+          if(ct.timerInterval) clearInterval(ct.timerInterval);
+          ct.timerInterval = setInterval(() => {
+            updateContractTimer(endTime);
+          }, 1000);
+          updateContractTimer(endTime);
+        } else {
+          // Таймер истек - очищаем
+          localStorage.removeItem('contractTimerEnd');
+        }
+      }
     } else {
       showQ(1);
     }
