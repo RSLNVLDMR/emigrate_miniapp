@@ -48,6 +48,18 @@
     .payment-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0}
     .payment-price{font-weight:bold;color:var(--accent)}
     .payment-price.total{font-size:18px;color:var(--ok)}
+    
+    /* Photo module styles */
+    .photo-requirements{margin:16px 0}
+    .requirement-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0}
+    .requirement-value{font-weight:bold;color:var(--accent)}
+    
+    .photo-studios{margin:16px 0}
+    .studio-item{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:12px}
+    .studio-info h4{margin:0 0 8px;color:var(--text)}
+    .studio-details{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+    .studio-details span{font-size:13px;color:var(--muted)}
+    .studio-actions{display:flex;gap:8px}
   </style>
 </head>
 <body>
@@ -299,6 +311,116 @@
   </div>
 </div>
 
+<!-- ====== Фотографии — модальный модуль -->
+<div id="photos_modal" class="modal" role="dialog" aria-modal="true">
+  <div class="sheet">
+    <div class="row" style="align-items:center;margin-bottom:6px">
+      <button class="ghost" style="flex:0 0 auto;width:auto" onclick="closePhotosModal()">← Назад</button>
+      <div class="pill">Фотографии · Требования ВНЖ</div>
+      <span></span>
+    </div>
+
+    <!-- экран 1: инструкции -->
+    <div id="photos_step1">
+      <h3>Требования к фотографиям для ВНЖ</h3>
+      <div class="status" style="margin-top:16px">
+        <div class="center">
+          <div style="font-size:24px;margin-bottom:8px">📸</div>
+          <div>От тебя требуется 4 таких фотки. Найди фото ателье рядом</div>
+        </div>
+      </div>
+      
+      <div class="hr"></div>
+      
+      <div class="photo-requirements">
+        <div class="requirement-item">
+          <span>Размер:</span>
+          <span class="requirement-value">35 x 45 мм</span>
+        </div>
+        <div class="requirement-item">
+          <span>Фон:</span>
+          <span class="requirement-value">Белый</span>
+        </div>
+        <div class="requirement-item">
+          <span>Количество:</span>
+          <span class="requirement-value">4 штуки</span>
+        </div>
+        <div class="requirement-item">
+          <span>Срок действия:</span>
+          <span class="requirement-value">Не старше 6 месяцев</span>
+        </div>
+      </div>
+      
+      <div class="row" style="margin-top:20px">
+        <button class="primary" onclick="findPhotoStudios()">Найти фото ателье рядом</button>
+      </div>
+      
+      <div class="center" style="margin-top:20px">
+        <a href="javascript:void(0)" onclick="markPhotosDone()" style="text-decoration:underline;color:var(--accent)">
+          Я сделал
+        </a>
+      </div>
+    </div>
+
+    <!-- экран 2: список фотоателье -->
+    <div id="photos_step2" style="display:none">
+      <h3>Фотоателье рядом с вами</h3>
+      
+      <div class="photo-studios">
+        <div class="studio-item">
+          <div class="studio-info">
+            <h4>Foto Studio Centrum</h4>
+            <div class="studio-details">
+              <span>📍 ul. Marszałkowska 15, Warszawa</span>
+              <span>📞 +48 22 123 45 67</span>
+              <span>⏰ Пн-Пт 9:00-18:00</span>
+            </div>
+          </div>
+          <div class="studio-actions">
+            <button class="primary" onclick="callStudio('+48 22 123 45 67')">Позвонить</button>
+            <button class="ghost" onclick="openMap('ul. Marszałkowska 15, Warszawa')">Карта</button>
+          </div>
+        </div>
+        
+        <div class="studio-item">
+          <div class="studio-info">
+            <h4>Foto Express</h4>
+            <div class="studio-details">
+              <span>📍 ul. Nowy Świat 28, Warszawa</span>
+              <span>📞 +48 22 987 65 43</span>
+              <span>⏰ Пн-Сб 8:00-20:00</span>
+            </div>
+          </div>
+          <div class="studio-actions">
+            <button class="primary" onclick="callStudio('+48 22 987 65 43')">Позвонить</button>
+            <button class="ghost" onclick="openMap('ul. Nowy Świat 28, Warszawa')">Карта</button>
+          </div>
+        </div>
+        
+        <div class="studio-item">
+          <div class="studio-info">
+            <h4>Foto Pro</h4>
+            <div class="studio-details">
+              <span>📍 ul. Krakowskie Przedmieście 12, Warszawa</span>
+              <span>📞 +48 22 555 44 33</span>
+              <span>⏰ Пн-Вс 10:00-19:00</span>
+            </div>
+          </div>
+          <div class="studio-actions">
+            <button class="primary" onclick="callStudio('+48 22 555 44 33')">Позвонить</button>
+            <button class="ghost" onclick="openMap('ul. Krakowskie Przedmieście 12, Warszawa')">Карта</button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="row" style="margin-top:20px">
+        <button class="ghost" onclick="backToPhotosStep1()">Назад к требованиям</button>
+        <button class="primary" onclick="markPhotosDone()">Я сделал фотографии</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
   // ====== Telegram init
   const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
@@ -438,7 +560,7 @@
       return;
     }
     if(kind==='photos'){
-      alert('Фото: гайд по размеру/фону. Загрузите фото (AI-проверка качества отключена в MVP).');
+      openPhotosModal();
       return;
     }
     if(kind==='insurance'){
@@ -589,6 +711,61 @@
     if(ct.pollTimer){ clearInterval(ct.pollTimer); ct.pollTimer=null; }
   }
   function ctBackToHome(){ closeModal(); openChecklist(); }
+
+  // ====== Фотографии — функции модуля
+  function openPhotosModal(){
+    el('photos_modal').style.display='grid';
+    el('photos_step1').style.display='';
+    el('photos_step2').style.display='none';
+  }
+  
+  function closePhotosModal(){
+    el('photos_modal').style.display='none';
+  }
+  
+  function findPhotoStudios(){
+    el('photos_step1').style.display='none';
+    el('photos_step2').style.display='';
+  }
+  
+  function backToPhotosStep1(){
+    el('photos_step2').style.display='none';
+    el('photos_step1').style.display='';
+  }
+  
+  function markPhotosDone(){
+    // Помечаем задачу как выполненную
+    st.tasks = st.tasks.map(t=> t.id==='photos' ? {...t, status:'done'} : t);
+    localStorage.setItem('tasks', JSON.stringify(st.tasks));
+    
+    // Обновляем чеклист
+    try { renderChecklist(); } catch(e) {}
+    
+    // Закрываем модальное окно
+    closePhotosModal();
+    
+    // Показываем уведомление
+    alert('Отлично! Фотографии отмечены как выполненные. 🎉');
+  }
+  
+  function callStudio(phone){
+    // Открываем звонок
+    if(tg && tg.openTelegramLink){
+      tg.openTelegramLink(`tel:${phone}`);
+    } else {
+      window.open(`tel:${phone}`, '_blank');
+    }
+  }
+  
+  function openMap(address){
+    // Открываем карту с адресом
+    const mapUrl = `https://maps.google.com/?q=${encodeURIComponent(address)}`;
+    if(tg && tg.openTelegramLink){
+      tg.openTelegramLink(mapUrl);
+    } else {
+      window.open(mapUrl, '_blank');
+    }
+  }
 
   // enable button when file chosen
   el('ct_file').addEventListener('change', (e)=>{
