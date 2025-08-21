@@ -132,13 +132,18 @@
       background:linear-gradient(135deg,var(--accent),var(--accent-light));
       border-color:var(--accent);
       color:white;
-      box-shadow:0 2px 8px 0 rgba(37,99,235,0.25);
-      min-height:48px;
+      box-shadow:0 4px 16px 0 rgba(37,99,235,0.2);
+      min-height:52px;
+      font-weight:600;
+      font-size:16px;
+      letter-spacing:0.3px;
+      transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
     button.primary:hover{
-      transform:translateY(-2px);
-      box-shadow:0 4px 16px 0 rgba(37,99,235,0.35);
+      transform:translateY(-3px);
+      box-shadow:0 8px 25px 0 rgba(37,99,235,0.4);
+      background:linear-gradient(135deg,var(--accent-light),var(--accent));
     }
     
     button.primary:active{
@@ -194,6 +199,37 @@
     
     .ok{color:var(--ok);border-color:var(--ok);background:rgba(16,185,129,0.1)}
     .warn{color:var(--warn);border-color:var(--warn);background:rgba(245,158,11,0.1)}
+    
+    .help-link{
+      color:var(--accent);
+      text-decoration:none;
+      padding:8px 16px;
+      border-radius:20px;
+      background:rgba(37,99,235,0.08);
+      border:1px solid rgba(37,99,235,0.15);
+      transition:all 0.2s ease;
+      display:inline-block;
+    }
+    
+    .help-link:hover{
+      background:rgba(37,99,235,0.12);
+      border-color:rgba(37,99,235,0.25);
+      transform:translateY(-1px);
+      box-shadow:0 2px 8px rgba(37,99,235,0.15);
+    }
+    
+    button:disabled{
+      opacity:0.4;
+      cursor:not-allowed;
+      transform:none !important;
+    }
+    
+    button.primary:disabled{
+      background:linear-gradient(135deg,#94a3b8,#cbd5e1);
+      border-color:#94a3b8;
+      color:#475569;
+      box-shadow:0 2px 8px 0 rgba(148,163,184,0.2) !important;
+    }
     
     .bottom{
       position:fixed;
@@ -999,8 +1035,15 @@
       <div id="ct_checked_info" class="status ok" style="display:none;margin-top:10px"></div>
       <input id="ct_file" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" />
       <div class="hr"></div>
-      <button id="ct_btn_upload" class="primary" disabled onclick="ctStart()">Проверить с AI</button>
-      <div class="small muted" style="margin-top:8px"><a href="javascript:void(0)" onclick="ctNoDoc()">У меня нет — помогите</a></div>
+      <button id="ct_btn_upload" class="primary" disabled onclick="ctStart()">
+        <span style="display:flex;align-items:center;justify-content:center;gap:8px">
+          <span style="font-size:18px">🤖</span>
+          <span>Проверить с AI</span>
+        </span>
+      </button>
+      <div class="small muted" style="margin-top:12px;text-align:center">
+        <a href="javascript:void(0)" onclick="ctNoDoc()" class="help-link">У меня нет — помогите</a>
+      </div>
     </div>
 
     <!-- экран 2: дата завершения анализа -->
