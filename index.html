@@ -2,8 +2,8 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <title>eMigrant — Miniapp MVP v2.1</title>
-  <meta name="version" content="v2.1-welcome-modal-2024-12-19-20-50">
+  <title>eMigrant — Miniapp MVP</title>
+  <meta name="version" content="v1.0.1-<?php echo time(); ?>">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -359,7 +359,7 @@
       /* Telegram Mini App button optimizations */
       -webkit-tap-highlight-color: transparent !important;
       touch-action: manipulation !important;
-      min-height: 55px !important;
+      min-height: 60px !important;
     }
     
     .footer-btn:hover{
@@ -472,72 +472,6 @@
       font-weight: 500 !important;
       line-height: 1.2 !important;
       text-align: center !important;
-    }
-
-    /* Welcome Modal Styles */
-    .welcome-card {
-      text-align: center !important;
-      max-width: 500px !important;
-      margin: 0 auto !important;
-    }
-
-    .welcome-header {
-      margin-bottom: 24px !important;
-    }
-
-    .welcome-icon {
-      font-size: 48px !important;
-      margin-bottom: 16px !important;
-      display: block !important;
-    }
-
-    .welcome-header h2 {
-      color: var(--accent) !important;
-      font-size: 24px !important;
-      margin: 0 !important;
-      font-weight: 700 !important;
-    }
-
-    .welcome-content {
-      margin-bottom: 24px !important;
-    }
-
-    .welcome-text {
-      font-size: 16px !important;
-      line-height: 1.6 !important;
-      color: var(--text) !important;
-      margin-bottom: 20px !important;
-    }
-
-    .welcome-features {
-      display: flex !important;
-      flex-direction: column !important;
-      gap: 12px !important;
-      margin: 24px 0 !important;
-      text-align: left !important;
-    }
-
-    .feature-item {
-      display: flex !important;
-      align-items: center !important;
-      gap: 12px !important;
-      padding: 8px 0 !important;
-    }
-
-    .feature-icon {
-      font-size: 20px !important;
-      min-width: 24px !important;
-    }
-
-    .welcome-actions {
-      margin-top: 24px !important;
-    }
-
-    .welcome-actions button {
-      min-width: 200px !important;
-      font-size: 16px !important;
-      font-weight: 600 !important;
-      padding: 16px 24px !important;
     }
     
 
@@ -901,14 +835,14 @@
       }
       
       .footer-btn {
-        min-height: 50px !important;
+        min-height: 52px !important;
         padding: 6px 2px !important;
       }
       
       .footer-icon {
         width: 22px !important;
         height: 22px !important;
-        margin-bottom: 6px !important;
+        margin-bottom: 5px !important;
       }
       
       .icon-ai::before {
@@ -949,7 +883,7 @@
         padding: 4px 6px;
         font-size: 10px;
         gap: 4px;
-      }
+        }
         
         .photo-requirements {
           margin: 8px 0;
@@ -1190,13 +1124,6 @@
   </style>
 </head>
 <body>
-  <!-- 
-    VERCEL DEPLOYMENT TRIGGER - 2024-12-19 20:50
-    Welcome modal added with stylish design
-    Footer height adjusted for better UX
-    Version: v2.1
-    Force update: YES
-  -->
 <div class="wrap">
   <header><h2 id="title">eMigrant · Онбординг</h2></header>
 
@@ -1543,7 +1470,7 @@
           <div id="załącznik_availability_warning" style="display:none; margin-bottom: 16px; padding: 12px; background: var(--warn); color: white; border-radius: 8px; text-align: center;">
             <div class="small" style="margin-bottom: 8px;">⚠️ Внимание</div>
             <div class="small">Шаблон для этого воеводства пока не готов. Будет использован шаблон Мазовецкого воеводства.</div>
-          </div>
+        </div>
         
         <button id="załącznik_btn_download" class="primary" onclick="załącznikDownloadTemplate()">
           <span style="display:flex;align-items:center;justify-content:center;gap:8px">
@@ -2153,57 +2080,8 @@
   </div>
 </div>
 
-  <!-- ====== Модальное окно приветствия -->
-  <div id="welcome_modal" class="modal" role="dialog" aria-modal="true">
-    <div class="sheet">
-      <div class="card welcome-card">
-        <div class="welcome-header">
-          <div class="welcome-icon">🌟</div>
-          <h2>Добро пожаловать в eMigrant!</h2>
-        </div>
-        
-        <div class="welcome-content">
-          <p class="welcome-text">
-            Мы — команда мигрантов, которые уже получили по 4-5 карт побыту и знаем, 
-            как сложно разобраться во всех документах и процедурах.
-          </p>
-          
-          <div class="welcome-features">
-            <div class="feature-item">
-              <span class="feature-icon">✅</span>
-              <span>Проверенные шаблоны документов</span>
-            </div>
-            <div class="feature-item">
-              <span class="feature-icon">🤖</span>
-              <span>AI-проверка ваших документов</span>
-            </div>
-            <div class="feature-item">
-              <span class="feature-icon">📋</span>
-              <span>Пошаговые инструкции</span>
-            </div>
-            <div class="feature-item">
-              <span class="feature-icon">💬</span>
-              <span>Поддержка от опытных мигрантов</span>
-            </div>
-          </div>
-          
-          <p class="welcome-text">
-            В следующем шаге мы зададим вам несколько вопросов, чтобы лучше понять, 
-            как именно помочь в вашем случае.
-          </p>
-        </div>
-        
-        <div class="welcome-actions">
-          <button class="primary" onclick="startOnboarding()">
-            Начать знакомство
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ====== Модальное окно Book a slot -->
-  <div id="book_slot_modal" class="modal" role="dialog" aria-modal="true">
+<!-- ====== Модальное окно Book a slot -->
+<div id="book_slot_modal" class="modal" role="dialog" aria-modal="true">
   <div class="sheet">
     <div class="card">
       <div class="row" style="align-items:center;margin-bottom:16px">
@@ -2448,8 +2326,8 @@
       </button>
     `;
     
-    console.log('Создаем новый футер с 3 кнопками и CSS иконками (v2.0):', footer.innerHTML);
-    // Vercel deployment trigger - welcome modal added - 2024-12-19 20:45
+    console.log('Создаем новый футер с 3 кнопками и CSS иконками:', footer.innerHTML);
+    // Vercel deployment trigger - CSS icons added
     
     // Добавляем футер после основного контента
     const wrap = document.querySelector('.wrap');
@@ -2962,41 +2840,6 @@
       const wrap = document.querySelector('.wrap');
       if(wrap) wrap.classList.remove('no-header');
     }, 300);
-  }
-
-  // ====== Welcome modal functions
-  function openWelcomeModal(){
-    console.log('openWelcomeModal вызвана');
-    const modal = el('welcome_modal');
-    console.log('Найден модальный элемент welcome_modal:', modal);
-    if (!modal) {
-      console.error('Модальный элемент welcome_modal не найден!');
-      return;
-    }
-    modal.style.display='grid';
-    setTimeout(() => {
-      modal.classList.add('show');
-      console.log('Модальное окно приветствия открыто');
-    }, 10);
-  }
-
-  function closeWelcomeModal(){
-    const modal = el('welcome_modal');
-    modal.classList.remove('show');
-    setTimeout(() => {
-      modal.style.display='none';
-    }, 300);
-  }
-
-  function startOnboarding(){
-    // Закрываем окно приветствия
-    closeWelcomeModal();
-    
-    // Отмечаем что приветствие уже показано
-    localStorage.setItem('welcomeShown', 'true');
-    
-    // Начинаем онбординг
-    showQ(1);
   }
 
   // ====== Book a slot modal functions
@@ -4398,9 +4241,6 @@
   
   function closeBookSlotOnBackdrop(e){ if(e.target.id==='book_slot_modal') closeBookSlotModal(); }
   document.getElementById('book_slot_modal').addEventListener('click', closeBookSlotOnBackdrop);
-
-  function closeWelcomeOnBackdrop(e){ if(e.target.id==='welcome_modal') closeWelcomeModal(); }
-  document.getElementById('welcome_modal').addEventListener('click', closeWelcomeOnBackdrop);
   
   document.getElementById('ct_btn_upload').disabled = true; // init
   document.getElementById('załącznik_btn_upload').disabled = true; // init
@@ -5392,15 +5232,6 @@
     const allFooters = document.querySelectorAll('.bottom');
     console.log('При инициализации найдено футеров:', allFooters.length);
     allFooters.forEach(footer => footer.remove());
-    
-    // Проверяем, показывали ли уже окно приветствия
-    const welcomeShown = localStorage.getItem('welcomeShown');
-    if (!welcomeShown) {
-      // Показываем окно приветствия только один раз
-      setTimeout(() => {
-        openWelcomeModal();
-      }, 500);
-    }
     
     if(st.track){
       document.getElementById('onb').style.display='none';
