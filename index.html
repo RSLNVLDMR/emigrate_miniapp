@@ -39,6 +39,9 @@
     
     .wrap{max-width:100%;margin:0 auto;padding:16px 16px 100px;padding-top:80px}
     
+    /* Когда хедер скрыт, убираем отступ сверху */
+    .wrap.no-header{padding-top:16px}
+    
     .card{
       background:var(--card);
       border:1px solid var(--line);
@@ -492,6 +495,10 @@
     @media (max-width: 480px) {
       .wrap {
         padding: 76px 12px 100px;
+      }
+      
+      .wrap.no-header {
+        padding: 16px 12px 100px;
       }
       
       .card {
@@ -1583,6 +1590,13 @@
   function el(id){ return document.getElementById(id); }
   function openContractModal(){
     ct = { file:null, fileMeta:null, jobId:null, pollTimer:null, boosted:false };
+    
+    // Скрываем хедер и убираем отступ сверху
+    const header = document.querySelector('header');
+    const wrap = document.querySelector('.wrap');
+    if(header) header.style.display = 'none';
+    if(wrap) wrap.classList.add('no-header');
+    
     const modal = el('modal');
     modal.style.display='grid';
     setTimeout(() => {
@@ -1637,10 +1651,24 @@
     modal.classList.remove('show');
     setTimeout(() => {
       modal.style.display='none';
-    if(ct.pollTimer){ clearInterval(ct.pollTimer); ct.pollTimer=null; }
+      if(ct.pollTimer){ clearInterval(ct.pollTimer); ct.pollTimer=null; }
+      
+      // Показываем хедер обратно и возвращаем отступ сверху
+      const header = document.querySelector('header');
+      const wrap = document.querySelector('.wrap');
+      if(header) header.style.display = '';
+      if(wrap) wrap.classList.remove('no-header');
     }, 300);
   }
-  function ctBackToHome(){ closeModal(); openChecklist(); }
+  function ctBackToHome(){ 
+    closeModal(); 
+    // Показываем хедер обратно перед открытием чеклиста
+    const header = document.querySelector('header');
+    const wrap = document.querySelector('.wrap');
+    if(header) header.style.display = '';
+    if(wrap) wrap.classList.remove('no-header');
+    openChecklist(); 
+  }
   
   function ctStartOver(){
     // Сбрасываем статус задачи если нужно
@@ -1684,6 +1712,12 @@
 
   // ====== Фотографии — функции модуля
   function openPhotosModal(){
+    // Скрываем хедер и убираем отступ сверху
+    const header = document.querySelector('header');
+    const wrap = document.querySelector('.wrap');
+    if(header) header.style.display = 'none';
+    if(wrap) wrap.classList.add('no-header');
+    
     const modal = el('photos_modal');
     modal.style.display='grid';
     setTimeout(() => {
@@ -1720,6 +1754,12 @@
       el('photos_step1').style.display='none';
       el('photos_step2').style.display='none';
       el('photos_step3').style.display='none';
+      
+      // Показываем хедер обратно и возвращаем отступ сверху
+      const header = document.querySelector('header');
+      const wrap = document.querySelector('.wrap');
+      if(header) header.style.display = '';
+      if(wrap) wrap.classList.remove('no-header');
     }, 300);
   }
   
