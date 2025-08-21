@@ -1084,6 +1084,7 @@
       </div>
       <div style="margin-top:20px">
         <button class="primary" onclick="ctBackToHome()" style="width:100%;margin-bottom:12px">Вернуться в главное меню</button>
+        <button class="ghost" onclick="ctStartOver()" style="width:100%;margin-bottom:12px">Загрузить новый документ</button>
         <button class="ghost" onclick="closeModal()" style="width:100%">Остаться здесь</button>
       </div>
     </div>
@@ -1625,25 +1626,49 @@
     setTimeout(() => {
       modal.classList.add('show');
     }, 10);
-    el('ct_step1').style.display='';
-    el('ct_step2').style.display='none';
-    el('ct_step3').style.display='none';
-    el('ct_step4') && (el('ct_step4').style.display='none');
-    // показать отметку если уже проверено
-    try{
-      const task = (st.tasks||[]).find(t=>t.id==='contract');
-      const info = el('ct_checked_info');
-      if(task && task.status==='done'){
-        const ts = localStorage.getItem('contractCheckedAt');
-        const dateStr = ts ? new Date(Number(ts)).toLocaleString() : new Date().toLocaleString();
-        info.style.display='block';
-        info.innerText = `Документ проверен: ${dateStr}`;
-      } else {
-        if(info){ info.style.display='none'; info.innerText=''; }
-      }
-    }catch(e){}
-    el('ct_btn_upload').disabled = true;
-    el('ct_file').value = '';
+    
+    // Проверяем статус задачи
+    const task = (st.tasks||[]).find(t=>t.id==='contract');
+    
+    if(task && task.status==='inreview'){
+      // Если документ был проанализирован но есть проблемы - показываем результат
+      el('ct_step1').style.display='none';
+      el('ct_step2').style.display='none';
+      el('ct_step3').style.display='none';
+      el('ct_step4').style.display='';
+      // Показываем результат с красными флагами
+      showRedFlagsResult();
+    } else if(task && task.status==='done'){
+      // Если документ уже проверен успешно - показываем результат
+      el('ct_step1').style.display='none';
+      el('ct_step2').style.display='none';
+      el('ct_step3').style.display='none';
+      el('ct_step4').style.display='';
+      // Показываем результат успеха
+      showSuccessResult();
+    } else {
+      // Обычное состояние - показываем первый экран
+      el('ct_step1').style.display='';
+      el('ct_step2').style.display='none';
+      el('ct_step3').style.display='none';
+      el('ct_step4') && (el('ct_step4').style.display='none');
+      
+      // показать отметку если уже проверено
+      try{
+        const info = el('ct_checked_info');
+        if(task && task.status==='done'){
+          const ts = localStorage.getItem('contractCheckedAt');
+          const dateStr = ts ? new Date(Number(ts)).toLocaleString() : new Date().toLocaleString();
+          info.style.display='block';
+          info.innerText = `Документ проверен: ${dateStr}`;
+        } else {
+          if(info){ info.style.display='none'; info.innerText=''; }
+        }
+      }catch(e){}
+      
+      el('ct_btn_upload').disabled = true;
+      el('ct_file').value = '';
+    }
   }
   function closeModal(){
     const modal = el('modal');
@@ -1654,6 +1679,32 @@
     }, 300);
   }
   function ctBackToHome(){ closeModal(); openChecklist(); }
+  
+  function ctStartOver(){
+    // Сбрасываем статус задачи если нужно
+    const task = st.tasks.find(t => t.id === 'contract');
+    if(task && task.status === 'inreview'){
+      st.tasks = st.tasks.map(t=> t.id==='contract' ? {...t, status:'todo'} : t);
+      localStorage.setItem('tasks', JSON.stringify(st.tasks));
+      // Обновляем чеклист
+      try { renderChecklist(); } catch(e) {}
+    }
+    
+    // Возвращаемся к первому экрану
+    el('ct_step4').style.display='none';
+    el('ct_step3').style.display='none';
+    el('ct_step2').style.display='none';
+    el('ct_step1').style.display='';
+    
+    // Сбрасываем состояние
+    ct = { file:null, fileMeta:null, jobId:null, pollTimer:null, boosted:false };
+    el('ct_btn_upload').disabled = true;
+    el('ct_file').value = '';
+    
+    // Скрываем информацию о предыдущей проверке
+    const info = el('ct_checked_info');
+    if(info){ info.style.display='none'; info.innerText=''; }
+  }
 
   // ====== Фотографии — функции модуля
   function openPhotosModal(){
@@ -1874,6 +1925,11 @@
     el('ct_step3').style.display='none';
     el('ct_step4').style.display='none';
     el('ct_poll_note').innerText = '';
+    
+    // Запускаем таймер на 24 часа если нет backend
+    if(!ENDPOINTS){
+      startContractTimer();
+    }
 
     try{
       // 1) загрузка файла
@@ -2142,8 +2198,11 @@
         <button class="primary" onclick="showDetailedReport()" style="width:100%;margin-bottom:8px">
           Узнать что не так
         </button>
-        <button class="ghost" onclick="ignoreRedFlags()" style="width:100%">
+        <button class="ghost" onclick="ignoreRedFlags()" style="width:100%;margin-bottom:8px">
           Проигнорировать
+        </button>
+        <button class="ghost" onclick="ctStartOver()" style="width:100%">
+          Загрузить другой документ
         </button>
       </div>
     `;
