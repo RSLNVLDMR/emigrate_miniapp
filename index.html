@@ -2034,11 +2034,23 @@
   }
 
   function openZałącznikModal(){
-    el('załącznik_modal').style.display='block';
+    // Скрываем хедер и убираем отступ сверху
     const header = document.querySelector('header');
-    if(header) header.style.display = 'none';
     const wrap = document.querySelector('.wrap');
+    if(header) header.style.display = 'none';
     if(wrap) wrap.classList.add('no-header');
+    
+    const modal = el('załącznik_modal');
+    modal.style.display='grid';
+    setTimeout(() => {
+      modal.classList.add('show');
+    }, 10);
+    
+    // Сначала скрываем все экраны
+    el('załącznik_step1').style.display='none';
+    el('załącznik_step2').style.display='none';
+    el('załącznik_step3').style.display='none';
+    el('załącznik_step4').style.display='none';
     
     // Проверяем статус задачи załącznik
     const task = st.tasks.find(t => t.id === 'załącznik');
@@ -2058,11 +2070,37 @@
   }
 
   function closeZałącznikModal(){
-    el('załącznik_modal').style.display='none';
-    const header = document.querySelector('header');
-    if(header) header.style.display = 'block';
+    const modal = el('załącznik_modal');
+    modal.classList.remove('show');
+    setTimeout(() => {
+      modal.style.display='none';
+      
+      // Сбрасываем все экраны для следующего открытия
+      el('załącznik_step1').style.display='none';
+      el('załącznik_step2').style.display='none';
+      el('załącznik_step3').style.display='none';
+      el('załącznik_step4').style.display='none';
+      
+      // Очищаем таймер если есть
+      if(załącznik.pollTimer){ clearInterval(załącznik.pollTimer); załącznik.pollTimer=null; }
+      
+      // Очищаем состояние załącznik
+      załącznik = { file:null, fileMeta:null, jobId:null, pollTimer:null, boosted:false };
+      
+      // Сбрасываем поля формы
+      el('załącznik_btn_upload').disabled = true;
+      el('załącznik_file').value = '';
+      
+      // Скрываем информацию о проверке
+      const info = el('załącznik_checked_info');
+      if(info){ info.style.display='none'; info.innerText=''; }
+      
+      // Показываем хедер обратно и возвращаем отступ сверху
+      const header = document.querySelector('header');
       const wrap = document.querySelector('.wrap');
+      if(header) header.style.display = '';
       if(wrap) wrap.classList.remove('no-header');
+    }, 300);
   }
   
   function findPhotoStudios(){
@@ -2871,6 +2909,10 @@
   // ====== Модалка — открытие и доступность кнопки
   function closeOnBackdrop(e){ if(e.target.id==='modal') closeModal(); }
   document.getElementById('modal').addEventListener('click', closeOnBackdrop);
+  
+  function closeZałącznikOnBackdrop(e){ if(e.target.id==='załącznik_modal') closeZałącznikModal(); }
+  document.getElementById('załącznik_modal').addEventListener('click', closeZałącznikOnBackdrop);
+  
   document.getElementById('ct_btn_upload').disabled = true; // init
   document.getElementById('załącznik_btn_upload').disabled = true; // init
 
