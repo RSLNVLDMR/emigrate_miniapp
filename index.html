@@ -1296,22 +1296,22 @@
   // ====== Voivodeship hint
   function officeHintByVoiv(v){
     const map = {
-      'Mazowieckie': 'Ваш ужонд: Mazowiecki Urząd Wojewódzki w Warszawie, pl. Bankowy 3/5, 00-950 Warszawa. Сайт: gov.pl',
-      'Małopolskie': 'Ваш ужонд: Małopolski Urząd Wojewódzki w Krakowie, Wydział Spraw Cudzoziemców, ul. Przy Rondzie 6, 31-547 Kraków. Сайт: malopolska.uw.gov.pl',
-      'Pomorskie': 'Ваш ужонд: Pomorski Urząd Wojewódzki w Gdańsku, ul. Okopowa 21/27, 80-810 Gdańsk. Сайт: gov.pl (Важно: отправлять документы только на этот адрес)',
-      'Dolnośląskie': 'Ваш ужонд: Dolnośląski Urząd Wojewódzki we Wrocławiu, pl. Powstańców Warszawy 1, 50-153 Wrocław. Сайт: gov.pl',
-      'Kujawsko-Pomorskie': 'Ваш ужонд: Kujawsko-Pomorski Urząd Wojewódzki w Bydgoszczy, ul. Jagiellońska 3, 85-950 Bydgoszcz. Сайт: gov.pl',
-      'Lubelskie': 'Ваш ужонд: Lubelski Urząd Wojewódzki w Lublinie, ul. Spokojna 4, 20-914 Lublin. Сайт: gov.pl (с пометкой «Wydział Spraw Obywatelskich i Cudzoziemców»)',
-      'Lubuskie': 'Ваш ужонд: Lubuski Urząd Wojewódzki w Gorzowie Wielkopolskim, ul. Jagiellończyka 8, 66-400 Gorzów Wielkopolski. Сайт: gov.pl',
-      'Łódzkie': 'Ваш ужонд: Łódzki Urząd Wojewódzki w Łodzi, ul. Piotrkowska 104, 90-926 Łódź. Сайт: gov.pl',
-      'Opolskie': 'Ваш ужонд: Opolski Urząd Wojewódzki w Opolu, Wydział Spraw Obywatelskich i Cudzoziemców, ul. Piastowska 14, 45-082 Opole. Сайт: cic.wup.opole.pl',
-      'Podkarpackie': 'Ваш ужонд: Podkarpacki Urząd Wojewódzki w Rzeszowie, ul. Grunwaldzka 15, 35-959 Rzeszów. Сайт: gov.pl',
-      'Podlaskie': 'Ваш ужонд: Podlaski Urząd Wojewódzki w Białymstoku, ul. Mickiewicza 3, 15-213 Białystok. Сайт: gov.pl',
-      'Śląskie': 'Ваш ужонд: Śląski Urząd Wojewódzki w Katowicach, Wydział Spraw Cudzoziemców, ul. Jagiellońska 25, 40-032 Katowice. Сайт: radio90.pl',
-      'Świętokrzyskie': 'Ваш ужонд: Świętokrzyski Urząd Wojewódzki w Kielcach, al. IX Wieków Kielc 3, 25-516 Kielce. Сайт: gov.pl',
-      'Warmińsko-Mazurskie': 'Ваш ужонд: Warmińsko-Mazurski Urząd Wojewódzki w Olsztynie, Al. Marsz. J. Piłsudskiego 7/9, 10-575 Olsztyn. Сайт: gov.pl',
-      'Wielkopolskie': 'Ваш ужонд: Wielkopolski Urząd Wojewódzki w Poznaniu, al. Niepodległości 16/18, 61-713 Poznań. Сайт: nabory.kprm.gov.pl',
-      'Zachodniopomorskie': 'Ваш ужонд: Zachodniopomorski Urząd Wojewódzki w Szczecinie, ul. Wały Chrobrego 4, 70-502 Szczecin. Сайт: gov.pl',
+      'Mazowieckie': 'Ваш ужонд: Mazowiecki Urząd Wojewódzki w Warszawie, pl. Bankowy 3/5, 00-950 Warszawa',
+      'Małopolskie': 'Ваш ужонд: Małopolski Urząd Wojewódzki w Krakowie, Wydział Spraw Cudzoziemców, ul. Przy Rondzie 6, 31-547 Kraków',
+      'Pomorskie': 'Ваш ужонд: Pomorski Urząd Wojewódzki w Gdańsku, ul. Okopowa 21/27, 80-810 Gdańsk (Важно: отправлять документы только на этот адрес)',
+      'Dolnośląskie': 'Ваш ужонд: Dolnośląski Urząd Wojewódzki we Wrocławiu, pl. Powstańców Warszawy 1, 50-153 Wrocław',
+      'Kujawsko-Pomorskie': 'Ваш ужонд: Kujawsko-Pomorski Urząd Wojewódzki w Bydgoszczy, ul. Jagiellońska 3, 85-950 Bydgoszcz',
+      'Lubelskie': 'Ваш ужонд: Lubelski Urząd Wojewódzki w Lublinie, ul. Spokojna 4, 20-914 Lublin (с пометкой «Wydział Spraw Obywatelskich i Cudzoziemców»)',
+      'Lubuskie': 'Ваш ужонд: Lubuski Urząd Wojewódzki w Gorzowie Wielkopolskim, ul. Jagiellończyka 8, 66-400 Gorzów Wielkopolski',
+      'Łódzkie': 'Ваш ужонд: Łódzki Urząd Wojewódzki w Łodzi, ul. Piotrkowska 104, 90-926 Łódź',
+      'Opolskie': 'Ваш ужонд: Opolski Urząd Wojewódzki w Opolu, Wydział Spraw Obywatelskich i Cudzoziemców, ul. Piastowska 14, 45-082 Opole',
+      'Podkarpackie': 'Ваш ужонд: Podkarpacki Urząd Wojewódzki w Rzeszowie, ul. Grunwaldzka 15, 35-959 Rzeszów',
+      'Podlaskie': 'Ваш ужонд: Podlaski Urząd Wojewódzki w Białymstoku, ul. Mickiewicza 3, 15-213 Białystok',
+      'Śląskie': 'Ваш ужонд: Śląski Urząd Wojewódzki w Katowicach, Wydział Spraw Cudzoziemców, ul. Jagiellońska 25, 40-032 Katowice',
+      'Świętokrzyskie': 'Ваш ужонд: Świętokrzyski Urząd Wojewódzki w Kielcach, al. IX Wieków Kielc 3, 25-516 Kielce',
+      'Warmińsko-Mazurskie': 'Ваш ужонд: Warmińsko-Mazurski Urząd Wojewódzki w Olsztynie, Al. Marsz. J. Piłsudskiego 7/9, 10-575 Olsztyn',
+      'Wielkopolskie': 'Ваш ужонд: Wielkopolski Urząd Wojewódzki w Poznaniu, al. Niepodległości 16/18, 61-713 Poznań',
+      'Zachodniopomorskie': 'Ваш ужонд: Zachodniopomorski Urząd Wojewódzki w Szczecinie, ul. Wały Chrobrego 4, 70-502 Szczecin',
       'Inne': 'Подсказки по ужондам для вашего региона: https://gov.example'
     };
     return map[v] || '';
