@@ -3260,6 +3260,9 @@
         <button class="primary" onclick="showZałącznikDetailedReport()" style="width:100%;margin-bottom:8px">
           Узнать что не так
         </button>
+        <button class="secondary" onclick="contactZałącznikSupport()" style="width:100%;margin-bottom:8px">
+          Написать в поддержку
+        </button>
         <button class="ghost" onclick="ignoreZałącznikRedFlags()" style="width:100%;margin-bottom:8px">
           Проигнорировать
         </button>
@@ -3274,6 +3277,59 @@
     localStorage.setItem('tasks', JSON.stringify(st.tasks));
     // Обновляем чеклист
     try { renderChecklist(); } catch(e) {}
+  }
+  
+  // Функция показа детального отчета для załącznik
+  function showZałącznikDetailedReport(){
+    el('załącznik_result_title').innerText = 'Детальный отчет по załącznik';
+    el('załącznik_result_box').className = 'status err';
+    el('załącznik_result_box').innerHTML = `
+      <div style="margin-bottom:16px">
+        <h4>Проблемы в вашем załącznik:</h4>
+        <div style="margin:8px 0;padding:8px;background:#0c0f14;border-radius:6px">
+          <strong>Проблема 1:</strong> Неполная информация о работодателе
+        </div>
+        <div style="margin:8px 0;padding:8px;background:#0c0f14;border-radius:6px">
+          <strong>Проблема 2:</strong> Отсутствует указание на тип договора
+        </div>
+        <div style="margin:8px 0;padding:8px;background:#0c0f14;border-radius:6px">
+          <strong>Проблема 3:</strong> Не указан точный адрес рабочего места
+        </div>
+      </div>
+      <div style="text-align:center">
+        <button class="primary" onclick="contactZałącznikSupport()" style="width:100%;margin-bottom:8px">
+          Написать в поддержку
+        </button>
+        <button class="ghost" onclick="showZałącznikRedFlagsResult()" style="width:100%">
+          Назад к результату
+        </button>
+      </div>
+    `;
+  }
+  
+  // Функция связи с поддержкой для załącznik
+  function contactZałącznikSupport(){
+    // Закрываем модальное окно
+    closeZałącznikModal();
+    
+    // Открываем чат в Telegram с готовым сообщением
+    if(tg && tg.openTelegramLink){
+      // Формируем готовое сообщение
+      const message = encodeURIComponent('Здравствуйте, мне нужна помощь с документом Załącznik nr1.');
+      
+      // Открываем чат с пользователем @emigrate_support
+      const chatUrl = `https://t.me/emigrate_support?text=${message}`;
+      
+      try {
+        tg.openTelegramLink(chatUrl);
+      } catch(e) {
+        // Fallback: открываем в браузере
+        window.open(chatUrl, '_blank');
+      }
+    } else {
+      // Если Telegram Web App недоступен, показываем инструкцию
+      alert('Здравствуйте, мне нужна помощь с документом Załącznik nr1.\n\nНапишите нам в Telegram: @emigrate_support');
+    }
   }
   
   // Функция показа детального отчета
