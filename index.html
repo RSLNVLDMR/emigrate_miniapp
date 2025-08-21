@@ -1198,6 +1198,17 @@
       <h3>Скачайте шаблон для вашего воеводства</h3>
       <div class="small">Выберите ваше воеводство и скачайте соответствующий шаблон</div>
       
+      <div class="small muted" style="margin: 16px 0; padding: 12px; background: var(--bg); border-radius: 8px;">
+        <div style="margin-bottom: 8px;">💡 Инструкция:</div>
+        <div style="font-size: 13px; line-height: 1.4;">
+          1. Выберите ваше воеводство из списка<br>
+          2. Нажмите кнопку "Скачать шаблон"<br>
+          3. Если автоматическое скачивание не работает, используйте ручную ссылку ниже
+        </div>
+      </div>
+      
+
+      
       <div class="voivodeship-select" style="margin: 20px 0">
         <label for="załącznik_voivodeship" style="display: block; margin-bottom: 8px; font-weight: 600;">Выберите ваше воеводство:</label>
         <select id="załącznik_voivodeship" onchange="załącznikUpdateTemplate()">
@@ -1219,22 +1230,75 @@
           <option value="Wielkopolskie">Великопольское</option>
           <option value="Zachodniopomorskie">Западно-Поморское</option>
         </select>
+        
+        <div class="small muted" style="margin-top: 8px; padding: 8px; background: var(--bg); border-radius: 6px;">
+          <div style="margin-bottom: 4px;">📋 Доступные шаблоны:</div>
+          <div style="font-size: 12px; line-height: 1.4;">
+            ✅ Нижнесилезское, Люблинское, Лодзинское, Малопольское, Мазовецкое, Опольское, Подкарпатское, Свентокшиское, Великопольское<br>
+            ⏳ Остальные воеводства - используйте Мазовецкий шаблон
+          </div>
+        </div>
       </div>
       
-      <div id="załącznik_template_info" style="display:none" class="template-info">
-        <div class="template-details" style="background: var(--bg); padding: 16px; border-radius: 12px; margin-bottom: 16px;">
-          <h4 style="margin: 0 0 12px 0;">Шаблон для <span id="załącznik_voiv_name"></span></h4>
-          <p style="margin: 8px 0;">Файл: <span id="załącznik_template_file"></span></p>
-          <p style="margin: 8px 0;">Размер: <span id="załącznik_template_size"></span></p>
+              <div id="załącznik_template_info" style="display:none" class="template-info">
+          <div class="template-details" style="background: var(--bg); padding: 16px; border-radius: 12px; margin-bottom: 16px;">
+            <h4 style="margin: 0 0 12px 0;">Шаблон для <span id="załącznik_voiv_name"></span></h4>
+            <p style="margin: 8px 0;">Файл: <span id="załącznik_template_file"></span></p>
+            <p style="margin: 8px 0;">Размер: <span id="załącznik_template_size"></span></p>
+          </div>
+          
+          <div id="załącznik_availability_warning" style="display:none; margin-bottom: 16px; padding: 12px; background: var(--warn); color: white; border-radius: 8px; text-align: center;">
+            <div class="small" style="margin-bottom: 8px;">⚠️ Внимание</div>
+            <div class="small">Шаблон для этого воеводства пока не готов. Будет использован шаблон Мазовецкого воеводства.</div>
+          </div>
+          
+          <button id="załącznik_btn_download" class="primary" onclick="załącznikDownloadTemplate()">
+            <span style="display:flex;align-items:center;justify-content:center;gap:8px">
+              <span style="font-size:18px">📥</span>
+              <span>Скачать шаблон</span>
+            </span>
+          </button>
+          
+                  <div id="załącznik_download_status" style="display:none; margin-top: 12px; padding: 12px; background: var(--bg); border-radius: 8px; text-align: center;">
+          <div class="small" style="margin-bottom: 8px;">Статус скачивания:</div>
+          <div id="załącznik_status_text" class="small muted">Проверяем файл...</div>
+          
+
         </div>
-        
-        <button id="załącznik_btn_download" class="primary" onclick="załącznikDownloadTemplate()">
-          <span style="display:flex;align-items:center;justify-content:center;gap:8px">
-            <span style="font-size:18px">📥</span>
-            <span>Скачать шаблон</span>
-          </span>
-        </button>
-      </div>
+          
+                  <div id="załącznik_manual_download" style="display:none; margin-top: 12px;">
+          <div class="small muted" style="margin-bottom: 8px;">Если автоматическое скачивание не работает:</div>
+          <a id="załącznik_manual_link" href="#" target="_blank" class="ghost" style="display: inline-block; text-decoration: none; padding: 8px 16px; border: 1px solid var(--line); border-radius: 8px;">
+            <span style="display:flex;align-items:center;justify-content:center;gap:8px">
+              <span style="font-size:16px">🔗</span>
+              <span>Открыть в новой вкладке</span>
+            </span>
+          </a>
+          
+          <div class="small muted" style="margin-top: 8px; padding: 8px; background: var(--bg); border-radius: 6px;">
+            <div style="margin-bottom: 4px;">🔧 Решение:</div>
+            <div style="font-size: 12px; line-height: 1.4;">
+              Нажмите на ссылку выше, затем в новой вкладке нажмите правой кнопкой мыши на PDF и выберите "Сохранить как..."
+            </div>
+          </div>
+          
+          <div class="small muted" style="margin-top: 8px; padding: 8px; background: var(--bg); border-radius: 6px;">
+            <div style="margin-bottom: 4px;">📱 Для мобильных:</div>
+            <div style="font-size: 12px; line-height: 1.4;">
+              Нажмите и удерживайте ссылку, выберите "Сохранить ссылку как..."
+            </div>
+          </div>
+          
+          <div class="small muted" style="margin-top: 8px; padding: 8px; background: var(--bg); border-radius: 6px;">
+            <div style="margin-bottom: 4px;">✅ Улучшения:</div>
+            <div style="font-size: 12px; line-height: 1.4;">
+              Исправлено кодирование URL для правильной работы с польскими символами
+            </div>
+          </div>
+          
+
+        </div>
+        </div>
       
       <div class="small muted" style="margin-top:12px;text-align:center">
         <a href="javascript:void(0)" onclick="załącznikNoDoc()" class="help-link">У меня нет — помогите</a>
@@ -2163,6 +2227,22 @@
     el('załącznik_step3').style.display='none';
     el('załącznik_step4').style.display='none';
     
+    // Инициализируем состояния скачивания
+    const downloadStatus = document.getElementById('załącznik_download_status');
+    const statusText = document.getElementById('załącznik_status_text');
+    const manualDownload = document.getElementById('załącznik_manual_download');
+    const downloadBtn = document.getElementById('załącznik_btn_download');
+    const availabilityWarning = document.getElementById('załącznik_availability_warning');
+    
+    if (downloadStatus) downloadStatus.style.display = 'none';
+    if (statusText) statusText.textContent = 'Проверяем файл...';
+    if (manualDownload) manualDownload.style.display = 'none';
+    if (availabilityWarning) availabilityWarning.style.display = 'none';
+    if (downloadBtn) {
+      downloadBtn.disabled = false;
+      downloadBtn.innerHTML = '<span style="display:flex;align-items:center;justify-content:center;gap:8px"><span style="font-size:18px">📥</span><span>Скачать шаблон</span></span>';
+    }
+    
     // Проверяем статус задачи załącznik
     const task = st.tasks.find(t => t.id === 'załącznik');
     if(task && task.status === 'inreview'){
@@ -2192,6 +2272,27 @@
       el('załącznik_step3').style.display='none';
       el('załącznik_step4').style.display='none';
       el('załącznik_step5').style.display='none';
+      
+      // Сбрасываем статус скачивания
+      const downloadStatus = document.getElementById('załącznik_download_status');
+      const statusText = document.getElementById('załącznik_status_text');
+      if (downloadStatus) downloadStatus.style.display = 'none';
+      if (statusText) statusText.textContent = 'Проверяем файл...';
+      
+      // Скрываем ручную ссылку для скачивания
+      const manualDownload = document.getElementById('załącznik_manual_download');
+      if (manualDownload) manualDownload.style.display = 'none';
+      
+      // Скрываем предупреждение о недоступности
+      const availabilityWarning = document.getElementById('załącznik_availability_warning');
+      if (availabilityWarning) availabilityWarning.style.display = 'none';
+      
+      // Сбрасываем кнопку скачивания
+      const downloadBtn = document.getElementById('załącznik_btn_download');
+      if (downloadBtn) {
+        downloadBtn.disabled = false;
+        downloadBtn.innerHTML = '<span style="display:flex;align-items:center;justify-content:center;gap:8px"><span style="font-size:18px">📥</span><span>Скачать шаблон</span></span>';
+      }
       
       // Очищаем таймер если есть
       if(załącznik.pollTimer){ clearInterval(załącznik.pollTimer); załącznik.pollTimer=null; }
@@ -2552,6 +2653,8 @@
     const voivName = document.getElementById('załącznik_voiv_name');
     const templateFile = document.getElementById('załącznik_template_file');
     const templateSize = document.getElementById('załącznik_template_size');
+    const manualDownload = document.getElementById('załącznik_manual_download');
+    const manualLink = document.getElementById('załącznik_manual_link');
     
     if(voivodeship){
       // Показываем информацию о шаблоне
@@ -2560,17 +2663,104 @@
       // Устанавливаем название воеводства
       voivName.textContent = voivodeship;
       
-      // Устанавливаем информацию о файле
-      templateFile.textContent = `załącznik_${voivodeship.toLowerCase().replace(/[ąćęłńóśźż]/g, '').replace(/[^a-z0-9]/g, '_')}.pdf`;
-      templateSize.textContent = '245 KB';
+      // Создаем соответствие между польскими названиями и именами файлов
+      const voivodeshipToFile = {
+        'Dolnośląskie': 'załącznik_dolnoslaskie.pdf',
+        'Kujawsko-Pomorskie': 'załącznik_kujawskopomorskie.pdf',
+        'Lubelskie': 'załącznik_lubelskie.pdf',
+        'Lubuskie': 'załącznik_lubuskie.pdf',
+        'Łódzkie': 'załącznik_lodzkie.pdf',
+        'Małopolskie': 'załącznik_malopolskie.pdf',
+        'Mazowieckie': 'załącznik_mazowieckie.pdf',
+        'Opolskie': 'załącznik_opolskie.pdf',
+        'Podkarpackie': 'załącznik_podkarpackie.pdf',
+        'Podlaskie': 'załącznik_podlaskie.pdf',
+        'Pomorskie': 'załącznik_pomorskie.pdf',
+        'Śląskie': 'załącznik_slaskie.pdf',
+        'Świętokrzyskie': 'załącznik_swietokrzyskie.pdf',
+        'Warmińsko-Mazurskie': 'załącznik_warminskomazurskie.pdf',
+        'Wielkopolskie': 'załącznik_wielkopolskie.pdf',
+        'Zachodniopomorskie': 'załącznik_zachodniopomorskie.pdf'
+      };
+      
+      // Получаем имя файла для выбранного воеводства
+      const filename = voivodeshipToFile[voivodeship];
+      
+      if (filename) {
+        // Проверяем, есть ли файл в списке доступных
+        const availableFiles = [
+          'załącznik_dolnoslaskie.pdf',
+          'załącznik_lubelskie.pdf', 
+          'załącznik_malopolskie.pdf',
+          'załącznik_opolskie.pdf',
+          'załącznik_podkarpackie.pdf',
+          'załącznik_lodzkie.pdf',
+          'załącznik_swietokrzyskie.pdf',
+          'załącznik_wielkopolskie.pdf',
+          'załącznik_mazowieckie.pdf'
+        ];
+        
+        if (availableFiles.includes(filename)) {
+          // Файл доступен
+          templateFile.textContent = filename;
+          
+          // Устанавливаем размер файла (примерный)
+          const fileSizes = {
+            'załącznik_dolnoslaskie.pdf': '603 KB',
+            'załącznik_lubelskie.pdf': '2.6 MB',
+            'załącznik_malopolskie.pdf': '2.6 MB',
+            'załącznik_opolskie.pdf': '2.6 MB',
+            'załącznik_podkarpackie.pdf': '3.8 MB',
+            'załącznik_lodzkie.pdf': '762 KB',
+            'załącznik_swietokrzyskie.pdf': '707 KB',
+            'załącznik_wielkopolskie.pdf': '2.6 MB',
+            'załącznik_mazowieckie.pdf': '2.6 MB'
+          };
+          
+          templateSize.textContent = fileSizes[filename] || '~2.6 MB';
+          
+          // Показываем ручную ссылку для скачивания
+          manualDownload.style.display = 'block';
+          manualLink.href = encodeURI(`templates/${filename}`);
+          manualLink.download = filename;
+          
+          // Скрываем предупреждение о недоступности
+          const availabilityWarning = document.getElementById('załącznik_availability_warning');
+          if (availabilityWarning) {
+            availabilityWarning.style.display = 'none';
+          }
+          
         } else {
+          // Файл не доступен - показываем fallback
+          templateFile.textContent = 'Шаблон не готов, будет использован fallback';
+          templateSize.textContent = 'Используется Мазовецкое воеводство';
+          manualDownload.style.display = 'none';
+          
+          // Показываем предупреждение о недоступности
+          const availabilityWarning = document.getElementById('załącznik_availability_warning');
+          if (availabilityWarning) {
+            availabilityWarning.style.display = 'block';
+          }
+        }
+        
+      } else {
+        templateFile.textContent = 'Шаблон не найден';
+        templateSize.textContent = 'N/A';
+        manualDownload.style.display = 'none';
+      }
+      
+    } else {
       templateInfo.style.display = 'none';
+      manualDownload.style.display = 'none';
     }
   }
   
   function załącznikDownloadTemplate(){
     const voivodeship = document.getElementById('załącznik_voivodeship').value;
-    if(!voivodeship) return;
+    if(!voivodeship) {
+      alert('Пожалуйста, выберите воеводство');
+      return;
+    }
     
     console.log('Выбранное воеводство:', voivodeship);
     
@@ -2596,8 +2786,6 @@
     
     // Получаем имя файла для выбранного воеводства
     const filename = voivodeshipToFile[voivodeship];
-    console.log('Сформированное имя файла:', filename);
-    
     if (!filename) {
       alert('Ошибка: не удалось определить файл для выбранного воеводства');
       return;
@@ -2605,9 +2793,9 @@
     
     // Путь к файлу в папке templates
     const filePath = `templates/${filename}`;
-    console.log('Путь к файлу:', filePath);
+    console.log('Скачиваем файл:', filePath);
     
-    // Список доступных файлов (согласно вашим файлам)
+    // Список доступных файлов
     const availableFiles = [
       'załącznik_dolnoslaskie.pdf',
       'załącznik_lubelskie.pdf', 
@@ -2620,24 +2808,77 @@
       'załącznik_mazowieckie.pdf'
     ];
     
-
-    
-    console.log('Доступные файлы:', availableFiles);
-    console.log('Файл найден в списке?', availableFiles.includes(filename));
-    
     // Проверяем есть ли файл для выбранного воеводства
     if (availableFiles.includes(filename)) {
       // Файл есть - скачиваем его
-      console.log('Скачиваем файл:', filename);
+      
+      // Настраиваем ручную ссылку для основного файла
+      const manualDownload = document.getElementById('załącznik_manual_download');
+      const manualLink = document.getElementById('załącznik_manual_link');
+      if (manualDownload && manualLink) {
+        manualDownload.style.display = 'block';
+        manualLink.href = encodeURI(filePath);
+        manualLink.download = filename;
+      }
+      
+      // Скрываем предупреждение о недоступности
+      const availabilityWarning = document.getElementById('załącznik_availability_warning');
+      if (availabilityWarning) {
+        availabilityWarning.style.display = 'none';
+      }
+      
+      // Показываем информацию о выбранном файле
+      const templateInfo = document.getElementById('załącznik_template_info');
+      if (templateInfo) {
+        const templateFile = document.getElementById('załącznik_template_file');
+        const templateSize = document.getElementById('załącznik_template_size');
+        if (templateFile) templateFile.textContent = filename;
+        if (templateSize) {
+          const fileSizes = {
+            'załącznik_dolnoslaskie.pdf': '603 KB',
+            'załącznik_lubelskie.pdf': '2.6 MB',
+            'załącznik_malopolskie.pdf': '2.6 MB',
+            'załącznik_opolskie.pdf': '2.6 MB',
+            'załącznik_podkarpackie.pdf': '3.8 MB',
+            'załącznik_lodzkie.pdf': '762 KB',
+            'załącznik_swietokrzyskie.pdf': '707 KB',
+            'załącznik_wielkopolskie.pdf': '2.6 MB',
+            'załącznik_mazowieckie.pdf': '2.6 MB'
+          };
+          templateSize.textContent = fileSizes[filename] || '~2.6 MB';
+        }
+      }
+      
       downloadFile(filePath, filename);
     } else {
       // Файла нет - используем мазовецкий как fallback
-      console.log(`Файл ${filename} не найден, используем мазовецкий шаблон`);
       const fallbackPath = 'templates/załącznik_mazowieckie.pdf';
-      const fallbackFilename = 'załącznik_mazowieckie.pdf';
       
-      console.log('Используем fallback:', fallbackPath);
-      downloadFile(fallbackPath, fallbackFilename);
+      // Настраиваем ручную ссылку для fallback файла
+      const manualDownload = document.getElementById('załącznik_manual_download');
+      const manualLink = document.getElementById('załącznik_manual_link');
+      if (manualDownload && manualLink) {
+        manualDownload.style.display = 'block';
+        manualLink.href = encodeURI(fallbackPath);
+        manualLink.download = 'załącznik_mazowieckie.pdf';
+      }
+      
+      // Показываем предупреждение о недоступности
+      const availabilityWarning = document.getElementById('załącznik_availability_warning');
+      if (availabilityWarning) {
+        availabilityWarning.style.display = 'block';
+      }
+      
+      // Показываем информацию о fallback файла
+      const templateInfo = document.getElementById('załącznik_template_info');
+      if (templateInfo) {
+        const templateFile = document.getElementById('załącznik_template_file');
+        const templateSize = document.getElementById('załącznik_template_size');
+        if (templateFile) templateFile.textContent = 'załącznik_mazowieckie.pdf (fallback)';
+        if (templateSize) templateSize.textContent = '2.6 MB';
+      }
+      
+      downloadFile(fallbackPath, 'załącznik_mazowieckie.pdf');
       alert('Шаблон для этого воеводства пока не готов. Используется шаблон Мазовецкого воеводства.');
     }
     
@@ -2653,46 +2894,48 @@
     try {
       console.log('Пытаемся скачать файл:', filePath);
       
-      // Создаем ссылку для скачивания
+      // Кодируем путь правильно для URL
+      const encodedPath = encodeURI(filePath);
+      console.log('Закодированный путь:', encodedPath);
+      
+      // Метод 1: Прямое скачивание через ссылку
       const link = document.createElement('a');
-      link.href = filePath;
+      link.href = encodedPath;
       link.download = filename;
-      link.target = '_blank';
+      link.style.display = 'none';
       
-      // Добавляем обработчик ошибок
-      link.onerror = function() {
-        console.error('Ошибка при скачивании файла:', filePath);
-        alert('Ошибка при скачивании файла. Попробуйте еще раз.');
-      };
-      
-      // Добавляем обработчик успешной загрузки
-      link.onload = function() {
-        console.log('Файл успешно загружен:', filename);
-      };
-      
-      // Скачиваем файл
+      // Добавляем ссылку в DOM и активируем скачивание
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
       
-      console.log('Ссылка для скачивания создана и активирована');
+      console.log('Метод 1: Ссылка для скачивания создана и активирована');
       
-      // Проверяем существование файла через fetch
-      fetch(filePath, { method: 'HEAD' })
-        .then(response => {
-          if (response.ok) {
-            console.log('Файл существует на сервере:', filePath);
-          } else {
-            console.error('Файл не найден на сервере:', filePath);
-            alert('Файл не найден. Проверьте правильность пути.');
-          }
-        })
-        .catch(error => {
-          console.error('Ошибка при проверке файла:', error);
-          alert('Ошибка при проверке файла. Возможно, файл не существует.');
-        });
+      // Метод 2: Открываем файл в новой вкладке как fallback
+      setTimeout(() => {
+        console.log('Метод 2: Открываем файл в новой вкладке');
+        window.open(encodedPath, '_blank');
+      }, 500);
+      
+      // Метод 3: Показываем ручную ссылку для скачивания
+      setTimeout(() => {
+        const manualDownload = document.getElementById('załącznik_manual_download');
+        const manualLink = document.getElementById('załącznik_manual_link');
+        if (manualDownload && manualLink) {
+          manualDownload.style.display = 'block';
+          manualLink.href = encodedPath;
+          manualLink.download = filename;
+        }
+      }, 1000);
       
     } catch (error) {
       console.error('Ошибка при скачивании:', error);
-      alert('Ошибка при скачивании. Попробуйте еще раз.');
+      
+      // Показываем ручную ссылку для скачивания
+      const manualDownload = document.getElementById('załącznik_manual_download');
+      if (manualDownload) {
+        manualDownload.style.display = 'block';
+      }
     }
   }
 
