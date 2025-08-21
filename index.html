@@ -1143,7 +1143,7 @@
 <div class="bottom">
   <button onclick="openChecklist()">Checklist</button>
   <button onclick="openModule('aiTranslator')">AI Translator</button>
-  <button onclick="openModule('findSlot')">Book a slot</button>
+  <button onclick="openModule('slot')">Book a slot</button>
   <button onclick="openModule('bookAssistant')">Start a chat</button>
 </div>
 
@@ -1898,9 +1898,7 @@
       {id:'skarb', title:'Opłata skarbowa', status:'todo', requiresAI:false, kind:'skarb'},
       {id:'rent', title:'Umowa najmu / Meldunek', status:'todo', requiresAI:true, kind:'rent'},
       {id:'ins', title:'Ubezpieczenie', status:'todo', requiresAI:true, kind:'insurance'},
-      {id:'slot', title:'Find a slot', status:'todo', requiresAI:false, kind:'slot'},
-      {id:'ai', title:'AI Translator', status:'todo', requiresAI:false, kind:'aiTranslator'},
-      {id:'assist', title:'Book an assistant', status:'todo', requiresAI:false, kind:'bookAssistant'}
+
     ];
     if(track==='work'||track==='business'){
       common.splice(2,0,{id:'contract', title:'Контракт / Основание', status:'todo', requiresAI:true, kind:'contract'});
@@ -2029,7 +2027,7 @@
       alert('AI Translator: Загрузите письмо/документ → перевод и краткое резюме. (В MVP-заглушке загрузка опущена)');
       return;
     }
-    if(kind==='findSlot'){
+    if(kind==='slot'){
       const dates = prompt('Укажите даты/дни, когда вы доступны (например: Пн/Ср/Пт или 20-25 августа). Мы мониторим, но слот не гарантирован.');
       alert('Спасибо! Подписка на обновления оформлена.\nВаши доступные дни: '+(dates||'не указано')+'\nПодтверждение визита — вручную.');
       return;
