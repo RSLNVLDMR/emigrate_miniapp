@@ -2572,11 +2572,40 @@
     const voivodeship = document.getElementById('załącznik_voivodeship').value;
     if(!voivodeship) return;
     
-    // Формируем имя файла для выбранного воеводства
-    const filename = `załącznik_${voivodeship.toLowerCase().replace(/[ąćęłńóśźż]/g, '').replace(/[^a-z0-9]/g, '_')}.pdf`;
+    console.log('Выбранное воеводство:', voivodeship);
+    
+    // Создаем соответствие между польскими названиями и именами файлов
+    const voivodeshipToFile = {
+      'Dolnośląskie': 'załącznik_dolnoslaskie.pdf',
+      'Kujawsko-Pomorskie': 'załącznik_kujawskopomorskie.pdf',
+      'Lubelskie': 'załącznik_lubelskie.pdf',
+      'Lubuskie': 'załącznik_lubuskie.pdf',
+      'Łódzkie': 'załącznik_lodzkie.pdf',
+      'Małopolskie': 'załącznik_malopolskie.pdf',
+      'Mazowieckie': 'załącznik_mazowieckie.pdf',
+      'Opolskie': 'załącznik_opolskie.pdf',
+      'Podkarpackie': 'załącznik_podkarpackie.pdf',
+      'Podlaskie': 'załącznik_podlaskie.pdf',
+      'Pomorskie': 'załącznik_pomorskie.pdf',
+      'Śląskie': 'załącznik_slaskie.pdf',
+      'Świętokrzyskie': 'załącznik_swietokrzyskie.pdf',
+      'Warmińsko-Mazurskie': 'załącznik_warminskomazurskie.pdf',
+      'Wielkopolskie': 'załącznik_wielkopolskie.pdf',
+      'Zachodniopomorskie': 'załącznik_zachodniopomorskie.pdf'
+    };
+    
+    // Получаем имя файла для выбранного воеводства
+    const filename = voivodeshipToFile[voivodeship];
+    console.log('Сформированное имя файла:', filename);
+    
+    if (!filename) {
+      alert('Ошибка: не удалось определить файл для выбранного воеводства');
+      return;
+    }
     
     // Путь к файлу в папке templates
     const filePath = `templates/${filename}`;
+    console.log('Путь к файлу:', filePath);
     
     // Список доступных файлов (согласно вашим файлам)
     const availableFiles = [
@@ -2587,12 +2616,19 @@
       'załącznik_podkarpackie.pdf',
       'załącznik_lodzkie.pdf',
       'załącznik_swietokrzyskie.pdf',
-      'załącznik_wielkopolskie.pdf'
+      'załącznik_wielkopolskie.pdf',
+      'załącznik_mazowieckie.pdf'
     ];
+    
+
+    
+    console.log('Доступные файлы:', availableFiles);
+    console.log('Файл найден в списке?', availableFiles.includes(filename));
     
     // Проверяем есть ли файл для выбранного воеводства
     if (availableFiles.includes(filename)) {
       // Файл есть - скачиваем его
+      console.log('Скачиваем файл:', filename);
       downloadFile(filePath, filename);
     } else {
       // Файла нет - используем мазовецкий как fallback
@@ -2600,6 +2636,7 @@
       const fallbackPath = 'templates/załącznik_mazowieckie.pdf';
       const fallbackFilename = 'załącznik_mazowieckie.pdf';
       
+      console.log('Используем fallback:', fallbackPath);
       downloadFile(fallbackPath, fallbackFilename);
       alert('Шаблон для этого воеводства пока не готов. Используется шаблон Мазовецкого воеводства.');
     }
@@ -2614,6 +2651,8 @@
   // Вспомогательная функция для скачивания файла
   function downloadFile(filePath, filename) {
     try {
+      console.log('Пытаемся скачать файл:', filePath);
+      
       // Создаем ссылку для скачивания
       const link = document.createElement('a');
       link.href = filePath;
@@ -2626,10 +2665,30 @@
         alert('Ошибка при скачивании файла. Попробуйте еще раз.');
       };
       
+      // Добавляем обработчик успешной загрузки
+      link.onload = function() {
+        console.log('Файл успешно загружен:', filename);
+      };
+      
       // Скачиваем файл
       link.click();
       
-      console.log('Файл успешно скачан:', filename);
+      console.log('Ссылка для скачивания создана и активирована');
+      
+      // Проверяем существование файла через fetch
+      fetch(filePath, { method: 'HEAD' })
+        .then(response => {
+          if (response.ok) {
+            console.log('Файл существует на сервере:', filePath);
+          } else {
+            console.error('Файл не найден на сервере:', filePath);
+            alert('Файл не найден. Проверьте правильность пути.');
+          }
+        })
+        .catch(error => {
+          console.error('Ошибка при проверке файла:', error);
+          alert('Ошибка при проверке файла. Возможно, файл не существует.');
+        });
       
     } catch (error) {
       console.error('Ошибка при скачивании:', error);
