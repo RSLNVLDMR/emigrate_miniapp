@@ -3131,10 +3131,10 @@
         
         if(isDocumentOk){
           // Документ подходит - показываем экран успеха
-          showSuccessResult();
+          showZałącznikSuccessResult();
         } else {
           // Документ не подходит - показываем экран с красными флагами
-          showRedFlagsResult();
+          showZałącznikRedFlagsResult();
         }
       }, 3000);
       
@@ -3206,6 +3206,11 @@
   }
   
   function showZałącznikSuccessResult(){
+    // Показываем экран результата
+    el('załącznik_step3').style.display='none';
+    el('załącznik_step4').style.display='none';
+    el('załącznik_step5').style.display='block';
+    
     el('załącznik_result_title').innerText = 'Ура! Всё удалось 🎉';
     el('załącznik_result_box').className = 'status ok';
     el('załącznik_result_box').innerHTML = '<div>Все чётко. Замечаний нет.</div>';
@@ -3249,6 +3254,11 @@
   }
   
   function showZałącznikRedFlagsResult(){
+    // Показываем экран результата
+    el('załącznik_step3').style.display='none';
+    el('załącznik_step4').style.display='none';
+    el('załącznik_step5').style.display='block';
+    
     el('załącznik_result_title').innerText = 'Мы заметили красные флаги в твоем załącznik';
     el('załącznik_result_box').className = 'status err';
     el('załącznik_result_box').innerHTML = `
