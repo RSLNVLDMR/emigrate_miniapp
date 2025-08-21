@@ -330,16 +330,17 @@
       left: 0 !important;
       right: 0 !important;
       bottom: 0 !important;
-      background: var(--card) !important;
-      border-top: 1px solid var(--line) !important;
+      background: #f0f9ff !important;
+      border-top: 1px solid #e2e8f0 !important;
       display: flex !important;
       justify-content: space-around !important;
       align-items: center !important;
-      padding: 12px 16px !important;
+      padding: 16px 16px !important;
       box-shadow: 0 -2px 16px rgba(0,0,0,0.1) !important;
       z-index: 1000 !important;
       /* Telegram Mini App bottom menu optimizations */
-      padding-bottom: calc(12px + var(--safe-bottom)) !important;
+      padding-bottom: calc(16px + var(--safe-bottom)) !important;
+      min-height: 80px !important;
     }
     
     .footer-btn{
@@ -367,7 +368,11 @@
     }
     
     .footer-btn-primary{
-      color: var(--accent) !important;
+      color: #2563eb !important;
+    }
+    
+    .footer-btn-primary .footer-icon{
+      color: #2563eb !important;
     }
     
     .footer-btn-primary:hover{
@@ -375,9 +380,11 @@
     }
     
     .footer-icon{
-      font-size: 22px !important;
-      margin-bottom: 4px !important;
+      font-size: 28px !important;
+      margin-bottom: 6px !important;
       line-height: 1 !important;
+      font-weight: bold !important;
+      color: #64748b !important;
     }
     
     .footer-label{
@@ -2216,15 +2223,15 @@
     footer.className = 'bottom';
     footer.innerHTML = `
       <button onclick="openModule('aiTranslator')" class="footer-btn">
-        <div class="footer-icon">🤖</div>
+        <div class="footer-icon">⚡</div>
         <span class="footer-label">AI Translator</span>
       </button>
       <button onclick="openChecklist()" class="footer-btn footer-btn-primary">
-        <div class="footer-icon">✓</div>
+        <div class="footer-icon">☰</div>
         <span class="footer-label">Checklist</span>
       </button>
       <button onclick="openModule('slot')" class="footer-btn">
-        <div class="footer-icon">📅</div>
+        <div class="footer-icon">⏰</div>
         <span class="footer-label">Book a slot</span>
       </button>
     `;
