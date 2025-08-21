@@ -473,6 +473,72 @@
       line-height: 1.2 !important;
       text-align: center !important;
     }
+
+    /* Welcome Modal Styles */
+    .welcome-card {
+      text-align: center !important;
+      max-width: 500px !important;
+      margin: 0 auto !important;
+    }
+
+    .welcome-header {
+      margin-bottom: 24px !important;
+    }
+
+    .welcome-icon {
+      font-size: 48px !important;
+      margin-bottom: 16px !important;
+      display: block !important;
+    }
+
+    .welcome-header h2 {
+      color: var(--accent) !important;
+      font-size: 24px !important;
+      margin: 0 !important;
+      font-weight: 700 !important;
+    }
+
+    .welcome-content {
+      margin-bottom: 24px !important;
+    }
+
+    .welcome-text {
+      font-size: 16px !important;
+      line-height: 1.6 !important;
+      color: var(--text) !important;
+      margin-bottom: 20px !important;
+    }
+
+    .welcome-features {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 12px !important;
+      margin: 24px 0 !important;
+      text-align: left !important;
+    }
+
+    .feature-item {
+      display: flex !important;
+      align-items: center !important;
+      gap: 12px !important;
+      padding: 8px 0 !important;
+    }
+
+    .feature-icon {
+      font-size: 20px !important;
+      min-width: 24px !important;
+    }
+
+    .welcome-actions {
+      margin-top: 24px !important;
+    }
+
+    .welcome-actions button {
+      min-width: 200px !important;
+      font-size: 16px !important;
+      font-weight: 600 !important;
+      padding: 16px 24px !important;
+    }
     
 
     
@@ -2080,8 +2146,57 @@
   </div>
 </div>
 
-<!-- ====== Модальное окно Book a slot -->
-<div id="book_slot_modal" class="modal" role="dialog" aria-modal="true">
+  <!-- ====== Модальное окно приветствия -->
+  <div id="welcome_modal" class="modal" role="dialog" aria-modal="true">
+    <div class="sheet">
+      <div class="card welcome-card">
+        <div class="welcome-header">
+          <div class="welcome-icon">🌟</div>
+          <h2>Добро пожаловать в eMigrant!</h2>
+        </div>
+        
+        <div class="welcome-content">
+          <p class="welcome-text">
+            Мы — команда мигрантов, которые уже получили по 4-5 карт побыту и знаем, 
+            как сложно разобраться во всех документах и процедурах.
+          </p>
+          
+          <div class="welcome-features">
+            <div class="feature-item">
+              <span class="feature-icon">✅</span>
+              <span>Проверенные шаблоны документов</span>
+            </div>
+            <div class="feature-item">
+              <span class="feature-icon">🤖</span>
+              <span>AI-проверка ваших документов</span>
+            </div>
+            <div class="feature-item">
+              <span class="feature-icon">📋</span>
+              <span>Пошаговые инструкции</span>
+            </div>
+            <div class="feature-item">
+              <span class="feature-icon">💬</span>
+              <span>Поддержка от опытных мигрантов</span>
+            </div>
+          </div>
+          
+          <p class="welcome-text">
+            В следующем шаге мы зададим вам несколько вопросов, чтобы лучше понять, 
+            как именно помочь в вашем случае.
+          </p>
+        </div>
+        
+        <div class="welcome-actions">
+          <button class="primary" onclick="startOnboarding()">
+            Начать знакомство
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== Модальное окно Book a slot -->
+  <div id="book_slot_modal" class="modal" role="dialog" aria-modal="true">
   <div class="sheet">
     <div class="card">
       <div class="row" style="align-items:center;margin-bottom:16px">
@@ -2840,6 +2955,41 @@
       const wrap = document.querySelector('.wrap');
       if(wrap) wrap.classList.remove('no-header');
     }, 300);
+  }
+
+  // ====== Welcome modal functions
+  function openWelcomeModal(){
+    console.log('openWelcomeModal вызвана');
+    const modal = el('welcome_modal');
+    console.log('Найден модальный элемент welcome_modal:', modal);
+    if (!modal) {
+      console.error('Модальный элемент welcome_modal не найден!');
+      return;
+    }
+    modal.style.display='grid';
+    setTimeout(() => {
+      modal.classList.add('show');
+      console.log('Модальное окно приветствия открыто');
+    }, 10);
+  }
+
+  function closeWelcomeModal(){
+    const modal = el('welcome_modal');
+    modal.classList.remove('show');
+    setTimeout(() => {
+      modal.style.display='none';
+    }, 300);
+  }
+
+  function startOnboarding(){
+    // Закрываем окно приветствия
+    closeWelcomeModal();
+    
+    // Отмечаем что приветствие уже показано
+    localStorage.setItem('welcomeShown', 'true');
+    
+    // Начинаем онбординг
+    showQ(1);
   }
 
   // ====== Book a slot modal functions
@@ -4241,6 +4391,9 @@
   
   function closeBookSlotOnBackdrop(e){ if(e.target.id==='book_slot_modal') closeBookSlotModal(); }
   document.getElementById('book_slot_modal').addEventListener('click', closeBookSlotOnBackdrop);
+
+  function closeWelcomeOnBackdrop(e){ if(e.target.id==='welcome_modal') closeWelcomeModal(); }
+  document.getElementById('welcome_modal').addEventListener('click', closeWelcomeOnBackdrop);
   
   document.getElementById('ct_btn_upload').disabled = true; // init
   document.getElementById('załącznik_btn_upload').disabled = true; // init
@@ -5232,6 +5385,15 @@
     const allFooters = document.querySelectorAll('.bottom');
     console.log('При инициализации найдено футеров:', allFooters.length);
     allFooters.forEach(footer => footer.remove());
+    
+    // Проверяем, показывали ли уже окно приветствия
+    const welcomeShown = localStorage.getItem('welcomeShown');
+    if (!welcomeShown) {
+      // Показываем окно приветствия только один раз
+      setTimeout(() => {
+        openWelcomeModal();
+      }, 500);
+    }
     
     if(st.track){
       document.getElementById('onb').style.display='none';
