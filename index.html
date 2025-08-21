@@ -2237,6 +2237,7 @@
       return;
     }
     if(kind==='slot'){
+      console.log('openModule: kind=slot, вызываю openBookSlotModal');
       openBookSlotModal();
       return;
     }
@@ -2705,10 +2706,17 @@
 
   // ====== Book a slot modal functions
   function openBookSlotModal(){
+    console.log('openBookSlotModal вызвана');
     const modal = el('book_slot_modal');
+    console.log('Найден модальный элемент:', modal);
+    if (!modal) {
+      console.error('Модальный элемент book_slot_modal не найден!');
+      return;
+    }
     modal.style.display='grid';
     setTimeout(() => {
       modal.classList.add('show');
+      console.log('Модальное окно открыто');
     }, 10);
   }
 
