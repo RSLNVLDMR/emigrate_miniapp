@@ -1193,26 +1193,87 @@
       <span></span>
     </div>
 
-    <!-- экран 1: загрузка -->
+    <!-- экран 1: скачивание шаблона -->
     <div id="załącznik_step1">
-      <h3>Загрузи załącznik od pracodawcy для проверки</h3>
-      <div class="small">Поддерживаются PDF, JPG, PNG (до ~20 МБ).</div>
-      <div id="załącznik_checked_info" class="status ok" style="display:none;margin-top:10px"></div>
-      <input id="załącznik_file" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" />
-      <div class="hr"></div>
-      <button id="załącznik_btn_upload" class="primary" disabled onclick="załącznikStart()">
-        <span style="display:flex;align-items:center;justify-content:center;gap:8px">
-          <span style="font-size:18px">🤖</span>
-          <span>Проверить с AI</span>
-        </span>
-      </button>
+      <h3>Скачайте шаблон для вашего воеводства</h3>
+      <div class="small">Выберите ваше воеводство и скачайте соответствующий шаблон</div>
+      
+      <div class="voivodeship-select" style="margin: 20px 0">
+        <label for="załącznik_voivodeship" style="display: block; margin-bottom: 8px; font-weight: 600;">Выберите ваше воеводство:</label>
+        <select id="załącznik_voivodeship" onchange="załącznikUpdateTemplate()">
+          <option value="">Выберите воеводство...</option>
+          <option value="Dolnośląskie">Нижнесилезское</option>
+          <option value="Kujawsko-Pomorskie">Куявско-Поморское</option>
+          <option value="Lubelskie">Люблинское</option>
+          <option value="Lubuskie">Любуское</option>
+          <option value="Łódzkie">Лодзинское</option>
+          <option value="Małopolskie">Малопольское</option>
+          <option value="Mazowieckie">Мазовецкое</option>
+          <option value="Opolskie">Опольское</option>
+          <option value="Podkarpackie">Подкарпатское</option>
+          <option value="Podlaskie">Подляское</option>
+          <option value="Pomorskie">Поморское</option>
+          <option value="Śląskie">Силезское</option>
+          <option value="Świętokrzyskie">Свентокшиское</option>
+          <option value="Warmińsko-Mazurskie">Варминьско-Мазурское</option>
+          <option value="Wielkopolskie">Великопольское</option>
+          <option value="Zachodniopomorskie">Западно-Поморское</option>
+        </select>
+      </div>
+      
+      <div id="załącznik_template_info" style="display:none" class="template-info">
+        <div class="template-details" style="background: var(--bg); padding: 16px; border-radius: 12px; margin-bottom: 16px;">
+          <h4 style="margin: 0 0 12px 0;">Шаблон для <span id="załącznik_voiv_name"></span></h4>
+          <p style="margin: 8px 0;">Файл: <span id="załącznik_template_file"></span></p>
+          <p style="margin: 8px 0;">Размер: <span id="załącznik_template_size"></span></p>
+        </div>
+        
+        <button id="załącznik_btn_download" class="primary" onclick="załącznikDownloadTemplate()">
+          <span style="display:flex;align-items:center;justify-content:center;gap:8px">
+            <span style="font-size:18px">📥</span>
+            <span>Скачать шаблон</span>
+          </span>
+        </button>
+      </div>
+      
       <div class="small muted" style="margin-top:12px;text-align:center">
         <a href="javascript:void(0)" onclick="załącznikNoDoc()" class="help-link">У меня нет — помогите</a>
       </div>
     </div>
 
-    <!-- экран 2: дата завершения анализа -->
+    <!-- экран 2: отправка по почте -->
     <div id="załącznik_step2" style="display:none">
+      <h3>Отправьте заполненный документ начальнику</h3>
+      <div class="small">Теперь отправьте заполненный шаблон по почте вашему начальнику для подписи</div>
+      
+      <div class="email-info" style="background: var(--bg); padding: 16px; border-radius: 12px; margin: 20px 0;">
+        <h4 style="margin: 0 0 12px 0;">📧 Инструкция по отправке:</h4>
+        <ol style="margin: 0; padding-left: 20px;">
+          <li>Скачайте и заполните шаблон</li>
+          <li>Отправьте его по email вашему начальнику</li>
+          <li>Попросите подписать документ</li>
+          <li>Получите подписанную версию обратно</li>
+        </ol>
+      </div>
+      
+      <div class="hr"></div>
+      
+      <div class="upload-section">
+        <h4>Загрузите подписанный документ для AI проверки</h4>
+        <div class="small">Поддерживаются PDF, JPG, PNG (до ~20 МБ)</div>
+        <input id="załącznik_file" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" style="margin: 16px 0;" />
+        
+        <button id="załącznik_btn_upload" class="primary" disabled onclick="załącznikStart()">
+          <span style="display:flex;align-items:center;justify-content:center;gap:8px">
+            <span style="font-size:18px">🤖</span>
+            <span>Проверить с AI</span>
+          </span>
+        </button>
+      </div>
+    </div>
+
+    <!-- экран 3: AI анализ запущен -->
+    <div id="załącznik_step3" style="display:none">
       <h3>AI анализ запущен</h3>
       <div class="completion-info" style="margin:20px 0;text-align:center">
         <div style="font-size:48px;margin-bottom:16px">⏰</div>
@@ -1232,8 +1293,8 @@
       <div class="small muted" id="załącznik_poll_note" style="margin-top:8px"></div>
     </div>
 
-    <!-- экран 3: оплата -->
-    <div id="załącznik_step3" style="display:none">
+    <!-- экран 4: оплата -->
+    <div id="załącznik_step4" style="display:none">
       <h3>Ускорение AI анализа</h3>
       <div class="status" style="margin-top:16px">
         <div class="center">
@@ -1265,9 +1326,9 @@
         <button class="ghost" onclick="załącznikBackToTimer()" style="width:100%">Отмена</button>
       </div>
     </div>
-
-    <!-- экран 4: результат -->
-    <div id="załącznik_step4" style="display:none">
+    
+    <!-- экран 5: результат -->
+    <div id="załącznik_step5" style="display:none">
       <h3 id="załącznik_result_title">Ура! Всё удалось 🎉</h3>
       <div id="załącznik_result_box" class="status ok" style="margin-top:10px">
         <div id="załącznik_result_text">Все чётко. Замечаний нет.</div>
@@ -2008,17 +2069,19 @@
     localStorage.removeItem('załącznikTimerEnd');
     
     // Сбрасываем анимационные стили для всех экранов
-    const steps = ['załącznik_step1', 'załącznik_step2', 'załącznik_step3', 'załącznik_step4'];
+    const steps = ['załącznik_step1', 'załącznik_step2', 'załącznik_step3', 'załącznik_step4', 'załącznik_step5'];
     steps.forEach(stepId => {
       const step = el(stepId);
       if(step){
         step.style.opacity = '1';
+        step.style.transform = 'translateX(0)';
         step.style.transform = 'translateX(0)';
         step.style.transition = '';
       }
     });
     
     // Возвращаемся к первому экрану
+    el('załącznik_step5').style.display='none';
     el('załącznik_step4').style.display='none';
     el('załącznik_step3').style.display='none';
     el('załącznik_step2').style.display='none';
@@ -2103,14 +2166,18 @@
     // Проверяем статус задачи załącznik
     const task = st.tasks.find(t => t.id === 'załącznik');
     if(task && task.status === 'inreview'){
-      el('załącznik_step4').style.display='block';
-      if(task.result === 'redflags'){
-        showZałącznikRedFlagsResult();
-      } else {
-        showZałącznikSuccessResult();
+      el('załącznik_step3').style.display='block';
+      // Показываем дату завершения если есть
+      const completionDate = localStorage.getItem('załącznikTimerEnd');
+      if(completionDate){
+        const endTime = new Date(parseInt(completionDate));
+        const now = new Date();
+        if(endTime > now){
+          showZałącznikCompletionDate();
+        }
       }
     } else if(task && task.status === 'done'){
-      el('załącznik_step4').style.display='block';
+      el('załącznik_step5').style.display='block';
       showZałącznikSuccessResult();
     } else {
       el('załącznik_step1').style.display='block';
@@ -2128,6 +2195,7 @@
       el('załącznik_step2').style.display='none';
       el('załącznik_step3').style.display='none';
       el('załącznik_step4').style.display='none';
+      el('załącznik_step5').style.display='none';
       
       // Очищаем таймер если есть
       if(załącznik.pollTimer){ clearInterval(załącznik.pollTimer); załącznik.pollTimer=null; }
@@ -2482,32 +2550,75 @@
     console.log('Дата завершения анализа załącznik установлена:', completionDate.toLocaleString());
   }
 
+  function załącznikUpdateTemplate(){
+    const voivodeship = document.getElementById('załącznik_voivodeship').value;
+    const templateInfo = document.getElementById('załącznik_template_info');
+    const voivName = document.getElementById('załącznik_voiv_name');
+    const templateFile = document.getElementById('załącznik_template_file');
+    const templateSize = document.getElementById('załącznik_template_size');
+    
+    if(voivodeship){
+      // Показываем информацию о шаблоне
+      templateInfo.style.display = 'block';
+      
+      // Устанавливаем название воеводства
+      voivName.textContent = voivodeship;
+      
+      // Устанавливаем информацию о файле
+      templateFile.textContent = `załącznik_${voivodeship.toLowerCase().replace(/[ąćęłńóśźż]/g, '').replace(/[^a-z0-9]/g, '_')}.pdf`;
+      templateSize.textContent = '245 KB';
+    } else {
+      templateInfo.style.display = 'none';
+    }
+  }
+  
+  function załącznikDownloadTemplate(){
+    const voivodeship = document.getElementById('załącznik_voivodeship').value;
+    if(!voivodeship) return;
+    
+    // Симулируем скачивание файла
+    const filename = `załącznik_${voivodeship.toLowerCase().replace(/[ąćęłńóśźż]/g, '').replace(/[^a-z0-9]/g, '_')}.pdf`;
+    
+    // Создаем временную ссылку для скачивания
+    const link = document.createElement('a');
+    link.href = 'data:application/pdf;base64,JVBERi0xLjQKMSAwIG9iago8PCAvVHlwZSAvQ2F0YWxvZwovUGFnZXMgMiAwIFIKPj4KZW5kb2JqCjIgMCBvYmoKPDwgL1R5cGUgL1BhZ2VzCi9LaWRzIFszIDAgUl0KL1BhcmVudCAxIDAgUgovQ291bnQgMQo+PgplbmRvYmoKMyAwIG9iago8PCAvVHlwZSAvUGFnZQovUGFyZW50IDIgMCBSCi9Db250ZW50cyA0IDAgUgovUmVzb3VyY2VzIDw8IC9Gb250IDw8IC9GMSA1IDAgUiA+Pgo+PgovTWVkaWFCb3ggWzAgMCA1OTUgODQyXQo+PgplbmRvYmoKNCAwIG9iago8PCAvTGVuZ3RoIDQ5Cj4+CnN0cmVhbQoKcQo1MDAgNzUwIFRkCihUZW1wbGF0ZSBmb3IgWmFcdGxcdWJhY3puaWsgVGVtcGxhdGUpIFRqCkVuZAp4CnEKZW5kb2JqCjUgMCBvYmoKPDwgL1R5cGUgL0ZvbnQKL1N1YnR5cGUgL1R5cGUxCi9CYXNlRm9udCAvSGVsdmV0aWNhCi9FbmNvZGluZyAvV2luQW5zaUVuY29kaW5nCj4+CmVuZG9iagp4cmVmCjAgNgowMDAwMDAwMDAwIDY1NTM2IGYgCjAwMDAwMDAwMTAgMDAwMDAgbiAKMDAwMDAwMDA3OSAwMDAwMCBuIAowMDAwMDAwMTczIDAwMDAwIG4gCjAwMDAwMDAzMDEgMDAwMDAgbiAKMDAwMDAwMDM4MCAwMDAwMCBuIAp0cmFpbGVyCjw8IC9TaXplIDYKL1Jvb3QgMSAwIFIKPj4Kc3RhcnR4cmVmCjQ5MgolJUVPRgo=';
+    link.download = filename;
+    link.click();
+    
+    // Переходим к следующему шагу
+    setTimeout(() => {
+      el('załącznik_step1').style.display = 'none';
+      el('załącznik_step2').style.display = 'block';
+    }, 1000);
+  }
+
   async function załącznikStart(){
     if(!załącznik.file){ alert('Выберите файл.'); return; }
     
     // Анимация перехода между экранами
-    const step1 = el('załącznik_step1');
     const step2 = el('załącznik_step2');
+    const step3 = el('załącznik_step3');
     
-    step1.style.opacity = '0';
-    step1.style.transform = 'translateX(-20px)';
-    step1.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    step2.style.opacity = '0';
+    step2.style.transform = 'translateX(-20px)';
+    step2.style.transform = 'translateX(-20px)';
+    step2.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
     
     setTimeout(() => {
-      step1.style.display='none';
-      step2.style.display='';
-      step2.style.opacity = '0';
-      step2.style.transform = 'translateX(20px)';
-      step2.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+      step2.style.display='none';
+      step3.style.display='';
+      step3.style.opacity = '0';
+      step3.style.transform = 'translateX(20px)';
+      step3.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
       
       setTimeout(() => {
-        step2.style.opacity = '1';
-        step2.style.transform = 'translateX(0)';
+        step3.style.opacity = '1';
+        step3.style.transform = 'translateX(0)';
       }, 10);
     }, 300);
     
-    el('załącznik_step3').style.display='none';
     el('załącznik_step4').style.display='none';
+    el('załącznik_step5').style.display='none';
     el('załącznik_poll_note').innerText = '';
     
     // Показываем дату завершения анализа если нет backend
@@ -2588,23 +2699,23 @@
 
   function załącznikBoost(){
     // Показываем экран оплаты с анимацией
-    const step2 = el('załącznik_step2');
     const step3 = el('załącznik_step3');
+    const step4 = el('załącznik_step4');
     
-    step2.style.opacity = '0';
-    step2.style.transform = 'translateX(-20px)';
-    step2.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    step3.style.opacity = '0';
+    step3.style.transform = 'translateX(-20px)';
+    step3.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
     
     setTimeout(() => {
-      step2.style.display='none';
-      step3.style.display='';
-      step3.style.opacity = '0';
-      step3.style.transform = 'translateX(20px)';
-      step3.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+      step3.style.display='none';
+      step4.style.display='';
+      step4.style.opacity = '0';
+      step4.style.transform = 'translateX(20px)';
+      step4.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
       
       setTimeout(() => {
-        step3.style.opacity = '1';
-        step3.style.transform = 'translateX(0)';
+        step4.style.opacity = '1';
+        step4.style.transform = 'translateX(0)';
       }, 10);
     }, 300);
   }
@@ -2633,23 +2744,23 @@
   }
 
   function załącznikBackToTimer(){
+    const step4 = el('załącznik_step4');
     const step3 = el('załącznik_step3');
-    const step2 = el('załącznik_step2');
     
-    step3.style.opacity = '0';
-    step3.style.transform = 'translateX(20px)';
-    step3.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    step4.style.opacity = '0';
+    step4.style.transform = 'translateX(20px)';
+    step4.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
     
     setTimeout(() => {
-      step3.style.display='none';
-      step2.style.display='';
-      step2.style.opacity = '0';
-      step2.style.transform = 'translateX(-20px)';
-      step2.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+      step4.style.display='none';
+      step3.style.display='';
+      step3.style.opacity = '0';
+      step3.style.transform = 'translateX(-20px)';
+      step3.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
       
       setTimeout(() => {
-        step2.style.opacity = '1';
-        step2.style.transform = 'translateX(0)';
+        step3.style.opacity = '1';
+        step3.style.transform = 'translateX(0)';
       }, 10);
     }, 300);
   }
@@ -2715,24 +2826,24 @@
       // После успешной оплаты сразу показываем результат
       załącznik.boosted = true;
       
-      // Показываем экран загрузки с анимацией
-      const step3 = el('załącznik_step3');
+      // Показываем экран результата с анимацией
       const step4 = el('załącznik_step4');
+      const step5 = el('załącznik_step5');
       
-      step3.style.opacity = '0';
-      step3.style.transform = 'translateX(-20px)';
-      step3.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+      step4.style.opacity = '0';
+      step4.style.transform = 'translateX(-20px)';
+      step4.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
       
       setTimeout(() => {
-        step3.style.display='none';
-        step4.style.display='';
-        step4.style.opacity = '0';
-        step4.style.transform = 'translateX(20px)';
-        step4.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+        step4.style.display='none';
+        step5.style.display='';
+        step5.style.opacity = '0';
+        step5.style.transform = 'translateX(20px)';
+        step5.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
         
         setTimeout(() => {
-          step4.style.opacity = '1';
-          step4.style.transform = 'translateX(0)';
+          step5.style.opacity = '1';
+          step5.style.transform = 'translateX(0)';
         }, 10);
       }, 300);
       
