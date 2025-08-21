@@ -342,9 +342,9 @@
     .bottom button{
       flex:1;
       border-radius:12px;
-      padding:14px 10px;
+      padding:14px 8px;
       font-weight:600;
-      font-size:14px;
+      font-size:13px;
       background:var(--card);
       border:1px solid var(--line);
       color:var(--text);
@@ -356,6 +356,9 @@
       /* Telegram Mini App button optimizations */
       -webkit-tap-highlight-color: transparent;
       touch-action: manipulation;
+      /* Улучшаем читаемость текста */
+      line-height: 1.2;
+      letter-spacing: -0.01em;
     }
     
     .bottom button:hover{
@@ -751,9 +754,9 @@
       }
       
       .ai-badge {
-        padding: 6px 10px;
-        font-size: 11px;
-        gap: 6px;
+        padding: 4px 6px;
+        font-size: 10px;
+        gap: 4px;
       }
         
         .photo-requirements {
@@ -780,9 +783,11 @@
       }
       
       .bottom button {
-        padding: 12px 8px;
-        font-size: 14px;
+        padding: 10px 4px;
+        font-size: 11px;
         min-height: 48px;
+        line-height: 1.2;
+        letter-spacing: -0.01em;
       }
       
       .row {
@@ -825,9 +830,9 @@
       }
       
       .ai-badge {
-        padding: 8px 12px;
-        font-size: 13px;
-        gap: 8px;
+        padding: 6px 10px;
+        font-size: 12px;
+        gap: 6px;
       }
     }
     
@@ -915,19 +920,19 @@
     .ai-badge {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 6px 10px;
-      background: var(--accent);
+      gap: 4px;
+      padding: 4px 8px;
+      background: var(--muted);
       color: white;
-      border-radius: 6px;
-      font-size: 12px;
+      border-radius: 4px;
+      font-size: 11px;
       font-weight: 500;
       transition: all 0.2s ease;
     }
     
     .ai-badge:hover {
       transform: translateY(-1px);
-      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
+      box-shadow: 0 2px 8px rgba(100, 116, 139, 0.2);
     }
     
     .custom-checkbox-text {
@@ -2094,7 +2099,7 @@
           <div style="flex:3">
             <h3 style="margin:0 0 6px">${t.title}</h3>
             <span class="badge ${badgeClass}">${t.status==='todo'?'To do':t.status==='inreview'?'In review':'Done'}</span>
-            ${(t.requiresAI && t.status!=='done')?'<div class="ai-badge" style="margin-top:8px;display:inline-flex;align-items:center;gap:6px;padding:6px 10px;background:var(--accent);color:white;border-radius:6px;font-size:12px;font-weight:500;"><span style="font-size:14px;">🤖</span>Рекомендуется AI-проверка</div>':''}
+            ${(t.requiresAI && t.status!=='done')?'<div class="ai-badge" style="margin-top:6px;display:inline-flex;align-items:center;gap:4px;padding:4px 8px;background:var(--muted);color:white;border-radius:4px;font-size:11px;font-weight:500;"><span style="font-size:12px;">🤖</span>AI</div>':''}
           </div>
           <div style="flex:2">
             <div class="row">
