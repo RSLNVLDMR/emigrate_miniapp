@@ -725,6 +725,10 @@
         font-size: 12px;
         padding: 8px 6px;
       }
+      
+      .bottom.hidden {
+        display: none !important;
+      }
       }
       
       /* Extra small screens optimization */
@@ -772,6 +776,10 @@
         padding: 10px 6px;
         font-size: 12px;
         min-height: 40px;
+      }
+      
+      .bottom.hidden {
+        display: none !important;
       }
       
       .row {
@@ -2014,6 +2022,12 @@
       home.style.transform = 'translateY(20px)';
       home.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
       
+      // Показываем футер когда онбординг завершен
+      const bottomMenu = document.querySelector('.bottom');
+      if (bottomMenu) {
+        bottomMenu.classList.remove('hidden');
+      }
+      
       setTimeout(() => {
         home.style.opacity = '1';
         home.style.transform = 'translateY(0)';
@@ -2081,6 +2095,12 @@
 
   // ====== Онбординг
   function showQ(n){
+    // Скрываем футер во время онбординга
+    const bottomMenu = document.querySelector('.bottom');
+    if (bottomMenu) {
+      bottomMenu.classList.add('hidden');
+    }
+    
     // Анимация перехода между вопросами
     const currentQ = document.querySelector('#onb [id^="q"]:not([style*="display: none"])');
     const nextQ = document.getElementById('q'+n);
@@ -2208,6 +2228,12 @@
       home.style.transform = 'translateY(20px)';
       home.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
       
+      // Показываем футер когда онбординг завершен
+      const bottomMenu = document.querySelector('.bottom');
+      if (bottomMenu) {
+        bottomMenu.classList.remove('hidden');
+      }
+      
       setTimeout(() => {
         home.style.opacity = '1';
         home.style.transform = 'translateY(0)';
@@ -2253,6 +2279,12 @@
         onb.style.opacity = '0';
         onb.style.transform = 'translateY(-20px)';
         onb.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+        
+        // Скрываем футер при сбросе онбординга
+        const bottomMenu = document.querySelector('.bottom');
+        if (bottomMenu) {
+          bottomMenu.classList.add('hidden');
+        }
         
         setTimeout(() => {
           onb.style.opacity = '1';
@@ -4650,6 +4682,11 @@
         }
       }
     } else {
+      // Скрываем футер если онбординг активен
+      const bottomMenu = document.querySelector('.bottom');
+      if (bottomMenu) {
+        bottomMenu.classList.add('hidden');
+      }
       showQ(1);
     }
   })();
