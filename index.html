@@ -198,6 +198,61 @@
       background:var(--line);
       border-radius:999px;
       overflow:hidden;
+      
+    /* ====== Opłata skarbowa — стили модуля */
+    .oplata-field {
+      margin-bottom: 16px;
+    }
+    
+    .oplata-field label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text);
+      font-size: 14px;
+    }
+    
+    .copy-field {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--card);
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+    }
+    
+    .copy-text {
+      flex: 1;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      color: var(--text);
+      word-break: break-all;
+      line-height: 1.4;
+    }
+    
+    .copy-btn {
+      flex: 0 0 auto;
+      width: auto;
+      padding: 8px 12px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.2s ease;
+      min-height: auto;
+    }
+    
+    .copy-btn:hover {
+      background: var(--accent-light);
+      transform: scale(1.05);
+    }
+    
+    .copy-btn:active {
+      transform: scale(0.95);
+    }
       box-shadow:inset 0 1px 2px rgba(0,0,0,0.1);
     }
     
@@ -1403,6 +1458,49 @@
   </div>
 </div>
 
+<!-- ====== Opłata skarbowa — модальный модуль -->
+<div id="oplata_modal" class="modal" role="dialog" aria-modal="true">
+  <div class="sheet">
+    <div class="row" style="align-items:center;margin-bottom:6px">
+      <button class="ghost" style="flex:0 0 auto;width:auto" onclick="closeOplataModal()">← Назад</button>
+      <span></span>
+    </div>
+
+    <!-- экран 1: выбор воеводства -->
+    <div id="oplata_step1">
+      <h3>Opłata skarbowa - данные для оплаты</h3>
+      <div class="small">Выберите ваше воеводство для получения реквизитов оплаты</div>
+      
+      <div class="voivodeship-select" style="margin: 20px 0">
+        <label for="oplata_voivodeship" style="display: block; margin-bottom: 8px; font-weight: 600;">Выберите ваше воеводство:</label>
+        <select id="oplata_voivodeship" onchange="oplataUpdateData()">
+          <option value="">Выберите воеводство...</option>
+          <option value="Dolnośląskie">Нижнесилезское (Dolnośląskie)</option>
+          <option value="Kujawsko-Pomorskie">Куявско-Поморское (Kujawsko-Pomorskie)</option>
+          <option value="Lubelskie">Люблинское (Lubelskie)</option>
+          <option value="Lubuskie">Любуское (Lubuskie)</option>
+          <option value="Łódzkie">Лодзинское (Łódzkie)</option>
+          <option value="Małopolskie">Малопольское (Małopolskie)</option>
+          <option value="Mazowieckie">Мазовецкое (Mazowieckie)</option>
+          <option value="Opolskie">Опольское (Opolskie)</option>
+          <option value="Podkarpackie">Подкарпатское (Podkarpackie)</option>
+          <option value="Podlaskie">Подляское (Podlaskie)</option>
+          <option value="Pomorskie">Поморское (Pomorskie)</option>
+          <option value="Śląskie">Силезское (Śląskie)</option>
+          <option value="Świętokrzyskie">Свентокшиское (Świętokrzyskie)</option>
+          <option value="Warmińsko-Mazurskie">Варминьско-Мазурское (Warmińsko-Mazurskie)</option>
+          <option value="Wielkopolskie">Великопольское (Wielkopolskie)</option>
+          <option value="Zachodniopomorskie">Западно-Поморское (Zachodniopomorskie)</option>
+        </select>
+      </div>
+      
+      <div id="oplata_data" style="display:none">
+        <!-- Данные будут загружены динамически -->
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ====== Фотографии — модальный модуль -->
 <div id="photos_modal" class="modal" role="dialog" aria-modal="true">
   <div class="sheet">
@@ -1792,12 +1890,7 @@
       return;
     }
     if(kind==='skarb'){
-      const paid = confirm('Оплатили госпошлину? (OK — да; Отмена — нет)');
-      if(paid){
-        alert('Отметили как выполнено. (Можно прикрепить чек — опционально в MVP)');
-      } else {
-        alert('Покажем реквизиты и короткую инструкцию по оплате.');
-      }
+      openOplataModal();
       return;
     }
   }
@@ -3456,8 +3549,405 @@
   function closeZałącznikOnBackdrop(e){ if(e.target.id==='załącznik_modal') closeZałącznikModal(); }
   document.getElementById('załącznik_modal').addEventListener('click', closeZałącznikOnBackdrop);
   
+  function closeOplataOnBackdrop(e){ if(e.target.id==='oplata_modal') closeOplataModal(); }
+  document.getElementById('oplata_modal').addEventListener('click', closeOplataOnBackdrop);
+  
   document.getElementById('ct_btn_upload').disabled = true; // init
   document.getElementById('załącznik_btn_upload').disabled = true; // init
+
+  // ====== Opłata skarbowa — функции модуля
+  function openOplataModal(){
+    // В Telegram Mini App header уже скрыт, просто добавляем класс
+    const wrap = document.querySelector('.wrap');
+    if(wrap) wrap.classList.add('no-header');
+    
+    const modal = el('oplata_modal');
+    modal.style.display='grid';
+    setTimeout(() => {
+      modal.classList.add('show');
+    }, 10);
+    
+    // Скрываем все экраны
+    el('oplata_step1').style.display='block';
+    
+    // Сбрасываем выбор воеводства
+    el('oplata_voivodeship').value = '';
+    el('oplata_data').style.display = 'none';
+  }
+
+  function closeOplataModal(){
+    const modal = el('oplata_modal');
+    modal.classList.remove('show');
+    setTimeout(() => {
+      modal.style.display='none';
+      
+      // В Telegram Mini App возвращаем только отступ
+      const wrap = document.querySelector('.wrap');
+      if(wrap) wrap.classList.remove('no-header');
+    }, 300);
+  }
+
+  function oplataUpdateData(){
+    const voivodeship = el('oplata_voivodeship').value;
+    const dataContainer = el('oplata_data');
+    
+    if(!voivodeship) {
+      dataContainer.style.display = 'none';
+      return;
+    }
+    
+    // Данные для каждого воеводства
+    const oplataData = {
+      'Dolnośląskie': {
+        recipient: 'Gmina Wrocław',
+        account: '82 1020 5226 0000 6102 0417 7895',
+        title: 'Opłata skarbowa za wydanie zezwolenia na pobyt czasowy – imię i nazwisko',
+        amount: '440 zł'
+      },
+      'Kujawsko-Pomorskie': {
+        recipient: 'Urząd Miasta Bydgoszczy, Wydział Podatków i Opłat Lokalnych',
+        account: '52 1240 6960 3892 1000 0000 0000',
+        title: 'Opłata skarbowa za wydanie zezwolenia na pobyt czasowy – imię i nazwisko',
+        amount: '440 zł'
+      },
+      'Lubelskie': {
+        recipient: 'Urząd Miasta Lublin, Wydział Podatków',
+        account: '95 1240 2092 9329 9200 0620 0000',
+        title: 'Opłata skarbowa za wydanie zezwolenia na pobyt czasowy – imię i nazwisko',
+        amount: '440 zł'
+      },
+      'Lubuskie': {
+        recipient: 'Urząd Miasta Gorzów Wielkopolski',
+        account: '44 1020 5402 0000 0302 0325 6575',
+        title: 'Opłata skarbowa za wydanie zezwolenia na pobyt czasowy – imię i nazwisko',
+        amount: '440 zł'
+      },
+      'Łódzkie': {
+        recipient: 'Urząd Miasta Łodzi',
+        account: '50 1240 1037 1111 0011 0925 0073',
+        title: 'Opłata skarbowa za wydanie zezwolenia na pobyt czasowy – imię i nazwisko',
+        amount: '440 zł'
+      },
+      'Małopolskie': {
+        recipient: 'Urząd Miasta Krakowa',
+        account: '49 1020 2892 2276 3005 0000 0000',
+        title: 'Opłata skarbowa za wydanie zezwolenia na pobyt czasowy – imię i nazwisko',
+        amount: '440 zł'
+      },
+      'Mazowieckie': {
+        recipient: 'Urząd m.st. Warszawy (Centrum Obsługi Podatnika)',
+        account: '21 1030 1508 0000 0005 5000 0070',
+        title: 'Opłata skarbowa za wydanie zezwolenia na pobyt czasowy – imię i nazwisko',
+        amount: '440 zł'
+      },
+      'Opolskie': {
+        recipient: 'Urząd Miasta Opola',
+        account: '03 1160 2202 0000 0002 1515 3249',
+        title: 'Opłata skarbowa za wydanie zezwolenia na pobyt czasowy – imię i nazwisko',
+        amount: '440 zł'
+      },
+      'Podkarpackie': {
+        recipient: 'Urząd Miasta Rzeszowa',
+        account: '17 1020 4391 2018 0062 0000 0423',
+        title: 'Opłata skarbowa za wydanie zezwolenia na pobyt czasowy – imię i nazwisko',
+        amount: '440 zł'
+      },
+      'Podlaskie': {
+        recipient: 'Urząd Miejski w Białymstoku, Departament Finansów Miasta',
+        account: '26 1240 5211 1111 0010 3553 3132',
+        title: 'Opłata skarbowa za wydanie zezwolenia na pobyt czasowy – imię i nazwisko',
+        amount: '440 zł'
+      },
+      'Pomorskie': {
+        recipient: 'Urząd Miejski w Gdańsku',
+        account: '31 1240 1268 1111 0010 3877 3935',
+        title: 'Opłata skarbowa za wydanie zezwolenia na pobyt czasowy – imię i nazwisko',
+        amount: '440 zł'
+      },
+      'Śląskie': {
+        recipient: 'Urząd Miasta Katowice',
+        account: '52 1020 2313 2672 0211 1111 1111',
+        title: 'Opłata skarbowa za wydanie zezwolenia na pobyt czasowy – imię i nazwisko',
+        amount: '440 zł'
+      },
+      'Świętokrzyskie': {
+        recipient: 'Urząd Miasta Kielce',
+        account: '38 1050 0099 6450 9000 0000 0000',
+        title: 'Opłata skarbowa za wydanie zezwolenia na pobyt czasowy – imię i nazwisko',
+        amount: '440 zł'
+      },
+      'Warmińsko-Mazurskie': {
+        recipient: 'Urząd Miasta Olsztyna, Wydział Podatków i Opłat',
+        account: '09 1030 1508 0000 0008 2310 0003',
+        title: 'Opłata skarbowa za wydanie zezwolenia na pobyt czasowy – imię i nazwisko',
+        amount: '440 zł'
+      },
+      'Wielkopolskie': {
+        recipient: 'Urząd Miasta Poznania, Wydział Finansowy (Oddział Dochodów Budżetowych)',
+        account: '94 1020 4027 0000 1602 1262 0763',
+        title: 'Opłata skarbowa za wydanie zezwolenia na pobyt czasowy – imię i nazwisko',
+        amount: '440 zł'
+      },
+      'Zachodniopomorskie': {
+        recipient: 'Urząd Miasta Szczecin, Wydział Podatków i Opłat Lokalnych',
+        account: '20 1020 4795 0000 9302 0277 9429',
+        title: 'Opłata skarbowa za wydanie zezwolenia na pobyt czasowy – imię i nazwisko',
+        amount: '440 zł'
+      }
+    };
+    
+    const data = oplataData[voivodeship];
+    if(data) {
+      dataContainer.innerHTML = `
+        <div class="oplata-info" style="background: var(--bg); padding: 20px; border-radius: 12px; margin: 20px 0;">
+          <h4 style="margin: 0 0 16px 0; color: var(--accent);">Реквизиты для оплаты</h4>
+          
+          <div class="oplata-field">
+            <label>Получатель (Odbiorca):</label>
+            <div class="copy-field">
+              <span class="copy-text">${data.recipient}</span>
+              <button class="copy-btn" onclick="copyToClipboard('${data.recipient}')" title="Копировать">
+                📋
+              </button>
+            </div>
+          </div>
+          
+          <div class="oplata-field">
+            <label>Номер счёта (Nr rachunku):</label>
+            <div class="copy-field">
+              <span class="copy-text">${data.account}</span>
+              <button class="copy-btn" onclick="copyToClipboard('${data.account}')" title="Копировать">
+                📋
+              </button>
+            </div>
+          </div>
+          
+          <div class="oplata-field">
+            <label>Назначение платежа (Tytuł przelewu):</label>
+            <div class="copy-field">
+              <span class="copy-text">${data.title}</span>
+              <button class="copy-btn" onclick="copyToClipboard('${data.title}')" title="Копировать">
+                📋
+              </button>
+            </div>
+          </div>
+          
+          <div class="oplata-field">
+            <label>Сумма:</label>
+            <div class="copy-field">
+              <span class="copy-text">${data.amount}</span>
+              <button class="copy-btn" onclick="copyToClipboard('${data.amount}')" title="Копировать">
+                📋
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="oplata-actions" style="text-align: center; margin-top: 20px;">
+          <button class="primary" onclick="copyAllOplataData('${voivodeship}')" style="width: 100%; margin-bottom: 12px;">
+            📋 Скопировать все данные
+          </button>
+          <div class="small muted">
+            💡 Скопируйте данные в ваш банк для совершения перевода
+          </div>
+        </div>
+      `;
+      
+      dataContainer.style.display = 'block';
+    }
+  }
+
+  function copyToClipboard(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(() => {
+        showCopySuccess();
+      });
+    } else {
+      // Fallback для старых браузеров
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      textArea.style.top = '-999999px';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        showCopySuccess();
+      } catch (err) {
+        console.error('Ошибка копирования:', err);
+      }
+      document.body.removeChild(textArea);
+    }
+  }
+
+  function copyAllOplataData(voivodeship) {
+    const voivodeshipNames = {
+      'Dolnośląskie': 'Нижнесилезское',
+      'Kujawsko-Pomorskie': 'Куявско-Поморское',
+      'Lubelskie': 'Люблинское',
+      'Lubuskie': 'Любуское',
+      'Łódzkie': 'Лодзинское',
+      'Małopolskie': 'Малопольское',
+      'Mazowieckie': 'Мазовецкое',
+      'Opolskie': 'Опольское',
+      'Podkarpackie': 'Подкарпатское',
+      'Podlaskie': 'Подляское',
+      'Pomorskie': 'Поморское',
+      'Śląskie': 'Силезское',
+      'Świętokrzyskie': 'Свентокшиское',
+      'Warmińsko-Mazurskie': 'Варминьско-Мазурское',
+      'Wielkopolskie': 'Великопольское',
+      'Zachodniopomorskie': 'Западно-Поморское'
+    };
+    
+    const oplataData = {
+      'Dolnośląskie': {
+        recipient: 'Gmina Wrocław',
+        account: '82 1020 5226 0000 6102 0417 7895',
+        title: 'Opłata skarbowa za wydanie zezwolenia na pobyt czasowy – imię i nazwisko',
+        amount: '440 zł'
+      },
+      'Kujawsko-Pomorskie': {
+        recipient: 'Urząd Miasta Bydgoszczy, Wydział Podatków i Opłat Lokalnych',
+        account: '52 1240 6960 3892 1000 0000 0000',
+        title: 'Opłata skarbowa za wydanie zezwolenia na pobyt czasowy – imię i nazwisko',
+        amount: '440 zł'
+      },
+      'Lubelskie': {
+        recipient: 'Urząd Miasta Lublin, Wydział Podatków',
+        account: '95 1240 2092 9329 9200 0620 0000',
+        title: 'Opłata skarbowa za wydanie zezwolenia na pobyt czasowy – imię i nazwisko',
+        amount: '440 zł'
+      },
+      'Lubuskie': {
+        recipient: 'Urząd Miasta Gorzów Wielkopolski',
+        account: '44 1020 5402 0000 0302 0325 6575',
+        title: 'Opłata skarbowa za wydanie zezwolenia na pobyt czasowy – imię i nazwisko',
+        amount: '440 zł'
+      },
+      'Łódzkie': {
+        recipient: 'Urząd Miasta Łodzi',
+        account: '50 1240 1037 1111 0011 0925 0073',
+        title: 'Opłata skarbowa za wydanie zezwolenia na pobyt czasowy – imię i nazwisko',
+        amount: '440 zł'
+      },
+      'Małopolskie': {
+        recipient: 'Urząd Miasta Krakowa',
+        account: '49 1020 2892 2276 3005 0000 0000',
+        title: 'Opłata skarbowa za wydanie zezwolenia na pobyt czasowy – imię i nazwisko',
+        amount: '440 zł'
+      },
+      'Mazowieckie': {
+        recipient: 'Urząd m.st. Warszawy (Centrum Obsługi Podatnika)',
+        account: '21 1030 1508 0000 0005 5000 0070',
+        title: 'Opłata skarbowa za wydanie zezwolenia na pobyt czasowy – imię i nazwisko',
+        amount: '440 zł'
+      },
+      'Opolskie': {
+        recipient: 'Urząd Miasta Opola',
+        account: '03 1160 2202 0000 0002 1515 3249',
+        title: 'Opłata skarbowa za wydanie zezwolenia na pobyt czasowy – imię i nazwisko',
+        amount: '440 zł'
+      },
+      'Podkarpackie': {
+        recipient: 'Urząd Miasta Rzeszowa',
+        account: '17 1020 4391 2018 0062 0000 0423',
+        title: 'Opłata skarbowa za wydanie zezwolenia na pobyt czasowy – imię i nazwisko',
+        amount: '440 zł'
+      },
+      'Podlaskie': {
+        recipient: 'Urząd Miejski w Białymstoku, Departament Finansów Miasta',
+        account: '26 1240 5211 1111 0010 3553 3132',
+        title: 'Opłata skarbowa za wydanie zezwolenia na pobyt czasowy – imię i nazwisko',
+        amount: '440 zł'
+      },
+      'Pomorskie': {
+        recipient: 'Urząd Miejski w Gdańsku',
+        account: '31 1240 1268 1111 0010 3877 3935',
+        title: 'Opłata skarbowa za wydanie zezwolenia na pobyt czasowy – imię i nazwisko',
+        amount: '440 zł'
+      },
+      'Śląskie': {
+        recipient: 'Urząd Miasta Katowice',
+        account: '52 1020 2313 2672 0211 1111 1111',
+        title: 'Opłata skarbowa za wydanie zezwolenia na pobyt czasowy – imię i nazwisko',
+        amount: '440 zł'
+      },
+      'Świętokrzyskie': {
+        recipient: 'Urząd Miasta Kielce',
+        account: '38 1050 0099 6450 9000 0000 0000',
+        title: 'Opłata skarbowa za wydanie zezwolenia na pobyt czasowy – imię i nazwisko',
+        amount: '440 zł'
+      },
+      'Warmińsko-Mazurskie': {
+        recipient: 'Urząd Miasta Olsztyna, Wydział Podatków i Opłat',
+        account: '09 1030 1508 0000 0008 2310 0003',
+        title: 'Opłata skarbowa za wydanie zezwolenia na pobyt czasowy – imię i nazwisko',
+        amount: '440 zł'
+      },
+      'Wielkopolskie': {
+        recipient: 'Urząd Miasta Poznania, Wydział Finansowy (Oddział Dochodów Budżetowych)',
+        account: '94 1020 4027 0000 1602 1262 0763',
+        title: 'Opłata skarbowa za wydanie zezwolenia na pobyt czasowy – imię i nazwisko',
+        amount: '440 zł'
+      },
+      'Zachodniopomorskie': {
+        recipient: 'Urząd Miasta Szczecin, Wydział Podatków i Opłat Lokalnych',
+        account: '20 1020 4795 0000 9302 0277 9429',
+        title: 'Opłata skarbowa za wydanie zezwolenia na pobyt czasowy – imię i nazwisko',
+        amount: '440 zł'
+      }
+    };
+    
+    const data = oplataData[voivodeship];
+    if(data) {
+      const allData = `Воеводство: ${voivodeshipNames[voivodeship]}\nПолучатель: ${data.recipient}\nНомер счёта: ${data.account}\nНазначение платежа: ${data.title}\nСумма: ${data.amount}`;
+      copyToClipboard(allData);
+    }
+  }
+
+  function showCopySuccess() {
+    // Показываем уведомление об успешном копировании
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: var(--accent);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      z-index: 10000;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      animation: slideIn 0.3s ease-out;
+    `;
+    notification.textContent = '✅ Скопировано!';
+    
+    // Добавляем CSS анимацию
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+      }
+    `;
+    document.head.appendChild(style);
+    
+    document.body.appendChild(notification);
+    
+    // Убираем уведомление через 2 секунды
+    setTimeout(() => {
+      notification.style.animation = 'slideOut 0.3s ease-in';
+      notification.style.transform = 'translateX(100%)';
+      notification.style.opacity = '0';
+      setTimeout(() => {
+        document.body.removeChild(notification);
+      }, 300);
+    }, 2000);
+  }
 
   // ====== Автозагрузка
   (function init(){
