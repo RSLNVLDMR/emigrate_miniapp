@@ -1105,6 +1105,101 @@
   </div>
 </div>
 
+<!-- ====== Załącznik od pracodawcy — модальный модуль -->
+<div id="załącznik_modal" class="modal" role="dialog" aria-modal="true">
+  <div class="sheet">
+    <div class="row" style="align-items:center;margin-bottom:6px">
+      <button class="ghost" style="flex:0 0 auto;width:auto" onclick="closeZałącznikModal()">← Назад</button>
+      <span></span>
+    </div>
+
+    <!-- экран 1: загрузка -->
+    <div id="załącznik_step1">
+      <h3>Загрузи załącznik od pracodawcy для проверки</h3>
+      <div class="small">Поддерживаются PDF, JPG, PNG (до ~20 МБ).</div>
+      <div id="załącznik_checked_info" class="status ok" style="display:none;margin-top:10px"></div>
+      <input id="załącznik_file" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" />
+      <div class="hr"></div>
+      <button id="załącznik_btn_upload" class="primary" disabled onclick="załącznikStart()">
+        <span style="display:flex;align-items:center;justify-content:center;gap:8px">
+          <span style="font-size:18px">🤖</span>
+          <span>Проверить с AI</span>
+        </span>
+      </button>
+      <div class="small muted" style="margin-top:12px;text-align:center">
+        <a href="javascript:void(0)" onclick="załącznikNoDoc()" class="help-link">У меня нет — помогите</a>
+      </div>
+    </div>
+
+    <!-- экран 2: дата завершения анализа -->
+    <div id="załącznik_step2" style="display:none">
+      <h3>AI анализ запущен</h3>
+      <div class="completion-info" style="margin:20px 0;text-align:center">
+        <div style="font-size:48px;margin-bottom:16px">⏰</div>
+        <div style="font-size:18px;font-weight:600;margin-bottom:8px">Анализ будет готов</div>
+        <div id="załącznik_completion_date" style="font-size:24px;color:var(--accent);font-weight:700;margin-bottom:8px"></div>
+        <div id="załącznik_completion_time" style="font-size:16px;color:var(--muted)"></div>
+      </div>
+      <div class="status" id="załącznik_queue_msg" style="margin-top:16px">
+        Твой анализ будет готов <span id="załącznik_time_remaining">через 24 часа</span>
+      </div>
+      <div class="small muted" style="margin-top:12px">
+        Можешь ускорить AI и получить результат быстрее
+      </div>
+      <div style="margin-top:20px">
+        <button id="załącznik_btn_boost" class="primary" onclick="załącznikBoost()" style="width:100%">Ускоряю!</button>
+      </div>
+      <div class="small muted" id="załącznik_poll_note" style="margin-top:8px"></div>
+    </div>
+
+    <!-- экран 3: оплата -->
+    <div id="załącznik_step3" style="display:none">
+      <h3>Ускорение AI анализа</h3>
+      <div class="status" style="margin-top:16px">
+        <div class="center">
+          <div style="font-size:24px;color:var(--accent);margin-bottom:8px">⚡</div>
+          <div>Результат за 1 час вместо 24 часов</div>
+        </div>
+      </div>
+      
+      <div class="hr"></div>
+      
+      <div class="payment-details">
+        <div class="payment-item">
+          <span>Ускорение AI анализа</span>
+          <span class="payment-price">50 PLN</span>
+        </div>
+        <div class="payment-item">
+          <span>Приоритетная обработка</span>
+          <span class="payment-price">+20 PLN</span>
+        </div>
+        <div class="hr"></div>
+        <div class="payment-total">
+          <span>Итого к оплате:</span>
+          <span class="payment-price total">70 PLN</span>
+        </div>
+      </div>
+      
+      <div style="margin-top:20px">
+        <button class="primary" onclick="załącznikProcessPayment()" style="width:100%;margin-bottom:12px">Оплатить</button>
+        <button class="ghost" onclick="załącznikBackToTimer()" style="width:100%">Отмена</button>
+      </div>
+    </div>
+
+    <!-- экран 4: результат -->
+    <div id="załącznik_step4" style="display:none">
+      <h3 id="załącznik_result_title">Ура! Всё удалось 🎉</h3>
+      <div id="załącznik_result_box" class="status ok" style="margin-top:10px">
+        <div id="załącznik_result_text">Все чётко. Замечаний нет.</div>
+      </div>
+      <div style="margin-top:20px">
+        <button class="primary" onclick="załącznikBackToHome()" style="width:100%;margin-bottom:12px">Вернуться в главное меню</button>
+        <button class="ghost" onclick="załącznikStartOver()" style="width:100%">Загрузить новый документ</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ====== Фотографии — модальный модуль -->
 <div id="photos_modal" class="modal" role="dialog" aria-modal="true">
   <div class="sheet">
@@ -1316,7 +1411,7 @@
     ];
     if(track==='work'||track==='business'){
       common.splice(2,0,{id:'contract', title:'Контракт / Основание', status:'todo', requiresAI:true, kind:'contract'});
-      common.splice(3,0,{id:'hr', title:'Załącznik od pracodawcy', status:'todo', requiresAI:true, kind:'attachmentHR'});
+      common.splice(3,0,{id:'załącznik', title:'Załącznik od pracodawcy', status:'todo', requiresAI:true, kind:'załącznik'});
     }
     if(track==='study'){
       common.splice(2,0,{id:'uni', title:'Справка из вуза', status:'todo', requiresAI:true, kind:'university'});
@@ -1476,6 +1571,7 @@
       return;
     }
     if(kind==='contract'){ openContractModal(); return; }
+    if(kind==='załącznik'){ openZałącznikModal(); return; }
     if(kind==='attachmentHR'){
       alert('Скачайте шаблон, отдайте HR. Затем загрузите подписанный/с печатью документ (AI-проверка).');
       return;
@@ -1642,6 +1738,9 @@
 
   // ====== Контракт — модальное окно и логика
   let ct = { file: null, fileMeta: null, jobId: null, pollTimer: null, boosted:false };
+  
+  // ====== Załącznik od pracodawcy — модальное окно и логика
+  let załącznik = { file: null, fileMeta: null, jobId: null, pollTimer: null, boosted:false };
 
   function el(id){ return document.getElementById(id); }
   function openContractModal(){
@@ -1725,6 +1824,16 @@
     if(wrap) wrap.classList.remove('no-header');
     openChecklist(); 
   }
+
+  function załącznikBackToHome(){ 
+    closeZałącznikModal(); 
+    // Показываем хедер обратно перед открытием чеклиста
+    const header = document.querySelector('header');
+    const wrap = document.querySelector('.wrap');
+    if(header) header.style.display = '';
+    if(wrap) wrap.classList.remove('no-header');
+    openChecklist(); 
+  }
   
   function ctStartOver(){
     // Сбрасываем статус задачи если нужно
@@ -1763,6 +1872,46 @@
     
     // Скрываем информацию о предыдущей проверке
     const info = el('ct_checked_info');
+    if(info){ info.style.display='none'; info.innerText=''; }
+  }
+
+  function załącznikStartOver(){
+    // Сбрасываем статус задачи если нужно
+    const task = st.tasks.find(t => t.id === 'załącznik');
+    if(task && task.status === 'inreview'){
+      st.tasks = st.tasks.map(t=> t.id==='załącznik' ? {...t, status:'todo'} : t);
+      localStorage.setItem('tasks', JSON.stringify(st.tasks));
+      // Обновляем чеклист
+      try { renderChecklist(); } catch(e) {}
+    }
+    
+    // Очищаем localStorage от даты завершения
+    localStorage.removeItem('załącznikTimerEnd');
+    
+    // Сбрасываем анимационные стили для всех экранов
+    const steps = ['załącznik_step1', 'załącznik_step2', 'załącznik_step3', 'załącznik_step4'];
+    steps.forEach(stepId => {
+      const step = el(stepId);
+      if(step){
+        step.style.opacity = '1';
+        step.style.transform = 'translateX(0)';
+        step.style.transition = '';
+      }
+    });
+    
+    // Возвращаемся к первому экрану
+    el('załącznik_step4').style.display='none';
+    el('załącznik_step3').style.display='none';
+    el('załącznik_step2').style.display='none';
+    el('załącznik_step1').style.display='block';
+    
+    // Сбрасываем состояние
+    załącznik = { file:null, fileMeta:null, jobId:null, pollTimer:null, boosted:false };
+    el('załącznik_btn_upload').disabled = true;
+    el('załącznik_file').value = '';
+    
+    // Скрываем информацию о предыдущей проверке
+    const info = el('załącznik_checked_info');
     if(info){ info.style.display='none'; info.innerText=''; }
   }
 
@@ -1817,6 +1966,38 @@
       if(header) header.style.display = '';
       if(wrap) wrap.classList.remove('no-header');
     }, 300);
+  }
+
+  function openZałącznikModal(){
+    el('załącznik_modal').style.display='block';
+    const header = document.querySelector('header');
+    if(header) header.style.display = 'none';
+    const wrap = document.querySelector('.wrap');
+    if(wrap) wrap.classList.add('no-header');
+    
+    // Проверяем статус задачи załącznik
+    const task = st.tasks.find(t => t.id === 'załącznik');
+    if(task && task.status === 'inreview'){
+      el('załącznik_step4').style.display='block';
+      if(task.result === 'redflags'){
+        showZałącznikRedFlagsResult();
+      } else {
+        showZałącznikSuccessResult();
+      }
+    } else if(task && task.status === 'done'){
+      el('załącznik_step4').style.display='block';
+      showZałącznikSuccessResult();
+    } else {
+      el('załącznik_step1').style.display='block';
+    }
+  }
+
+  function closeZałącznikModal(){
+    el('załącznik_modal').style.display='none';
+    const header = document.querySelector('header');
+    if(header) header.style.display = 'block';
+      const wrap = document.querySelector('.wrap');
+      if(wrap) wrap.classList.remove('no-header');
   }
   
   function findPhotoStudios(){
@@ -1946,6 +2127,13 @@
     el('ct_btn_upload').disabled = !ct.file;
   });
 
+  // enable button when file chosen for załącznik
+  el('załącznik_file').addEventListener('change', (e)=>{
+    const f = e.target.files[0];
+    załącznik.file = f || null;
+    el('załącznik_btn_upload').disabled = !załącznik.file;
+  });
+
   function ctNoDoc(){
     // Закрываем модальное окно
     closeModal();
@@ -1967,6 +2155,30 @@
     } else {
       // Если Telegram Web App недоступен, показываем инструкцию
       alert('Здравствуйте, у меня нету контракта на работу. Хотел бы попросить о помощи\n\nНапишите нам в Telegram: @emigrate_support');
+    }
+  }
+
+  function załącznikNoDoc(){
+    // Закрываем модальное окно
+    closeZałącznikModal();
+    
+    // Открываем чат в Telegram с готовым сообщением
+    if(tg && tg.openTelegramLink){
+      // Формируем готовое сообщение
+      const message = encodeURIComponent('Здравствуйте, у меня нету załącznik od pracodawcy. Хотел бы попросить о помощи');
+      
+      // Открываем чат с пользователем @emigrate_support
+      const chatUrl = `https://t.me/emigrate_support?text=${message}`;
+      
+      try {
+        tg.openTelegramLink(chatUrl);
+      } catch(e) {
+        // Fallback: открываем в браузере
+        window.open(chatUrl, '_blank');
+      }
+    } else {
+      // Если Telegram Web App недоступен, показываем инструкцию
+      alert('Здравствуйте, у меня нету załącznik od pracodawcy. Хотел бы попросить о помощи\n\nНапишите нам в Telegram: @emigrate_support');
     }
   }
 
@@ -2085,12 +2297,150 @@
     console.log('Дата завершения анализа установлена:', completionDate.toLocaleString());
   }
 
+  // Функция показа даты завершения анализа для załącznik
+  function showZałącznikCompletionDate(){
+    // Устанавливаем время окончания: текущее время + 24 часа
+    const endTime = new Date().getTime() + (24 * 60 * 60 * 1000);
+    const completionDate = new Date(endTime);
+    
+    // Сохраняем время окончания в localStorage
+    localStorage.setItem('załącznikTimerEnd', endTime.toString());
+    
+    // Показываем дату и время завершения
+    const dateEl = el('załącznik_completion_date');
+    const timeEl = el('załącznik_completion_time');
+    
+    if(dateEl && timeEl){
+      // Форматируем дату
+      const dateOptions = { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      };
+      const timeOptions = { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      };
+      
+      dateEl.innerText = completionDate.toLocaleDateString('ru-RU', dateOptions);
+      timeEl.innerText = completionDate.toLocaleTimeString('ru-RU', timeOptions);
+    }
+    
+    // Обновляем текст статуса
+    el('załącznik_time_remaining').innerText = 'через 24 часа';
+    
+    console.log('Дата завершения анализа załącznik установлена:', completionDate.toLocaleString());
+  }
+
+  async function załącznikStart(){
+    if(!załącznik.file){ alert('Выберите файл.'); return; }
+    
+    // Анимация перехода между экранами
+    const step1 = el('załącznik_step1');
+    const step2 = el('załącznik_step2');
+    
+    step1.style.opacity = '0';
+    step1.style.transform = 'translateX(-20px)';
+    step1.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    
+    setTimeout(() => {
+      step1.style.display='none';
+      step2.style.display='';
+      step2.style.opacity = '0';
+      step2.style.transform = 'translateX(20px)';
+      step2.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+      
+      setTimeout(() => {
+        step2.style.opacity = '1';
+        step2.style.transform = 'translateX(0)';
+      }, 10);
+    }, 300);
+    
+    el('załącznik_step3').style.display='none';
+    el('załącznik_step4').style.display='none';
+    el('załącznik_poll_note').innerText = '';
+    
+    // Показываем дату завершения анализа если нет backend
+    if(!ENDPOINTS){
+      showZałącznikCompletionDate();
+    }
+
+    try{
+      // 1) загрузка файла
+      let uploadRes = null;
+      if(ENDPOINTS){
+        const fd = new FormData();
+        fd.append('file', załącznik.file);
+        fd.append('source', 'emigrant_webapp');
+        const resp = await fetch(ENDPOINTS.upload, { method:'POST', body: fd });
+        if(!resp.ok) throw new Error('Upload failed');
+        uploadRes = await resp.json(); // ожидаем {file_id, file_url, name, size}
+      } else {
+        // fallback: шлём боту метаданные, пусть он продолжит в чате
+        uploadRes = { file_id: null, file_url: null, name: załącznik.file.name, size: załącznik.file.size };
+      }
+
+      załącznik.fileMeta = uploadRes;
+
+      // 2) запуск анализа
+      let analyzeRes = null;
+      if(ENDPOINTS){
+        const body = { file_id: uploadRes.file_id, file_url: uploadRes.file_url, prompt: AI_PROMPT, priority: załącznik.boosted?'high':'normal' };
+        const resp = await fetch(ENDPOINTS.analyze, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+        if(!resp.ok) throw new Error('Analyze start failed');
+        analyzeRes = await resp.json(); // ожидаем {job_id}
+        załącznik.jobId = analyzeRes.job_id;
+        startZałącznikPolling();
+      } else {
+        // отправляем в бота, который читает web_app_data
+        try{
+          tg && tg.sendData && tg.sendData(JSON.stringify({
+            type:'analyze_załącznik',
+            prompt: AI_PROMPT,
+            fileMeta: { name: załącznik.file.name, size: załącznik.file.size },
+            note:'Нет подключенного backend ENDPOINTS — передано в бота через sendData'
+          }));
+          // НЕ запускаем fakeFinishOk() сразу - ждем таймер на 24 часа
+        }catch(e){}
+      }
+
+    }catch(err){
+      console.error(err);
+      el('załącznik_queue_msg').innerText = 'Не удалось запустить анализ. Попробуйте ещё раз.';
+      el('załącznik_btn_boost').disabled = true;
+    }
+  }
+
 
 
   function ctBoost(){
     // Показываем экран оплаты с анимацией
     const step2 = el('ct_step2');
     const step3 = el('ct_step3');
+    
+    step2.style.opacity = '0';
+    step2.style.transform = 'translateX(-20px)';
+    step2.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    
+    setTimeout(() => {
+      step2.style.display='none';
+      step3.style.display='';
+      step3.style.opacity = '0';
+      step3.style.transform = 'translateX(20px)';
+      step3.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+      
+      setTimeout(() => {
+        step3.style.opacity = '1';
+        step3.style.transform = 'translateX(0)';
+      }, 10);
+    }, 300);
+  }
+
+  function załącznikBoost(){
+    // Показываем экран оплаты с анимацией
+    const step2 = el('załącznik_step2');
+    const step3 = el('załącznik_step3');
     
     step2.style.opacity = '0';
     step2.style.transform = 'translateX(-20px)';
@@ -2132,11 +2482,33 @@
       }, 10);
     }, 300);
   }
+
+  function załącznikBackToTimer(){
+    const step3 = el('załącznik_step3');
+    const step2 = el('załącznik_step2');
+    
+    step3.style.opacity = '0';
+    step3.style.transform = 'translateX(20px)';
+    step3.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    
+    setTimeout(() => {
+      step3.style.display='none';
+      step2.style.display='';
+      step2.style.opacity = '0';
+      step2.style.transform = 'translateX(-20px)';
+      step2.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+      
+      setTimeout(() => {
+        step2.style.opacity = '1';
+        step2.style.transform = 'translateX(0)';
+      }, 10);
+    }, 300);
+  }
   
   // Функция обработки оплаты
   function ctProcessPayment(){
     // Имитируем процесс оплаты
-    el('ct_poll_note').innerText = 'Обрабатываем оплату...';
+    el('ct_poll_note').innerText = 'Обрабатываем оплаты...';
     
     setTimeout(() => {
       // После успешной оплаты сразу показываем результат
@@ -2185,6 +2557,56 @@
       
     }, 2000);
   }
+
+  function załącznikProcessPayment(){
+    // Имитируем процесс оплаты
+    el('załącznik_poll_note').innerText = 'Обрабатываем оплату...';
+    
+    setTimeout(() => {
+      // После успешной оплаты сразу показываем результат
+      załącznik.boosted = true;
+      
+      // Показываем экран загрузки с анимацией
+      const step3 = el('załącznik_step3');
+      const step4 = el('załącznik_step4');
+      
+      step3.style.opacity = '0';
+      step3.style.transform = 'translateX(-20px)';
+      step3.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+      
+      setTimeout(() => {
+        step3.style.display='none';
+        step4.style.display='';
+        step4.style.opacity = '0';
+        step4.style.transform = 'translateX(20px)';
+        step4.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+        
+        setTimeout(() => {
+          step4.style.opacity = '1';
+          step4.style.transform = 'translateX(0)';
+        }, 10);
+      }, 300);
+      
+      // Имитируем загрузку результата
+      el('załącznik_result_title').innerText = 'Обрабатываем результат...';
+      el('załącznik_result_box').innerHTML = '<div class="spinner"></div><div style="margin-top:10px">AI анализирует документ...</div>';
+      
+      // Через 3 секунды показываем результат
+      setTimeout(() => {
+        // Генерируем случайный результат (подходит/не подходит)
+        const isDocumentOk = Math.random() > 0.3; // 70% вероятность что документ подходит
+        
+        if(isDocumentOk){
+          // Документ подходит - показываем экран успеха
+          showZałącznikSuccessResult();
+        } else {
+          // Документ не подходит - показываем экран с красными флагами
+          showZałącznikRedFlagsResult();
+        }
+      }, 3000);
+      
+    }, 2000);
+  }
   
   // Функция показа успешного результата
   function showSuccessResult(){
@@ -2199,6 +2621,19 @@
     // Мгновенно обновляем чеклист, если он открыт
     try { renderChecklist(); } catch(e) {}
   }
+
+  function showZałącznikSuccessResult(){
+    el('załącznik_result_title').innerText = 'Ура! Всё удалось 🎉';
+    el('załącznik_result_box').className = 'status ok';
+    el('załącznik_result_box').innerHTML = '<div>Все чётко. Замечаний нет.</div>';
+    
+    // Помечаем задачу как выполненную
+    st.tasks = st.tasks.map(t=> t.id==='załącznik' ? {...t, status:'done'} : t);
+    localStorage.setItem('tasks', JSON.stringify(st.tasks));
+    localStorage.setItem('załącznikCheckedAt', String(Date.now()));
+    // Мгновенно обновляем чеклист, если он открыт
+    try { renderChecklist(); } catch(e) {}
+  }
   
   // Функция показа результата с красными флагами
   function showRedFlagsResult(){
@@ -2206,6 +2641,7 @@
     el('ct_result_box').className = 'status err';
     el('ct_result_box').innerHTML = `
       <div style="text-align:center;margin-bottom:16px">
+        <div style="text-align:center;margin-bottom:16px">
         <div style="font-size:24px;margin-bottom:8px">⚠️</div>
         <div>Узнай детальный отчет или проигнорируй наши подсказки</div>
       </div>
@@ -2224,6 +2660,34 @@
     
     // Помечаем задачу как требующую внимания
     st.tasks = st.tasks.map(t=> t.id==='contract' ? {...t, status:'inreview'} : t);
+    localStorage.setItem('tasks', JSON.stringify(st.tasks));
+    // Обновляем чеклист
+    try { renderChecklist(); } catch(e) {}
+  }
+
+  function showZałącznikRedFlagsResult(){
+    el('załącznik_result_title').innerText = 'Мы заметили красные флаги в твоем załącznik';
+    el('załącznik_result_box').className = 'status err';
+    el('załącznik_result_box').innerHTML = `
+      <div style="text-align:center;margin-bottom:16px">
+        <div style="font-size:24px;margin-bottom:8px">⚠️</div>
+        <div>Узнай детальный отчет или проигнорируй наши подсказки</div>
+      </div>
+      <div style="text-align:center">
+        <button class="primary" onclick="showZałącznikDetailedReport()" style="width:100%;margin-bottom:8px">
+          Узнать что не так
+        </button>
+        <button class="ghost" onclick="ignoreZałącznikRedFlags()" style="width:100%;margin-bottom:8px">
+          Проигнорировать
+        </button>
+        <button class="ghost" onclick="załącznikStartOver()" style="width:100%">
+          Загрузить другой документ
+        </button>
+      </div>
+    `;
+    
+    // Помечаем задачу как требующую внимания
+    st.tasks = st.tasks.map(t=> t.id==='załącznik' ? {...t, status:'inreview'} : t);
     localStorage.setItem('tasks', JSON.stringify(st.tasks));
     // Обновляем чеклист
     try { renderChecklist(); } catch(e) {}
@@ -2343,6 +2807,7 @@
   function closeOnBackdrop(e){ if(e.target.id==='modal') closeModal(); }
   document.getElementById('modal').addEventListener('click', closeOnBackdrop);
   document.getElementById('ct_btn_upload').disabled = true; // init
+  document.getElementById('załącznik_btn_upload').disabled = true; // init
 
   // ====== Автозагрузка
   (function init(){
@@ -2380,6 +2845,38 @@
         } else {
           // Дата истекла - очищаем
           localStorage.removeItem('contractTimerEnd');
+        }
+      }
+
+      // Проверяем, есть ли активная дата завершения анализа для załącznik
+      const załącznikTimerEnd = localStorage.getItem('załącznikTimerEnd');
+      if(załącznikTimerEnd){
+        const endTime = parseInt(załącznikTimerEnd);
+        const now = new Date().getTime();
+        if(endTime > now){
+          // Дата еще актуальна - показываем её
+          const completionDate = new Date(endTime);
+          const dateEl = el('załącznik_completion_date');
+          const timeEl = el('załącznik_completion_time');
+          
+          if(dateEl && timeEl){
+            const dateOptions = { 
+              weekday: 'long', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            };
+            const timeOptions = { 
+              hour: '2-digit', 
+              minute: '2-digit' 
+            };
+            
+            dateEl.innerText = completionDate.toLocaleDateString('ru-RU', dateOptions);
+            timeEl.innerText = completionDate.toLocaleTimeString('ru-RU', timeOptions);
+          }
+        } else {
+          // Дата истекла - очищаем
+          localStorage.removeItem('załącznikTimerEnd');
         }
       }
     } else {
