@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>eMigrant — Miniapp MVP</title>
+  <meta name="version" content="v1.0.1-<?php echo time(); ?>">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -325,65 +326,65 @@
     }
     
     .bottom{
-      position:fixed;
-      left:0;
-      right:0;
-      bottom:0;
-      background:var(--card);
-      border-top:1px solid var(--line);
-      display:flex;
-      justify-content:space-around;
-      align-items:center;
-      padding:12px 16px;
-      box-shadow:0 -2px 16px rgba(0,0,0,0.1);
-      z-index:1000;
+      position: fixed !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      background: var(--card) !important;
+      border-top: 1px solid var(--line) !important;
+      display: flex !important;
+      justify-content: space-around !important;
+      align-items: center !important;
+      padding: 12px 16px !important;
+      box-shadow: 0 -2px 16px rgba(0,0,0,0.1) !important;
+      z-index: 1000 !important;
       /* Telegram Mini App bottom menu optimizations */
-      padding-bottom: calc(12px + var(--safe-bottom));
+      padding-bottom: calc(12px + var(--safe-bottom)) !important;
     }
     
     .footer-btn{
-      flex:1;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      background:transparent;
-      border:none;
-      color:var(--muted);
-      transition:all 0.2s ease;
-      padding:8px 4px;
-      border-radius:8px;
-      cursor:pointer;
+      flex: 1 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: center !important;
+      background: transparent !important;
+      border: none !important;
+      color: var(--muted) !important;
+      transition: all 0.2s ease !important;
+      padding: 8px 4px !important;
+      border-radius: 8px !important;
+      cursor: pointer !important;
       /* Telegram Mini App button optimizations */
-      -webkit-tap-highlight-color: transparent;
-      touch-action: manipulation;
-      min-height:60px;
+      -webkit-tap-highlight-color: transparent !important;
+      touch-action: manipulation !important;
+      min-height: 60px !important;
     }
     
     .footer-btn:hover{
-      background:rgba(37, 99, 235, 0.1);
-      color:var(--accent);
+      background: rgba(37, 99, 235, 0.1) !important;
+      color: var(--accent) !important;
     }
     
     .footer-btn-primary{
-      color:var(--accent);
+      color: var(--accent) !important;
     }
     
     .footer-btn-primary:hover{
-      background:rgba(37, 99, 235, 0.15);
+      background: rgba(37, 99, 235, 0.15) !important;
     }
     
     .footer-icon{
-      font-size:22px;
-      margin-bottom:4px;
-      line-height:1;
+      font-size: 22px !important;
+      margin-bottom: 4px !important;
+      line-height: 1 !important;
     }
     
     .footer-label{
-      font-size:11px;
-      font-weight:500;
-      line-height:1.2;
-      text-align:center;
+      font-size: 11px !important;
+      font-weight: 500 !important;
+      line-height: 1.2 !important;
+      text-align: center !important;
     }
     
 
@@ -747,17 +748,17 @@
       }
       
       .footer-btn {
-        min-height: 56px;
-        padding: 6px 2px;
+        min-height: 56px !important;
+        padding: 6px 2px !important;
       }
       
       .footer-icon {
-        font-size: 20px;
-        margin-bottom: 3px;
+        font-size: 20px !important;
+        margin-bottom: 3px !important;
       }
       
       .footer-label {
-        font-size: 10px;
+        font-size: 10px !important;
       }
       }
       
