@@ -1,0 +1,16 @@
+{
+  "name": "emigrate-miniapp",
+  "version": "1.0.0",
+  "description": "eMigrant Mini App for Telegram",
+  "main": "index.html",
+  "scripts": {
+    "build": "echo 'Static site - no build needed'",
+    "dev": "echo 'Static site - open index.html in browser'"
+  },
+  "keywords": ["telegram", "miniapp", "emigration", "poland"],
+  "author": "eMigrant Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
