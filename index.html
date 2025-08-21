@@ -329,47 +329,64 @@
       left:0;
       right:0;
       bottom:0;
-      background:rgba(255,255,255,0.98);
-      backdrop-filter:blur(20px);
+      background:var(--card);
       border-top:1px solid var(--line);
       display:flex;
-      gap:8px;
-      padding:16px 16px;
+      justify-content:space-around;
+      align-items:center;
+      padding:12px 16px;
       box-shadow:0 -2px 16px rgba(0,0,0,0.1);
       z-index:1000;
       /* Telegram Mini App bottom menu optimizations */
-      -webkit-backdrop-filter:blur(20px);
-      padding-bottom: calc(16px + var(--safe-bottom));
+      padding-bottom: calc(12px + var(--safe-bottom));
     }
     
-    .bottom button{
+    .footer-btn{
       flex:1;
-      border-radius:12px;
-      padding:14px 8px;
-      font-weight:600;
-      font-size:13px;
-      background:var(--card);
-      border:1px solid var(--line);
-      color:var(--text);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      background:transparent;
+      border:none;
+      color:var(--muted);
       transition:all 0.2s ease;
-      min-height:48px;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
+      padding:8px 4px;
+      border-radius:8px;
+      cursor:pointer;
       /* Telegram Mini App button optimizations */
       -webkit-tap-highlight-color: transparent;
       touch-action: manipulation;
-      /* Улучшаем читаемость текста */
-      line-height: 1.2;
-      letter-spacing: -0.01em;
+      min-height:60px;
     }
     
-    .bottom button:hover{
-      background:var(--accent);
-      color:white;
-      border-color:var(--accent);
-      transform:translateY(-1px);
+    .footer-btn:hover{
+      background:rgba(37, 99, 235, 0.1);
+      color:var(--accent);
     }
+    
+    .footer-btn-primary{
+      color:var(--accent);
+    }
+    
+    .footer-btn-primary:hover{
+      background:rgba(37, 99, 235, 0.15);
+    }
+    
+    .footer-icon{
+      font-size:22px;
+      margin-bottom:4px;
+      line-height:1;
+    }
+    
+    .footer-label{
+      font-size:11px;
+      font-weight:500;
+      line-height:1.2;
+      text-align:center;
+    }
+    
+
     
     header{
       position:sticky;
@@ -724,15 +741,23 @@
       }
       
       .bottom {
-        padding: 16px 12px;
+        padding: 10px 12px;
         /* Добавляем отступ снизу для iPhone с полоской управления */
-        padding-bottom: calc(16px + var(--safe-bottom));
+        padding-bottom: calc(10px + var(--safe-bottom));
       }
       
-      .bottom button {
-        min-height: 48px;
-        font-size: 14px;
-        padding: 12px 8px;
+      .footer-btn {
+        min-height: 56px;
+        padding: 6px 2px;
+      }
+      
+      .footer-icon {
+        font-size: 20px;
+        margin-bottom: 3px;
+      }
+      
+      .footer-label {
+        font-size: 10px;
       }
       }
       
@@ -779,18 +804,23 @@
       }
       
       .bottom {
-        padding: 16px 12px;
-        gap: 8px;
+        padding: 8px 8px;
         /* Добавляем отступ снизу для iPhone с полоской управления */
-        padding-bottom: calc(16px + var(--safe-bottom));
+        padding-bottom: calc(8px + var(--safe-bottom));
       }
       
-      .bottom button {
-        padding: 10px 4px;
-        font-size: 11px;
-        min-height: 48px;
-        line-height: 1.2;
-        letter-spacing: -0.01em;
+      .footer-btn {
+        min-height: 52px;
+        padding: 4px 1px;
+      }
+      
+      .footer-icon {
+        font-size: 18px;
+        margin-bottom: 2px;
+      }
+      
+      .footer-label {
+        font-size: 9px;
       }
       
       .row {
@@ -2184,9 +2214,18 @@
     const footer = document.createElement('div');
     footer.className = 'bottom';
     footer.innerHTML = `
-      <button onclick="openChecklist()">Checklist</button>
-      <button onclick="openModule('aiTranslator')">AI Translator</button>
-      <button onclick="openModule('slot')">Book a slot</button>
+      <button onclick="openModule('aiTranslator')" class="footer-btn">
+        <div class="footer-icon">🤖</div>
+        <span class="footer-label">AI Translator</span>
+      </button>
+      <button onclick="openChecklist()" class="footer-btn footer-btn-primary">
+        <div class="footer-icon">✓</div>
+        <span class="footer-label">Checklist</span>
+      </button>
+      <button onclick="openModule('slot')" class="footer-btn">
+        <div class="footer-icon">📅</div>
+        <span class="footer-label">Book a slot</span>
+      </button>
     `;
     
     console.log('Создаем новый футер с 3 кнопками:', footer.innerHTML);
