@@ -23,6 +23,7 @@
       --danger:#ef4444;
       --shadow:0 1px 3px 0 rgba(0,0,0,0.1),0 1px 2px -1px rgba(0,0,0,0.1);
       --shadow-lg:0 10px 15px -3px rgba(0,0,0,0.1),0 4px 6px -4px rgba(0,0,0,0.1);
+      --safe-bottom: env(safe-area-inset-bottom, 20px);
     }
     
     *{box-sizing:border-box} 
@@ -329,26 +330,26 @@
       backdrop-filter:blur(20px);
       border-top:1px solid var(--line);
       display:flex;
-      gap:6px;
-      padding:12px 16px;
+      gap:8px;
+      padding:16px 16px;
       box-shadow:0 -2px 16px rgba(0,0,0,0.1);
       z-index:1000;
       /* Telegram Mini App bottom menu optimizations */
       -webkit-backdrop-filter:blur(20px);
-      padding-bottom: calc(12px + env(safe-area-inset-bottom));
+      padding-bottom: calc(16px + var(--safe-bottom));
     }
     
     .bottom button{
       flex:1;
       border-radius:12px;
-      padding:12px 8px;
+      padding:14px 10px;
       font-weight:600;
-      font-size:13px;
+      font-size:14px;
       background:var(--card);
       border:1px solid var(--line);
       color:var(--text);
       transition:all 0.2s ease;
-      min-height:44px;
+      min-height:48px;
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
@@ -717,13 +718,15 @@
       }
       
       .bottom {
-        padding: 8px 12px;
+        padding: 16px 12px;
+        /* Добавляем отступ снизу для iPhone с полоской управления */
+        padding-bottom: calc(16px + var(--safe-bottom));
       }
       
       .bottom button {
-        min-height: 40px;
-        font-size: 12px;
-        padding: 8px 6px;
+        min-height: 48px;
+        font-size: 14px;
+        padding: 12px 8px;
       }
       }
       
@@ -742,10 +745,16 @@
           font-size: 10px;
         }
         
-        .studio-actions button {
-          padding: 6px 8px;
-          font-size: 11px;
-        }
+              .studio-actions button {
+        padding: 6px 8px;
+        font-size: 11px;
+      }
+      
+      .ai-badge {
+        padding: 6px 10px;
+        font-size: 11px;
+        gap: 6px;
+      }
         
         .photo-requirements {
           margin: 8px 0;
@@ -764,14 +773,16 @@
       }
       
       .bottom {
-        padding: 10px 12px;
-        gap: 4px;
+        padding: 16px 12px;
+        gap: 8px;
+        /* Добавляем отступ снизу для iPhone с полоской управления */
+        padding-bottom: calc(16px + var(--safe-bottom));
       }
       
       .bottom button {
-        padding: 10px 6px;
-        font-size: 12px;
-        min-height: 40px;
+        padding: 12px 8px;
+        font-size: 14px;
+        min-height: 48px;
       }
       
       .row {
@@ -811,6 +822,12 @@
       
       .custom-checkbox-text {
         font-size: 15px;
+      }
+      
+      .ai-badge {
+        padding: 8px 12px;
+        font-size: 13px;
+        gap: 8px;
       }
     }
     
@@ -892,6 +909,25 @@
       color: white;
       font-size: 14px;
       font-weight: bold;
+    }
+    
+    /* AI бейдж для рекомендаций */
+    .ai-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      background: var(--accent);
+      color: white;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+    
+    .ai-badge:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
     }
     
     .custom-checkbox-text {
@@ -1589,6 +1625,101 @@
   </div>
 </div>
 
+<!-- ====== AI Translator — модальный модуль -->
+<div id="ai_translator_modal" class="modal" role="dialog" aria-modal="true">
+  <div class="sheet">
+    <div class="row" style="align-items:center;margin-bottom:6px">
+      <button class="ghost" style="flex:0 0 auto;width:auto" onclick="closeAiTranslatorModal()">← Назад</button>
+      <span></span>
+    </div>
+
+    <!-- экран 1: загрузка -->
+    <div id="ai_translator_step1">
+      <h3>AI Переводчик юридических писем</h3>
+      <div class="small">Загрузите письмо или документ для перевода и получения краткого объяснения</div>
+      <div id="ai_translator_checked_info" class="status ok" style="display:none;margin-top:10px"></div>
+      <input id="ai_translator_file" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.txt,.doc,.docx" />
+      <div class="hr"></div>
+      <button id="ai_translator_btn_upload" class="primary" disabled onclick="aiTranslatorStart()">
+        <span style="display:flex;align-items:center;justify-content:center;gap:8px">
+          <span style="font-size:18px">🤖</span>
+          <span>Перевести с AI</span>
+        </span>
+      </button>
+      <div class="small muted" style="margin-top:12px;text-align:center">
+        <a href="javascript:void(0)" onclick="aiTranslatorNoDoc()" class="help-link">У меня нет документа — помогите</a>
+      </div>
+    </div>
+
+    <!-- экран 2: дата завершения анализа -->
+    <div id="ai_translator_step2" style="display:none">
+      <h3>AI перевод запущен</h3>
+      <div class="completion-info" style="margin:20px 0;text-align:center">
+        <div style="font-size:48px;margin-bottom:16px">⏰</div>
+        <div style="font-size:18px;font-weight:600;margin-bottom:8px">Перевод будет готов</div>
+        <div id="ai_translator_completion_date" style="font-size:24px;color:var(--accent);font-weight:700;margin-bottom:8px"></div>
+        <div id="ai_translator_completion_time" style="font-size:16px;color:var(--muted)"></div>
+      </div>
+      <div class="status" id="ai_translator_queue_msg" style="margin-top:16px">
+        Твой перевод будет готов <span id="ai_translator_time_remaining">через 24 часа</span>
+      </div>
+      <div class="small muted" style="margin-top:12px">
+        Можешь ускорить AI и получить результат быстрее
+      </div>
+      <div style="margin-top:20px">
+        <button id="ai_translator_btn_boost" class="primary" onclick="aiTranslatorBoost()" style="width:100%">Ускоряю!</button>
+      </div>
+      <div class="small muted" id="ai_translator_poll_note" style="margin-top:8px"></div>
+    </div>
+
+    <!-- экран 3: оплата -->
+    <div id="ai_translator_step3" style="display:none">
+      <h3>Ускорение AI перевода</h3>
+      <div class="status" style="margin-top:16px">
+        <div class="center">
+          <div style="font-size:24px;color:var(--accent);margin-bottom:8px">⚡</div>
+          <div>Результат за 1 час вместо 24 часов</div>
+        </div>
+      </div>
+      
+      <div class="hr"></div>
+      
+      <div class="payment-details">
+        <div class="payment-item">
+          <span>Ускорение AI перевода</span>
+          <span class="payment-price">50 PLN</span>
+        </div>
+        <div class="payment-item">
+          <span>Приоритетная обработка</span>
+          <span class="payment-price">+20 PLN</span>
+        </div>
+        <div class="hr"></div>
+        <div class="payment-total">
+          <span>Итого к оплате:</span>
+          <span class="payment-price total">70 PLN</span>
+        </div>
+      </div>
+      
+      <div style="margin-top:20px">
+        <button class="primary" onclick="aiTranslatorProcessPayment()" style="width:100%;margin-bottom:12px">Оплатить</button>
+        <button class="ghost" onclick="aiTranslatorBackToTimer()" style="width:100%">Отмена</button>
+      </div>
+    </div>
+
+    <!-- экран 4: результат -->
+    <div id="ai_translator_step4" style="display:none">
+      <h3 id="ai_translator_result_title">Перевод готов! 📝</h3>
+      <div id="ai_translator_result_box" class="status ok" style="margin-top:10px">
+        <div id="ai_translator_result_text">Ваш документ успешно переведен и проанализирован.</div>
+      </div>
+      <div style="margin-top:20px">
+        <button class="primary" onclick="aiTranslatorBackToHome()" style="width:100%;margin-bottom:12px">Вернуться в главное меню</button>
+        <button class="ghost" onclick="aiTranslatorStartOver()" style="width:100%">Перевести новый документ</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ====== Ubezpieczenie — модальный модуль -->
 <div id="insurance_modal" class="modal" role="dialog" aria-modal="true">
   <div class="sheet">
@@ -1889,7 +2020,7 @@
       {id:'skarb', title:'Opłata skarbowa', status:'todo', requiresAI:false, kind:'skarb'},
       {id:'rent', title:'Umowa najmu / Meldunek', status:'todo', requiresAI:true, kind:'rent'},
       {id:'ins', title:'Ubezpieczenie', status:'todo', requiresAI:true, kind:'insurance'},
-
+      {id:'aiTranslator', title:'AI Translator', status:'todo', requiresAI:true, kind:'aiTranslator'},
     ];
     if(track==='work'||track==='business'){
       common.splice(2,0,{id:'contract', title:'Контракт / Основание', status:'todo', requiresAI:true, kind:'contract'});
@@ -1963,7 +2094,7 @@
           <div style="flex:3">
             <h3 style="margin:0 0 6px">${t.title}</h3>
             <span class="badge ${badgeClass}">${t.status==='todo'?'To do':t.status==='inreview'?'In review':'Done'}</span>
-            ${(t.requiresAI && t.status!=='done')?'<span class="small" style="margin-left:8px">Рекомендуется AI-проверка</span>':''}
+            ${(t.requiresAI && t.status!=='done')?'<div class="ai-badge" style="margin-top:8px;display:inline-flex;align-items:center;gap:6px;padding:6px 10px;background:var(--accent);color:white;border-radius:6px;font-size:12px;font-weight:500;"><span style="font-size:14px;">🤖</span>Рекомендуется AI-проверка</div>':''}
           </div>
           <div style="flex:2">
             <div class="row">
@@ -2043,7 +2174,7 @@
 
   function openModule(kind){
     if(kind==='aiTranslator'){
-      alert('AI Translator: Загрузите письмо/документ → перевод и краткое резюме. (В MVP-заглушке загрузка опущена)');
+      openAiTranslatorModal();
       return;
     }
     if(kind==='slot'){
@@ -2766,6 +2897,13 @@
     const f = e.target.files[0];
     insurance.file = f || null;
     el('insurance_btn_upload').disabled = !insurance.file;
+  });
+
+  // enable button when file chosen for aiTranslator
+  el('ai_translator_file').addEventListener('change', (e)=>{
+    const f = e.target.files[0];
+    aiTranslator.file = f || null;
+    el('ai_translator_btn_upload').disabled = !aiTranslator.file;
   });
 
   function ctNoDoc(){
@@ -3856,10 +3994,14 @@
   function closeInsuranceOnBackdrop(e){ if(e.target.id==='insurance_modal') closeInsuranceModal(); }
   document.getElementById('insurance_modal').addEventListener('click', closeInsuranceOnBackdrop);
   
+  function closeAiTranslatorOnBackdrop(e){ if(e.target.id==='ai_translator_modal') closeAiTranslatorModal(); }
+  document.getElementById('ai_translator_modal').addEventListener('click', closeAiTranslatorOnBackdrop);
+  
   document.getElementById('ct_btn_upload').disabled = true; // init
   document.getElementById('załącznik_btn_upload').disabled = true; // init
   document.getElementById('rent_btn_upload').disabled = true; // init
   document.getElementById('insurance_btn_upload').disabled = true; // init
+  document.getElementById('ai_translator_btn_upload').disabled = true; // init
 
   // ====== Opłata skarbowa — функции модуля
   function openOplataModal(){
@@ -4160,6 +4302,9 @@
     }
   }
 
+  // ====== AI Translator — функции модуля
+  const aiTranslator = { file: null, boosted: false, jobId: null, pollTimer: null, fileMeta: null };
+
   // ====== Ubezpieczenie — функции модуля
   const insurance = { file: null, boosted: false, jobId: null, pollTimer: null, fileMeta: null };
 
@@ -4218,7 +4363,7 @@
       // Формируем готовое сообщение
       const message = encodeURIComponent('Здравствуйте, у меня нету страховки. Хотел бы попросить о помощи');
       
-      // Открываем чат с пользователем @emigrate_support
+      // Открываем чат в Telegram с готовым сообщением
       const chatUrl = `https://t.me/emigrate_support?text=${message}`;
       
       try {
@@ -4230,6 +4375,228 @@
     } else {
       // Если Telegram Web App недоступен, показываем инструкцию
       alert('Здравствуйте, у меня нету страховки. Хотел бы попросить о помощи\n\nНапишите нам в Telegram: @emigrate_support');
+    }
+  }
+
+  // ====== AI Translator — основные функции
+  function openAiTranslatorModal(){
+    // В Telegram Mini App header уже скрыт, просто добавляем класс
+    const wrap = document.querySelector('.wrap');
+    if(wrap) wrap.classList.add('no-header');
+    
+    const modal = el('ai_translator_modal');
+    modal.style.display='grid';
+    setTimeout(() => {
+      modal.classList.add('show');
+    }, 10);
+    
+    // Сначала скрываем все экраны
+    el('ai_translator_step1').style.display='block';
+    el('ai_translator_step2').style.display='none';
+    el('ai_translator_step3').style.display='none';
+    el('ai_translator_step4').style.display='none';
+    
+    // Проверяем статус задачи aiTranslator
+    const task = st.tasks.find(t => t.id === 'aiTranslator');
+    if(task && task.status === 'inreview'){
+      el('ai_translator_step4').style.display='block';
+      showAiTranslatorResult();
+    } else if(task && task.status === 'done'){
+      el('ai_translator_step4').style.display='block';
+      showAiTranslatorResult();
+    } else {
+      el('ai_translator_step1').style.display='block';
+    }
+  }
+
+  function closeAiTranslatorModal(){
+    const modal = el('ai_translator_modal');
+    modal.classList.remove('show');
+    setTimeout(() => {
+      modal.style.display='none';
+      
+      // В Telegram Mini App возвращаем только отступ
+      const wrap = document.querySelector('.wrap');
+      if(wrap) wrap.classList.remove('no-header');
+    }, 300);
+  }
+
+  function aiTranslatorNoDoc(){
+    // Закрываем модальное окно
+    closeAiTranslatorModal();
+    
+    // Открываем чат в Telegram с готовым сообщением
+    if(tg && tg.openTelegramLink){
+      // Формируем готовое сообщение
+      const message = encodeURIComponent('Здравствуйте, у меня нет документа для перевода. Хотел бы попросить о помощи');
+      
+      // Открываем чат с пользователем @emigrate_support
+      const chatUrl = `https://t.me/emigrate_support?text=${message}`;
+      
+      try {
+        tg.openTelegramLink(chatUrl);
+      } catch(e) {
+        // Fallback: открываем в браузере
+        window.open(chatUrl, '_blank');
+      }
+    } else {
+      // Если Telegram Web App недоступен, показываем инструкцию
+      alert('Здравствуйте, у меня нет документа для перевода. Хотел бы попросить о помощи\n\nНапишите нам в Telegram: @emigrate_support');
+    }
+  }
+
+  // Основные функции для модуля AI Translator
+  async function aiTranslatorStart(){
+    if(!aiTranslator.file){ alert('Выберите файл.'); return; }
+    
+    el('ai_translator_step1').style.display='none';
+    el('ai_translator_step2').style.display='';
+    el('ai_translator_step3').style.display='none';
+    el('ai_translator_step4').style.display='none';
+    
+    if(!ENDPOINTS){
+      showAiTranslatorCompletionDate();
+      setTimeout(() => {
+        const isDocumentOk = Math.random() > 0.3;
+        if(isDocumentOk){
+          showAiTranslatorResult();
+        } else {
+          showAiTranslatorError();
+        }
+      }, 3000);
+    }
+  }
+
+  function aiTranslatorBoost(){
+    el('ai_translator_step2').style.display='none';
+    el('ai_translator_step3').style.display='';
+  }
+
+  function aiTranslatorProcessPayment(){
+    setTimeout(() => {
+      aiTranslator.boosted = true;
+      el('ai_translator_step3').style.display='none';
+      el('ai_translator_step4').style.display='';
+      
+      setTimeout(() => {
+        const isDocumentOk = Math.random() > 0.3;
+        if(isDocumentOk){
+          showAiTranslatorResult();
+        } else {
+          showAiTranslatorError();
+        }
+      }, 3000);
+    }, 2000);
+  }
+
+  function aiTranslatorBackToTimer(){
+    el('ai_translator_step3').style.display='none';
+    el('ai_translator_step2').style.display='';
+  }
+
+  function aiTranslatorBackToHome(){
+    closeAiTranslatorModal();
+  }
+
+  function aiTranslatorStartOver(){
+    el('ai_translator_step4').style.display='none';
+    el('ai_translator_step1').style.display='';
+    aiTranslator.file = null;
+    el('ai_translator_file').value = '';
+    el('ai_translator_btn_upload').disabled = true;
+  }
+
+  function showAiTranslatorResult(){
+    el('ai_translator_step1').style.display='none';
+    el('ai_translator_step2').style.display='none';
+    el('ai_translator_step3').style.display='none';
+    el('ai_translator_step4').style.display='block';
+    
+    el('ai_translator_result_title').innerText = 'Перевод готов! 📝';
+    el('ai_translator_result_box').className = 'status ok';
+    el('ai_translator_result_box').innerHTML = `
+      <div style="margin-bottom:16px">
+        <h4 style="margin:0 0 12px 0;color:var(--accent);">Результат перевода:</h4>
+        <div style="background:var(--bg);padding:16px;border-radius:8px;border-left:4px solid var(--accent);">
+          <p><strong>Краткое объяснение:</strong> Ваш документ содержит официальное уведомление о необходимости предоставить дополнительные документы для продления разрешения на пребывание.</p>
+          <p><strong>Основные пункты:</strong></p>
+          <ul style="margin:8px 0;padding-left:20px;">
+            <li>Срок подачи документов: до 30 дней</li>
+            <li>Требуемые документы: справка о доходах, договор аренды</li>
+            <li>Следующий шаг: собрать документы и подать заявление</li>
+          </ul>
+        </div>
+      </div>
+      <div style="background:var(--bg);padding:16px;border-radius:8px;border-left:4px solid var(--muted);">
+        <h5 style="margin:0 0 8px 0;">Полный перевод:</h5>
+        <p style="font-size:14px;line-height:1.5;margin:0;">[Полный перевод документа будет доступен в детальном отчете]</p>
+      </div>
+    `;
+    
+    st.tasks = st.tasks.map(t=> t.id==='aiTranslator' ? {...t, status:'done'} : t);
+    localStorage.setItem('tasks', JSON.stringify(st.tasks));
+    localStorage.setItem('aiTranslatorCheckedAt', String(Date.now()));
+    try { renderChecklist(); } catch(e) {}
+  }
+
+  function showAiTranslatorError(){
+    el('ai_translator_step1').style.display='none';
+    el('ai_translator_step2').style.display='none';
+    el('ai_translator_step3').style.display='none';
+    el('ai_translator_step4').style.display='block';
+    
+    el('ai_translator_result_title').innerText = 'Ошибка при переводе';
+    el('ai_translator_result_box').className = 'status err';
+    el('ai_translator_result_box').innerHTML = `
+      <div style="text-align:center;margin-bottom:16px">
+        <div style="font-size:24px;margin-bottom:8px">⚠️</div>
+        <div>Не удалось обработать документ</div>
+      </div>
+      <div style="text-align:center">
+        <button class="primary" onclick="aiTranslatorStartOver()" style="width:100%;margin-bottom:8px">
+          Попробовать снова
+          </button>
+        <button class="secondary" onclick="contactAiTranslatorSupport()" style="width:100%;margin-bottom:8px">
+          Написать в поддержку
+        </button>
+      </div>
+    `;
+    
+    st.tasks = st.tasks.map(t=> t.id==='aiTranslator' ? {...t, status:'inreview'} : t);
+    localStorage.setItem('tasks', JSON.stringify(st.tasks));
+    try { renderChecklist(); } catch(e) {}
+  }
+
+  function contactAiTranslatorSupport(){
+    closeAiTranslatorModal();
+    
+    if(tg && tg.openTelegramLink){
+      const message = encodeURIComponent('Здравствуйте, мне нужна помощь с AI переводом документа.');
+      const chatUrl = `https://t.me/emigrate_support?text=${message}`;
+      
+      try {
+        tg.openTelegramLink(chatUrl);
+      } catch(e) {
+        window.open(chatUrl, '_blank');
+      }
+    } else {
+      alert('Здравствуйте, мне нужна помощь с AI переводом документа.\n\nНапишите нам в Telegram: @emigrate_support');
+    }
+  }
+
+  function showAiTranslatorCompletionDate(){
+    const now = new Date();
+    const completionDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    
+    const dateEl = el('ai_translator_completion_date');
+    const timeEl = el('ai_translator_completion_time');
+    
+    if(dateEl && timeEl){
+      const dateOptions = { month: 'long', day: 'numeric' };
+      const timeOptions = { hour: '2-digit', minute: '2-digit' };
+      
+      dateEl.innerText = completionDate.toLocaleDateString('ru-RU', dateOptions);
+      timeEl.innerText = completionDate.toLocaleTimeString('ru-RU', timeOptions);
     }
   }
 
