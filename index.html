@@ -346,17 +346,7 @@
       }
     }
     
-    @keyframes numberChange{
-      0%{
-        transform:scale(1);
-      }
-      50%{
-        transform:scale(1.1);
-      }
-      100%{
-        transform:scale(1);
-      }
-    }
+
     
     @keyframes fadeIn{
       from{
@@ -380,46 +370,21 @@
       }
     }
     
-    /* Timer styles */
-    .timer-display{
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      gap:16px;
-      margin:20px 0;
-      background:var(--bg);
-      padding:20px;
-      border-radius:16px;
-      animation:pulse 2s ease-in-out infinite;
-    }
-    
-    .timer-hours,.timer-minutes,.timer-seconds{
-      font-size:36px;
-      font-weight:800;
-      color:var(--accent);
-      text-align:center;
-      min-width:60px;
-      text-shadow:0 2px 4px rgba(37,99,235,0.2);
-      transition:all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    }
-    
-    .timer-hours.animate,.timer-minutes.animate,.timer-seconds.animate{
-      animation:numberChange 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    }
-    
-    .timer-label{
-      font-size:14px;
-      color:var(--muted);
-      text-align:center;
-      margin-top:8px;
-      font-weight:600;
-    }
+
     
     .status{
       padding:16px;
       border-radius:16px;
       border:1px solid var(--line);
       background:var(--bg);
+      box-shadow:var(--shadow);
+    }
+    
+    .completion-info{
+      background:var(--bg);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:20px;
       box-shadow:var(--shadow);
     }
     
@@ -555,20 +520,7 @@
         font-size: 16px;
       }
       
-      .timer-display {
-        gap: 12px;
-        padding: 16px;
-        border-radius: 14px;
-      }
-      
-      .timer-hours, .timer-minutes, .timer-seconds {
-        font-size: 32px;
-        min-width: 50px;
-      }
-      
-      .timer-label {
-        font-size: 12px;
-      }
+
       
       .status {
         padding: 14px;
@@ -1032,25 +984,17 @@
       <div class="small muted" style="margin-top:8px"><a href="javascript:void(0)" onclick="ctNoDoc()">У меня нет — помогите</a></div>
     </div>
 
-    <!-- экран 2: таймер на 24 часа -->
+    <!-- экран 2: дата завершения анализа -->
     <div id="ct_step2" style="display:none">
       <h3>AI анализ запущен</h3>
-      <div class="timer-display" id="ct_timer_display">
-        <div>
-          <div class="timer-hours" id="ct_timer_hours">24</div>
-          <div class="timer-label">часов</div>
-        </div>
-        <div>
-          <div class="timer-minutes" id="ct_timer_minutes">00</div>
-          <div class="timer-label">минут</div>
-        </div>
-        <div>
-          <div class="timer-seconds" id="ct_timer_seconds">00</div>
-          <div class="timer-label">секунд</div>
-        </div>
+      <div class="completion-info" style="margin:20px 0;text-align:center">
+        <div style="font-size:48px;margin-bottom:16px">⏰</div>
+        <div style="font-size:18px;font-weight:600;margin-bottom:8px">Анализ будет готов</div>
+        <div id="ct_completion_date" style="font-size:24px;color:var(--accent);font-weight:700;margin-bottom:8px"></div>
+        <div id="ct_completion_time" style="font-size:16px;color:var(--muted)"></div>
       </div>
       <div class="status" id="ct_queue_msg" style="margin-top:16px">
-        Твой анализ будет готов через <span id="ct_time_remaining">24 часа</span>
+        Твой анализ будет готов <span id="ct_time_remaining">через 24 часа</span>
       </div>
       <div class="small muted" style="margin-top:12px">
         Можешь ускорить AI и получить результат быстрее
@@ -1708,13 +1652,7 @@
       try { renderChecklist(); } catch(e) {}
     }
     
-    // Останавливаем таймер если он работает
-    if(ct.timerInterval){
-      clearInterval(ct.timerInterval);
-      ct.timerInterval = null;
-    }
-    
-    // Очищаем localStorage от таймера
+    // Очищаем localStorage от даты завершения
     localStorage.removeItem('contractTimerEnd');
     
     // Сбрасываем анимационные стили для всех экранов
@@ -1964,9 +1902,9 @@
     el('ct_step4').style.display='none';
     el('ct_poll_note').innerText = '';
     
-    // Запускаем таймер на 24 часа если нет backend
+    // Показываем дату завершения анализа если нет backend
     if(!ENDPOINTS){
-      startContractTimer();
+      showCompletionDate();
     }
 
     try{
@@ -2015,96 +1953,43 @@
     }
   }
 
-  // Функция запуска таймера на 24 часа
-  function startContractTimer(){
+  // Функция показа даты завершения анализа
+  function showCompletionDate(){
     // Устанавливаем время окончания: текущее время + 24 часа
     const endTime = new Date().getTime() + (24 * 60 * 60 * 1000);
+    const completionDate = new Date(endTime);
     
     // Сохраняем время окончания в localStorage
     localStorage.setItem('contractTimerEnd', endTime.toString());
     
-    // Запускаем обновление таймера каждую секунду
-    if(ct.timerInterval) clearInterval(ct.timerInterval);
-    ct.timerInterval = setInterval(() => {
-      updateContractTimer(endTime);
-    }, 1000);
+    // Показываем дату и время завершения
+    const dateEl = el('ct_completion_date');
+    const timeEl = el('ct_completion_time');
     
-    // Сразу обновляем таймер
-    updateContractTimer(endTime);
+    if(dateEl && timeEl){
+      // Форматируем дату
+      const dateOptions = { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      };
+      const timeOptions = { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      };
+      
+      dateEl.innerText = completionDate.toLocaleDateString('ru-RU', dateOptions);
+      timeEl.innerText = completionDate.toLocaleTimeString('ru-RU', timeOptions);
+    }
     
-    console.log('Таймер контракта запущен, окончание:', new Date(endTime).toLocaleString());
+    // Обновляем текст статуса
+    el('ct_time_remaining').innerText = 'через 24 часа';
+    
+    console.log('Дата завершения анализа установлена:', completionDate.toLocaleString());
   }
 
-  // Функция обновления таймера
-  function updateContractTimer(endTime){
-    const now = new Date().getTime();
-    const timeLeft = endTime - now;
-    
-    if(timeLeft <= 0){
-      // Время истекло - показываем результат
-      clearInterval(ct.timerInterval);
-      ct.timerInterval = null;
-      
-      console.log('Таймер контракта истек, показываем результат');
-      
-      // Если нет backend, показываем результат
-      if(!ENDPOINTS){
-        // Генерируем случайный результат (подходит/не подходит)
-        const isDocumentOk = Math.random() > 0.3; // 70% вероятность что документ подходит
-        
-        if(isDocumentOk){
-          // Документ подходит - показываем экран успеха
-          showSuccessResult();
-        } else {
-          // Документ не подходит - показываем экран с красными флагами
-          showRedFlagsResult();
-        }
-      }
-      
-      // Обновляем UI
-      el('ct_timer_hours').innerText = '00';
-      el('ct_timer_minutes').innerText = '00';
-      el('ct_timer_seconds').innerText = '00';
-      el('ct_time_remaining').innerText = '0 минут';
-      el('ct_queue_msg').innerText = 'Анализ завершён! Результат готов.';
-      return;
-    }
-    
-    // Вычисляем оставшееся время
-    const hours = Math.floor(timeLeft / (1000 * 60 * 60));
-    const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
-    
-    // Обновляем UI с анимацией
-    const hoursEl = el('ct_timer_hours');
-    const minutesEl = el('ct_timer_minutes');
-    const secondsEl = el('ct_timer_seconds');
-    
-    if(hoursEl.innerText !== hours.toString().padStart(2, '0')){
-      hoursEl.innerText = hours.toString().padStart(2, '0');
-      hoursEl.classList.add('animate');
-      setTimeout(() => hoursEl.classList.remove('animate'), 300);
-    }
-    
-    if(minutesEl.innerText !== minutes.toString().padStart(2, '0')){
-      minutesEl.innerText = minutes.toString().padStart(2, '0');
-      minutesEl.classList.add('animate');
-      setTimeout(() => minutesEl.classList.remove('animate'), 300);
-    }
-    
-    if(secondsEl.innerText !== seconds.toString().padStart(2, '0')){
-      secondsEl.innerText = seconds.toString().padStart(2, '0');
-      secondsEl.classList.add('animate');
-      setTimeout(() => secondsEl.classList.remove('animate'), 300);
-    }
-    
-    // Обновляем текст
-    if(hours > 0){
-      el('ct_time_remaining').innerText = `${hours} час${hours === 1 ? '' : hours < 5 ? 'а' : 'ов'} ${minutes} минут`;
-    } else {
-      el('ct_time_remaining').innerText = `${minutes} минут`;
-    }
-  }
+
 
   function ctBoost(){
     // Показываем экран оплаты с анимацией
@@ -2161,11 +2046,7 @@
       // После успешной оплаты сразу показываем результат
     ct.boosted = true;
       
-      // Очищаем таймер
-      if(ct.timerInterval){
-        clearInterval(ct.timerInterval);
-        ct.timerInterval = null;
-      }
+
       
       // Показываем экран загрузки с анимацией
       const step3 = el('ct_step3');
@@ -2374,20 +2255,34 @@
       document.getElementById('home').style.display='';
       renderChecklist();
       
-      // Проверяем, есть ли активный таймер контракта
+      // Проверяем, есть ли активная дата завершения анализа
       const contractTimerEnd = localStorage.getItem('contractTimerEnd');
       if(contractTimerEnd){
         const endTime = parseInt(contractTimerEnd);
         const now = new Date().getTime();
         if(endTime > now){
-          // Таймер еще активен - восстанавливаем его
-          if(ct.timerInterval) clearInterval(ct.timerInterval);
-          ct.timerInterval = setInterval(() => {
-            updateContractTimer(endTime);
-          }, 1000);
-          updateContractTimer(endTime);
+          // Дата еще актуальна - показываем её
+          const completionDate = new Date(endTime);
+          const dateEl = el('ct_completion_date');
+          const timeEl = el('ct_completion_time');
+          
+          if(dateEl && timeEl){
+            const dateOptions = { 
+              weekday: 'long', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            };
+            const timeOptions = { 
+              hour: '2-digit', 
+              minute: '2-digit' 
+            };
+            
+            dateEl.innerText = completionDate.toLocaleDateString('ru-RU', dateOptions);
+            timeEl.innerText = completionDate.toLocaleTimeString('ru-RU', timeOptions);
+          }
         } else {
-          // Таймер истек - очищаем
+          // Дата истекла - очищаем
           localStorage.removeItem('contractTimerEnd');
         }
       }
