@@ -874,10 +874,10 @@
           font-size: 10px;
         }
         
-              .studio-actions button {
-        padding: 6px 8px;
-        font-size: 11px;
-      }
+        .studio-actions button {
+          padding: 6px 8px;
+          font-size: 11px;
+        }
       
       .ai-badge {
         padding: 4px 6px;
@@ -1460,32 +1460,32 @@
         </div>
       </div>
       
-              <div id="załącznik_template_info" style="display:none" class="template-info">
-          <div class="template-details" style="background: var(--bg); padding: 16px; border-radius: 12px; margin-bottom: 16px;">
-            <h4 style="margin: 0 0 12px 0;">Шаблон для <span id="załącznik_voiv_name"></span></h4>
-            <p style="margin: 8px 0;">Файл: <span id="załącznik_template_file"></span></p>
-            <p style="margin: 8px 0;">Размер: <span id="załącznik_template_size"></span></p>
-          </div>
+      <div id="załącznik_template_info" style="display:none" class="template-info">
+        <div class="template-details" style="background: var(--bg); padding: 16px; border-radius: 12px; margin-bottom: 16px;">
+          <h4 style="margin: 0 0 12px 0;">Шаблон для <span id="załącznik_voiv_name"></span></h4>
+          <p style="margin: 8px 0;">Файл: <span id="załącznik_template_file"></span></p>
+          <p style="margin: 8px 0;">Размер: <span id="załącznik_template_size"></span></p>
+        </div>
           
           <div id="załącznik_availability_warning" style="display:none; margin-bottom: 16px; padding: 12px; background: var(--warn); color: white; border-radius: 8px; text-align: center;">
             <div class="small" style="margin-bottom: 8px;">⚠️ Внимание</div>
             <div class="small">Шаблон для этого воеводства пока не готов. Будет использован шаблон Мазовецкого воеводства.</div>
           </div>
-          
-          <button id="załącznik_btn_download" class="primary" onclick="załącznikDownloadTemplate()">
-            <span style="display:flex;align-items:center;justify-content:center;gap:8px">
-              <span style="font-size:18px">📥</span>
-              <span>Скачать шаблон</span>
-            </span>
-          </button>
+        
+        <button id="załącznik_btn_download" class="primary" onclick="załącznikDownloadTemplate()">
+          <span style="display:flex;align-items:center;justify-content:center;gap:8px">
+            <span style="font-size:18px">📥</span>
+            <span>Скачать шаблон</span>
+          </span>
+        </button>
           
                   <div id="załącznik_download_status" style="display:none; margin-top: 12px; padding: 12px; background: var(--bg); border-radius: 8px; text-align: center;">
           <div class="small" style="margin-bottom: 8px;">Статус скачивания:</div>
           <div id="załącznik_status_text" class="small muted">Проверяем файл...</div>
           
 
-        </div>
-          
+      </div>
+      
                   <div id="załącznik_manual_download" style="display:none; margin-top: 12px;">
           <div class="small muted" style="margin-bottom: 8px;">Если автоматическое скачивание не работает:</div>
           <a id="załącznik_manual_link" href="#" target="_blank" class="ghost" style="display: inline-block; text-decoration: none; padding: 8px 16px; border: 1px solid var(--line); border-radius: 8px;">
@@ -1499,7 +1499,7 @@
             <div style="margin-bottom: 4px;">🔧 Решение:</div>
             <div style="font-size: 12px; line-height: 1.4;">
               Нажмите на ссылку выше, затем в новой вкладке нажмите правой кнопкой мыши на PDF и выберите "Сохранить как..."
-            </div>
+      </div>
           </div>
           
           <div class="small muted" style="margin-top: 8px; padding: 8px; background: var(--bg); border-radius: 6px;">
@@ -2326,8 +2326,8 @@
       </button>
     `;
     
-    console.log('Создаем новый футер с 3 кнопками:', footer.innerHTML);
-    // Vercel deployment trigger - footer updated with new design
+    console.log('Создаем новый футер с 3 кнопками и CSS иконками:', footer.innerHTML);
+    // Vercel deployment trigger - CSS icons added
     
     // Добавляем футер после основного контента
     const wrap = document.querySelector('.wrap');
@@ -3427,7 +3427,7 @@
         manualDownload.style.display = 'none';
       }
       
-    } else {
+        } else {
       templateInfo.style.display = 'none';
       manualDownload.style.display = 'none';
     }
