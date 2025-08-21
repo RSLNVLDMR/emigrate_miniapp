@@ -668,34 +668,34 @@
         font-size: 12px;
         padding: 8px 6px;
       }
-    }
-    
-    /* Extra small screens optimization */
-    @media (max-width: 375px) {
-      .studio-item {
-        padding: 10px;
-        margin-bottom: 6px;
       }
       
-      .studio-info h4 {
-        font-size: 13px;
-      }
-      
-      .studio-details span {
-        font-size: 10px;
-      }
-      
-      .studio-actions button {
-        padding: 6px 8px;
-        font-size: 11px;
-      }
-      
-      .photo-requirements {
-        margin: 8px 0;
-      }
-      
-      .requirement-item {
-        padding: 4px 0;
+      /* Extra small screens optimization */
+      @media (max-width: 375px) {
+        .studio-item {
+          padding: 10px;
+          margin-bottom: 6px;
+        }
+        
+        .studio-info h4 {
+          font-size: 13px;
+        }
+        
+        .studio-details span {
+          font-size: 10px;
+        }
+        
+        .studio-actions button {
+          padding: 6px 8px;
+          font-size: 11px;
+        }
+        
+        .photo-requirements {
+          margin: 8px 0;
+        }
+        
+        .requirement-item {
+          padding: 4px 0;
       }
       
       .modal .sheet {
@@ -2166,18 +2166,14 @@
     // Проверяем статус задачи załącznik
     const task = st.tasks.find(t => t.id === 'załącznik');
     if(task && task.status === 'inreview'){
-      el('załącznik_step3').style.display='block';
-      // Показываем дату завершения если есть
-      const completionDate = localStorage.getItem('załącznikTimerEnd');
-      if(completionDate){
-        const endTime = new Date(parseInt(completionDate));
-        const now = new Date();
-        if(endTime > now){
-          showZałącznikCompletionDate();
-        }
+      el('załącznik_step4').style.display='block';
+      if(task.result === 'redflags'){
+        showZałącznikRedFlagsResult();
+      } else {
+        showZałącznikSuccessResult();
       }
     } else if(task && task.status === 'done'){
-      el('załącznik_step5').style.display='block';
+      el('załącznik_step4').style.display='block';
       showZałącznikSuccessResult();
     } else {
       el('załącznik_step1').style.display='block';
@@ -2567,7 +2563,7 @@
       // Устанавливаем информацию о файле
       templateFile.textContent = `załącznik_${voivodeship.toLowerCase().replace(/[ąćęłńóśźż]/g, '').replace(/[^a-z0-9]/g, '_')}.pdf`;
       templateSize.textContent = '245 KB';
-    } else {
+        } else {
       templateInfo.style.display = 'none';
     }
   }
@@ -2576,20 +2572,69 @@
     const voivodeship = document.getElementById('załącznik_voivodeship').value;
     if(!voivodeship) return;
     
-    // Симулируем скачивание файла
+    // Формируем имя файла для выбранного воеводства
     const filename = `załącznik_${voivodeship.toLowerCase().replace(/[ąćęłńóśźż]/g, '').replace(/[^a-z0-9]/g, '_')}.pdf`;
     
-    // Создаем временную ссылку для скачивания
-    const link = document.createElement('a');
-    link.href = 'data:application/pdf;base64,JVBERi0xLjQKMSAwIG9iago8PCAvVHlwZSAvQ2F0YWxvZwovUGFnZXMgMiAwIFIKPj4KZW5kb2JqCjIgMCBvYmoKPDwgL1R5cGUgL1BhZ2VzCi9LaWRzIFszIDAgUl0KL1BhcmVudCAxIDAgUgovQ291bnQgMQo+PgplbmRvYmoKMyAwIG9iago8PCAvVHlwZSAvUGFnZQovUGFyZW50IDIgMCBSCi9Db250ZW50cyA0IDAgUgovUmVzb3VyY2VzIDw8IC9Gb250IDw8IC9GMSA1IDAgUiA+Pgo+PgovTWVkaWFCb3ggWzAgMCA1OTUgODQyXQo+PgplbmRvYmoKNCAwIG9iago8PCAvTGVuZ3RoIDQ5Cj4+CnN0cmVhbQoKcQo1MDAgNzUwIFRkCihUZW1wbGF0ZSBmb3IgWmFcdGxcdWJhY3puaWsgVGVtcGxhdGUpIFRqCkVuZAp4CnEKZW5kb2JqCjUgMCBvYmoKPDwgL1R5cGUgL0ZvbnQKL1N1YnR5cGUgL1R5cGUxCi9CYXNlRm9udCAvSGVsdmV0aWNhCi9FbmNvZGluZyAvV2luQW5zaUVuY29kaW5nCj4+CmVuZG9iagp4cmVmCjAgNgowMDAwMDAwMDAwIDY1NTM2IGYgCjAwMDAwMDAwMTAgMDAwMDAgbiAKMDAwMDAwMDA3OSAwMDAwMCBuIAowMDAwMDAwMTczIDAwMDAwIG4gCjAwMDAwMDAzMDEgMDAwMDAgbiAKMDAwMDAwMDM4MCAwMDAwMCBuIAp0cmFpbGVyCjw8IC9TaXplIDYKL1Jvb3QgMSAwIFIKPj4Kc3RhcnR4cmVmCjQ5MgolJUVPRgo=';
-    link.download = filename;
-    link.click();
+    // Путь к файлу в папке templates
+    const filePath = `templates/${filename}`;
+    
+    // Список доступных файлов (согласно вашим файлам)
+    const availableFiles = [
+      'załącznik_dolnoslaskie.pdf',
+      'załącznik_lubelskie.pdf', 
+      'załącznik_malopolskie.pdf',
+      'załącznik_opolskie.pdf',
+      'załącznik_podkarpackie.pdf',
+      'załącznik_lodzkie.pdf',
+      'załącznik_swietokrzyskie.pdf',
+      'załącznik_wielkopolskie.pdf'
+    ];
+    
+    // Проверяем есть ли файл для выбранного воеводства
+    if (availableFiles.includes(filename)) {
+      // Файл есть - скачиваем его
+      downloadFile(filePath, filename);
+    } else {
+      // Файла нет - используем мазовецкий как fallback
+      console.log(`Файл ${filename} не найден, используем мазовецкий шаблон`);
+      const fallbackPath = 'templates/załącznik_mazowieckie.pdf';
+      const fallbackFilename = 'załącznik_mazowieckie.pdf';
+      
+      downloadFile(fallbackPath, fallbackFilename);
+      alert('Шаблон для этого воеводства пока не готов. Используется шаблон Мазовецкого воеводства.');
+    }
     
     // Переходим к следующему шагу
     setTimeout(() => {
       el('załącznik_step1').style.display = 'none';
       el('załącznik_step2').style.display = 'block';
     }, 1000);
+  }
+
+  // Вспомогательная функция для скачивания файла
+  function downloadFile(filePath, filename) {
+    try {
+      // Создаем ссылку для скачивания
+      const link = document.createElement('a');
+      link.href = filePath;
+      link.download = filename;
+      link.target = '_blank';
+      
+      // Добавляем обработчик ошибок
+      link.onerror = function() {
+        console.error('Ошибка при скачивании файла:', filePath);
+        alert('Ошибка при скачивании файла. Попробуйте еще раз.');
+      };
+      
+      // Скачиваем файл
+      link.click();
+      
+      console.log('Файл успешно скачан:', filename);
+      
+    } catch (error) {
+      console.error('Ошибка при скачивании:', error);
+      alert('Ошибка при скачивании. Попробуйте еще раз.');
+    }
   }
 
   async function załącznikStart(){
@@ -2636,7 +2681,7 @@
         const resp = await fetch(ENDPOINTS.upload, { method:'POST', body: fd });
         if(!resp.ok) throw new Error('Upload failed');
         uploadRes = await resp.json(); // ожидаем {file_id, file_url, name, size}
-      } else {
+    } else {
         // fallback: шлём боту метаданные, пусть он продолжит в чате
         uploadRes = { file_id: null, file_url: null, name: załącznik.file.name, size: załącznik.file.size };
       }
