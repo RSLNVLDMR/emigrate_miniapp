@@ -1084,8 +1084,7 @@
       </div>
       <div style="margin-top:20px">
         <button class="primary" onclick="ctBackToHome()" style="width:100%;margin-bottom:12px">Вернуться в главное меню</button>
-        <button class="ghost" onclick="ctStartOver()" style="width:100%;margin-bottom:12px">Загрузить новый документ</button>
-        <button class="ghost" onclick="closeModal()" style="width:100%">Остаться здесь</button>
+        <button class="ghost" onclick="ctStartOver()" style="width:100%">Загрузить новый документ</button>
       </div>
     </div>
   </div>
@@ -1690,11 +1689,31 @@
       try { renderChecklist(); } catch(e) {}
     }
     
+    // Останавливаем таймер если он работает
+    if(ct.timerInterval){
+      clearInterval(ct.timerInterval);
+      ct.timerInterval = null;
+    }
+    
+    // Очищаем localStorage от таймера
+    localStorage.removeItem('contractTimerEnd');
+    
+    // Сбрасываем анимационные стили для всех экранов
+    const steps = ['ct_step1', 'ct_step2', 'ct_step3', 'ct_step4'];
+    steps.forEach(stepId => {
+      const step = el(stepId);
+      if(step){
+        step.style.opacity = '1';
+        step.style.transform = 'translateX(0)';
+        step.style.transition = '';
+      }
+    });
+    
     // Возвращаемся к первому экрану
     el('ct_step4').style.display='none';
     el('ct_step3').style.display='none';
     el('ct_step2').style.display='none';
-    el('ct_step1').style.display='';
+    el('ct_step1').style.display='block';
     
     // Сбрасываем состояние
     ct = { file:null, fileMeta:null, jobId:null, pollTimer:null, boosted:false };
