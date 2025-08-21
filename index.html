@@ -2118,17 +2118,19 @@
       }, index * 100);
     });
     
+    // Принудительно удаляем все существующие футеры
+    const allFooters = document.querySelectorAll('.bottom');
+    allFooters.forEach(footer => footer.remove());
+    
     // Создаем футер после рендера чеклиста
     createFooter();
   }
   
   // Функция создания футера
   function createFooter() {
-    // Удаляем существующий футер если есть
-    const existingFooter = document.querySelector('.bottom');
-    if (existingFooter) {
-      existingFooter.remove();
-    }
+    // Принудительно удаляем все существующие футеры
+    const allFooters = document.querySelectorAll('.bottom');
+    allFooters.forEach(footer => footer.remove());
     
     // Создаем новый футер
     const footer = document.createElement('div');
@@ -2236,10 +2238,9 @@
   // ====== Онбординг
   function showQ(n){
     // Убираем футер во время онбординга
-    const bottomMenu = document.querySelector('.bottom');
-    if (bottomMenu) {
-      bottomMenu.remove();
-    }
+    // Принудительно удаляем все существующие футеры
+    const allFooters = document.querySelectorAll('.bottom');
+    allFooters.forEach(footer => footer.remove());
     
     // Анимация перехода между вопросами
     const currentQ = document.querySelector('#onb [id^="q"]:not([style*="display: none"])');
@@ -2415,10 +2416,9 @@
         onb.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
         
         // Убираем футер при сбросе онбординга
-        const bottomMenu = document.querySelector('.bottom');
-        if (bottomMenu) {
-          bottomMenu.remove();
-        }
+            // Принудительно удаляем все существующие футеры
+    const allFooters = document.querySelectorAll('.bottom');
+    allFooters.forEach(footer => footer.remove());
         
         setTimeout(() => {
           onb.style.opacity = '1';
@@ -4983,6 +4983,10 @@
 
   // ====== Автозагрузка
   (function init(){
+    // Принудительно удаляем все существующие футеры
+    const allFooters = document.querySelectorAll('.bottom');
+    allFooters.forEach(footer => footer.remove());
+    
     if(st.track){
       document.getElementById('onb').style.display='none';
       document.getElementById('home').style.display='';
@@ -5052,11 +5056,9 @@
         }
       }
     } else {
-      // Убираем футер если онбординг активен
-      const bottomMenu = document.querySelector('.bottom');
-      if (bottomMenu) {
-        bottomMenu.remove();
-      }
+          // Принудительно удаляем все существующие футеры
+    const allFooters = document.querySelectorAll('.bottom');
+    allFooters.forEach(footer => footer.remove());
       showQ(1);
     }
   })();
