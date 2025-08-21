@@ -1300,9 +1300,7 @@
         </div>
         </div>
       
-      <div class="small muted" style="margin-top:12px;text-align:center">
-        <a href="javascript:void(0)" onclick="załącznikNoDoc()" class="help-link">У меня нет — помогите</a>
-      </div>
+
     </div>
 
     <!-- экран 2: отправка по почте -->
@@ -2472,29 +2470,7 @@
     }
   }
 
-  function załącznikNoDoc(){
-    // Закрываем модальное окно
-    closeZałącznikModal();
-    
-    // Открываем чат в Telegram с готовым сообщением
-    if(tg && tg.openTelegramLink){
-      // Формируем готовое сообщение
-      const message = encodeURIComponent('Здравствуйте, у меня нету załącznik od pracodawcy. Хотел бы попросить о помощи');
-      
-      // Открываем чат с пользователем @emigrate_support
-      const chatUrl = `https://t.me/emigrate_support?text=${message}`;
-      
-      try {
-        tg.openTelegramLink(chatUrl);
-      } catch(e) {
-        // Fallback: открываем в браузере
-        window.open(chatUrl, '_blank');
-      }
-    } else {
-      // Если Telegram Web App недоступен, показываем инструкцию
-      alert('Здравствуйте, у меня нету załącznik od pracodawcy. Хотел бы попросить о помощи\n\nНапишите нам в Telegram: @emigrate_support');
-    }
-  }
+
 
   async function ctStart(){
     if(!ct.file){ alert('Выберите файл.'); return; }
