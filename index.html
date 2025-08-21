@@ -1952,6 +1952,47 @@
   </div>
 </div>
 
+<!-- ====== Модальное окно Book a slot -->
+<div id="book_slot_modal" class="modal" role="dialog" aria-modal="true">
+  <div class="sheet">
+    <div class="card">
+      <div class="row" style="align-items:center;margin-bottom:16px">
+        <div style="font-size:24px">📅</div>
+        <button onclick="closeBookSlotModal()" style="margin:0;background:none;border:none;font-size:18px;padding:4px">✕</button>
+      </div>
+      
+      <h3>Поиск окна для подачи</h3>
+      
+      <div style="background: var(--card); border: 2px solid var(--warn); border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+          <span style="font-size: 20px;">⚠️</span>
+          <strong>Важное уведомление</strong>
+        </div>
+        <div class="small" style="line-height: 1.5;">
+          Мы <strong>не ищем слоты</strong> для подачи документов и не можем гарантировать их наличие. 
+          Мы только <strong>связываем вас с людьми</strong>, которые могут помочь с поиском окна для подачи.
+        </div>
+      </div>
+      
+      <div style="background: var(--bg); border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+        <div style="font-size: 14px; color: var(--muted); margin-bottom: 8px;">
+          💡 Что мы делаем:
+        </div>
+        <ul style="margin: 0; padding-left: 16px; font-size: 14px; line-height: 1.5;">
+          <li>Передаем ваш запрос нашим помощникам</li>
+          <li>Они могут поделиться опытом и советами</li>
+          <li>Предоставляем контакты проверенных людей</li>
+        </ul>
+      </div>
+      
+      <div class="row" style="margin-top: 20px;">
+        <button onclick="closeBookSlotModal()">Закрыть</button>
+        <button class="primary" onclick="contactSlotSupport()">Написать за помощью</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
   // ====== Telegram init
   const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
@@ -2196,8 +2237,7 @@
       return;
     }
     if(kind==='slot'){
-      const dates = prompt('Укажите даты/дни, когда вы доступны (например: Пн/Ср/Пт или 20-25 августа). Мы мониторим, но слот не гарантирован.');
-      alert('Спасибо! Подписка на обновления оформлена.\nВаши доступные дни: '+(dates||'не указано')+'\nПодтверждение визита — вручную.');
+      openBookSlotModal();
       return;
     }
     if(kind==='bookAssistant'){
@@ -2661,6 +2701,46 @@
       const wrap = document.querySelector('.wrap');
       if(wrap) wrap.classList.remove('no-header');
     }, 300);
+  }
+
+  // ====== Book a slot modal functions
+  function openBookSlotModal(){
+    const modal = el('book_slot_modal');
+    modal.style.display='grid';
+    setTimeout(() => {
+      modal.classList.add('show');
+    }, 10);
+  }
+
+  function closeBookSlotModal(){
+    const modal = el('book_slot_modal');
+    modal.classList.remove('show');
+    setTimeout(() => {
+      modal.style.display='none';
+    }, 300);
+  }
+
+  function contactSlotSupport(){
+    // Получаем воеводство из профиля пользователя
+    const voivodeship = st.profile?.voivodeship || 'не указано';
+    
+    // Формируем сообщение
+    const message = `Здравствуйте, помогите пожалуйста найти окно для подачи в воеводстве ${voivodeship}`;
+    
+    // Открываем Telegram чат с нашим аккаунтом поддержки
+    if (tg && tg.openTelegramLink) {
+      // Используем официальный аккаунт поддержки
+      tg.openTelegramLink(`https://t.me/emigrate_support?text=${encodeURIComponent(message)}`);
+    } else {
+      // Fallback для браузера
+      window.open(`https://t.me/emigrate_support?text=${encodeURIComponent(message)}`, '_blank');
+    }
+    
+    // Закрываем модальное окно
+    closeBookSlotModal();
+    
+    // Показываем уведомление
+    alert('Сообщение отправлено! Мы свяжемся с вами в ближайшее время.');
   }
 
   function openZałącznikModal(){
@@ -4012,6 +4092,9 @@
   
   function closeAiTranslatorOnBackdrop(e){ if(e.target.id==='ai_translator_modal') closeAiTranslatorModal(); }
   document.getElementById('ai_translator_modal').addEventListener('click', closeAiTranslatorOnBackdrop);
+  
+  function closeBookSlotOnBackdrop(e){ if(e.target.id==='book_slot_modal') closeBookSlotModal(); }
+  document.getElementById('book_slot_modal').addEventListener('click', closeBookSlotOnBackdrop);
   
   document.getElementById('ct_btn_upload').disabled = true; // init
   document.getElementById('załącznik_btn_upload').disabled = true; // init
