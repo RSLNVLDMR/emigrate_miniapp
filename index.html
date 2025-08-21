@@ -3165,6 +3165,53 @@
       const encodedPath = encodeURI(filePath);
       console.log('Закодированный путь:', encodedPath);
       
+      // Проверяем, находимся ли мы в Telegram Mini App
+      const isTelegramWebApp = window.Telegram && window.Telegram.WebApp;
+      
+      if (isTelegramWebApp) {
+        // В Telegram Mini App используем специальный подход
+        console.log('Telegram Mini App: используем специальный метод скачивания');
+        
+        // Метод 1: Пытаемся скачать через Telegram Web App API
+        try {
+          if (window.Telegram.WebApp.downloadFile) {
+            // Если доступен метод downloadFile (новые версии TWA)
+            window.Telegram.WebApp.downloadFile(encodedPath, filename);
+            console.log('Telegram WebApp.downloadFile вызван');
+            return;
+          }
+        } catch (e) {
+          console.log('Telegram WebApp.downloadFile недоступен:', e);
+        }
+        
+        // Метод 2: Открываем файл в Telegram браузере с возможностью возврата
+        try {
+          // Используем Telegram Web App API для открытия ссылки
+          if (window.Telegram.WebApp.openLink) {
+            window.Telegram.WebApp.openLink(encodedPath);
+            console.log('Telegram WebApp.openLink вызван');
+            return;
+          }
+        } catch (e) {
+          console.log('Telegram WebApp.openLink недоступен:', e);
+        }
+        
+        // Метод 3: Fallback - открываем в Telegram браузере
+        try {
+          if (window.Telegram.WebApp.openTelegramLink) {
+            // Открываем ссылку через Telegram
+            window.Telegram.WebApp.openTelegramLink(encodedPath);
+            console.log('Telegram WebApp.openTelegramLink вызван');
+            return;
+          }
+        } catch (e) {
+          console.log('Telegram WebApp.openTelegramLink недоступен:', e);
+        }
+      }
+      
+      // Если не в Telegram или методы TWA недоступны, используем стандартные методы
+      console.log('Используем стандартные методы скачивания');
+      
       // Метод 1: Прямое скачивание через ссылку
       const link = document.createElement('a');
       link.href = encodedPath;
@@ -3178,11 +3225,13 @@
       
       console.log('Метод 1: Ссылка для скачивания создана и активирована');
       
-      // Метод 2: Открываем файл в новой вкладке как fallback
-      setTimeout(() => {
-        console.log('Метод 2: Открываем файл в новой вкладке');
-        window.open(encodedPath, '_blank');
-      }, 500);
+      // Метод 2: Открываем файл в новой вкладке как fallback (только если не в TWA)
+      if (!isTelegramWebApp) {
+        setTimeout(() => {
+          console.log('Метод 2: Открываем файл в новой вкладке');
+          window.open(encodedPath, '_blank');
+        }, 500);
+      }
       
       // Метод 3: Показываем ручную ссылку для скачивания
       setTimeout(() => {
@@ -3192,6 +3241,26 @@
           manualDownload.style.display = 'block';
           manualLink.href = encodedPath;
           manualLink.download = filename;
+          
+          // В Telegram Mini App добавляем специальную инструкцию
+          if (isTelegramWebApp) {
+            const instruction = manualDownload.querySelector('.telegram-instruction');
+            if (!instruction) {
+              const newInstruction = document.createElement('div');
+              newInstruction.className = 'telegram-instruction';
+              newInstruction.style.cssText = `
+                margin-top: 8px;
+                padding: 8px;
+                background: var(--accent);
+                color: white;
+                border-radius: 6px;
+                font-size: 12px;
+                text-align: center;
+              `;
+              newInstruction.innerHTML = '📱 <strong>Telegram:</strong> Нажмите и удерживайте ссылку, выберите "Сохранить ссылку как..."';
+              manualDownload.appendChild(newInstruction);
+            }
+          }
         }
       }, 1000);
       
