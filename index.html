@@ -200,6 +200,15 @@
     .ok{color:var(--ok);border-color:var(--ok);background:rgba(16,185,129,0.1)}
     .warn{color:var(--warn);border-color:var(--warn);background:rgba(245,158,11,0.1)}
     
+    #income_warning {
+      border-left: 4px solid var(--warn);
+      animation: pulse 2s infinite;
+    }
+    
+    #income_warning .status {
+      margin: 0;
+    }
+    
     .help-link{
       color:var(--accent);
       text-decoration:none;
@@ -924,15 +933,15 @@
       <div class="small">Можно выбрать несколько.</div>
       <div style="margin:16px 0">
         <label class="custom-checkbox" data-value="UoP">
-          <input type="checkbox" class="grounds" value="UoP">
+          <input type="checkbox" class="grounds" value="UoP" onchange="checkIncomeWarning()">
           <span class="custom-checkbox-text">Работа (UoP)</span>
         </label>
         <label class="custom-checkbox" data-value="UoD">
-          <input type="checkbox" class="grounds" value="UoD">
+          <input type="checkbox" class="grounds" value="UoD" onchange="checkIncomeWarning()">
           <span class="custom-checkbox-text">Работа (UoD)</span>
         </label>
         <label class="custom-checkbox" data-value="UoZ">
-          <input type="checkbox" class="grounds" value="UoZ">
+          <input type="checkbox" class="grounds" value="UoZ" onchange="checkIncomeWarning()">
           <span class="custom-checkbox-text">Работа (UoZ)</span>
         </label>
         <label class="custom-checkbox" data-value="Dzialalnosc">
@@ -957,11 +966,20 @@
     <!-- Q7 -->
     <div id="q7" style="display:none">
       <h3>7) Ежемесячный доход (brutto)</h3>
-      <select id="income">
-        <option value="<4700">до 4700</option>
-        <option value="4800-10000">4800–10000</option>
+      <select id="income" onchange="checkIncomeWarning()">
+        <option value="<4666">до 4666</option>
+        <option value="4666-10000">4666–10000</option>
         <option value=">10000">10000+</option>
       </select>
+      
+      <div id="income_warning" class="status warn" style="display:none;margin-top:12px">
+        <div style="text-align:center">
+          <div style="font-size:20px;margin-bottom:8px">⚠️</div>
+          <div><strong>Внимание!</strong> С доходом ниже 4666 PLN ты не сможешь податься на карту побыту по работе.</div>
+          <div style="margin-top:8px;font-size:14px">Рекомендуем рассмотреть другие основания или увеличить доход.</div>
+        </div>
+      </div>
+      
       <div class="row" style="margin-top:16px">
         <button onclick="prevQ(6)">Назад</button>
         <button class="primary" onclick="nextQValidated(7,8)">Далее</button>
@@ -1628,11 +1646,21 @@
         setTimeout(() => {
           nextQ.style.opacity = '1';
           nextQ.style.transform = 'translateX(0)';
+          
+          // Проверяем предупреждение о доходе для вопроса 7
+          if(n === 7) {
+            setTimeout(() => checkIncomeWarning(), 50);
+          }
         }, 10);
       }, 300);
     } else {
       // Простое переключение без анимации
     for(let i=1;i<=8;i++){ document.getElementById('q'+i).style.display = (i===n)?'':'none' }
+    
+    // Проверяем предупреждение о доходе для вопроса 7
+    if(n === 7) {
+      setTimeout(() => checkIncomeWarning(), 50);
+    }
     }
     
     document.getElementById('step').innerText = String(n);
@@ -1672,6 +1700,26 @@
     const goal = document.getElementById('goal').value;
     const grounds = Array.from(document.querySelectorAll('.grounds')).filter(el=>el.checked).map(el=>el.value);
 
+    // Проверяем, есть ли конфликт между доходом и основанием "Работа"
+    const workGrounds = ['UoP', 'UoD', 'UoZ'];
+    const hasWorkGround = workGrounds.some(ground => grounds.includes(ground));
+    
+    if(income === '<4666' && hasWorkGround){
+      const proceed = confirm(
+        '⚠️ Внимание! С доходом ниже 4666 PLN ты не сможешь податься на карту побыту по работе.\n\n' +
+        'Ты уверен, что хочешь продолжить с текущими данными?\n\n' +
+        'Рекомендуем:\n' +
+        '• Увеличить доход до 4666+ PLN\n' +
+        '• Выбрать другие основания (Учёба, Семья)\n' +
+        '• Обратиться за консультацией'
+      );
+      
+      if(!proceed){
+        showQ(7); // Возвращаемся к вопросу о доходе
+        return;
+      }
+    }
+
     const track = determineTrack(grounds);
     const trackLabel = track==='work'?'Работа':track==='study'?'Учёба':track==='family'?'Семья':'Бизнес';
 
@@ -1704,6 +1752,23 @@
     renderChecklist();
       }, 10);
     }, 400);
+  }
+
+  // ====== Проверка дохода для карты побыту
+  function checkIncomeWarning(){
+    const income = document.getElementById('income').value;
+    const warning = document.getElementById('income_warning');
+    
+    // Проверяем, выбрано ли основание "Работа"
+    const workGrounds = ['UoP', 'UoD', 'UoZ'];
+    const selectedGrounds = Array.from(document.querySelectorAll('.grounds:checked')).map(el => el.value);
+    const hasWorkGround = workGrounds.some(ground => selectedGrounds.includes(ground));
+    
+    if(income === '<4666' && hasWorkGround){
+      warning.style.display = 'block';
+    } else {
+      warning.style.display = 'none';
+    }
   }
 
   // ====== Reset (тесты)
