@@ -1121,14 +1121,132 @@
         box-shadow: none;
       }
     }
+    
+    /* Стили для стартового экрана */
+    .welcome-container {
+      position: relative;
+      min-height: 400px;
+    }
+    
+    .welcome-step {
+      display: none;
+      text-align: center;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+    
+    .welcome-step.active {
+      display: block;
+    }
+    
+    .welcome-icon {
+      font-size: 64px;
+      margin-bottom: 24px;
+      display: block;
+    }
+    
+    .welcome-step h2 {
+      margin-bottom: 16px;
+      color: var(--accent);
+    }
+    
+    .welcome-step p {
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 32px;
+      font-size: 16px;
+    }
+    
+    .welcome-nav {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+    
+    .step-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--line);
+      transition: all 0.3s ease;
+    }
+    
+    .step-dot.active {
+      background: var(--accent);
+      transform: scale(1.2);
+    }
+    
+    .welcome-buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+    
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
   </style>
 </head>
 <body>
 <div class="wrap">
-  <header><h2 id="title">eMigrant · Онбординг</h2></header>
+  <header><h2 id="title">eMigrant · Добро пожаловать</h2></header>
+
+  <!-- Стартовый экран с тремя окнами -->
+  <div id="welcome" class="card">
+    <div class="welcome-container">
+      <div class="welcome-step active" id="welcome-step-1">
+        <div class="welcome-icon">🏠</div>
+        <h2>Добро пожаловать в eMigrant</h2>
+        <p>Мы создали это приложение, потому что сами много раз подавались на карту побыту и знаем, насколько хаотичным может быть этот процесс.</p>
+        <div class="welcome-nav">
+          <span class="step-dot active"></span>
+          <span class="step-dot"></span>
+          <span class="step-dot"></span>
+        </div>
+        <button class="primary" onclick="nextWelcomeStep(2)">Далее</button>
+      </div>
+
+      <div class="welcome-step" id="welcome-step-2">
+        <div class="welcome-icon">📋</div>
+        <h2>Персонализированный чеклист</h2>
+        <p>Мы подберем для вас индивидуальный чеклист документов на основе вашей ситуации и воеводства.</p>
+        <div class="welcome-nav">
+          <span class="step-dot"></span>
+          <span class="step-dot active"></span>
+          <span class="step-dot"></span>
+        </div>
+        <div class="welcome-buttons">
+          <button onclick="prevWelcomeStep(1)">Назад</button>
+          <button class="primary" onclick="nextWelcomeStep(3)">Далее</button>
+        </div>
+      </div>
+
+      <div class="welcome-step" id="welcome-step-3">
+        <div class="welcome-icon">🚀</div>
+        <h2>Готовы начать?</h2>
+        <p>Пройдите короткую анкету, и мы создадим ваш персональный план подачи на карту побыту.</p>
+        <div class="welcome-nav">
+          <span class="step-dot"></span>
+          <span class="step-dot"></span>
+          <span class="step-dot active"></span>
+        </div>
+        <div class="welcome-buttons">
+          <button onclick="prevWelcomeStep(2)">Назад</button>
+          <button class="primary" onclick="startOnboarding()">Начать анкету</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Онбординг (8 вопросов) -->
-  <div id="onb" class="card">
+  <div id="onb" class="card" style="display:none">
     <div class="badge" style="margin-bottom: 20px;">Шаг <span id="step">1</span>/8</div>
 
     <!-- Q1 -->
@@ -2126,6 +2244,44 @@
   const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
   try { tg && tg.ready(); tg && tg.expand(); } catch(e) {}
 
+  // ====== Функции для стартового экрана
+  function nextWelcomeStep(step) {
+    // Скрываем текущий шаг
+    document.querySelectorAll('.welcome-step').forEach(s => s.classList.remove('active'));
+    
+    // Показываем следующий шаг
+    document.getElementById(`welcome-step-${step}`).classList.add('active');
+    
+    // Обновляем точки навигации
+    document.querySelectorAll('.step-dot').forEach((dot, index) => {
+      dot.classList.toggle('active', index === step - 1);
+    });
+  }
+
+  function prevWelcomeStep(step) {
+    // Скрываем текущий шаг
+    document.querySelectorAll('.welcome-step').forEach(s => s.classList.remove('active'));
+    
+    // Показываем предыдущий шаг
+    document.getElementById(`welcome-step-${step}`).classList.add('active');
+    
+    // Обновляем точки навигации
+    document.querySelectorAll('.step-dot').forEach((dot, index) => {
+      dot.classList.toggle('active', index === step - 1);
+    });
+  }
+
+  function startOnboarding() {
+    // Скрываем стартовый экран
+    document.getElementById('welcome').style.display = 'none';
+    
+    // Показываем онбординг
+    document.getElementById('onb').style.display = 'block';
+    
+    // Обновляем заголовок
+    document.getElementById('title').textContent = 'eMigrant · Онбординг';
+  }
+
   // ====== Custom checkbox handling
   document.addEventListener('DOMContentLoaded', function() {
     // Handle custom checkbox clicks - improved version
@@ -2248,6 +2404,12 @@
   function renderChecklist(){
     const title = st.profile?.trackLabel ? `eMigrant · Чеклист (${st.profile.trackLabel})` : 'eMigrant · Чеклист';
     document.getElementById('title').innerText = title;
+    
+    // Скрываем стартовый экран и онбординг
+    const welcome = document.getElementById('welcome');
+    const onb = document.getElementById('onb');
+    if (welcome) welcome.style.display = 'none';
+    if (onb) onb.style.display = 'none';
 
     const tasksDiv = document.getElementById('tasks');
     tasksDiv.innerHTML = '';
@@ -2349,13 +2511,19 @@
   function openChecklist(){
     const onb = document.getElementById('onb');
     const home = document.getElementById('home');
+    const welcome = document.getElementById('welcome');
     
+    // Скрываем онбординг и стартовый экран
     onb.style.opacity = '0';
     onb.style.transform = 'translateY(-20px)';
     onb.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    welcome.style.opacity = '0';
+    welcome.style.transform = 'translateY(-20px)';
+    welcome.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
     
     setTimeout(() => {
       onb.style.display = 'none';
+      welcome.style.display = 'none';
       home.style.display = 'block';
       home.style.opacity = '0';
       home.style.transform = 'translateY(20px)';
@@ -2364,12 +2532,18 @@
       setTimeout(() => {
         home.style.opacity = '1';
         home.style.transform = 'translateY(0)';
-    renderChecklist();
+        renderChecklist();
       }, 10);
     }, 400);
   }
 
   function openModule(kind){
+    // Скрываем стартовый экран и онбординг при открытии модулей
+    const welcome = document.getElementById('welcome');
+    const onb = document.getElementById('onb');
+    if (welcome) welcome.style.display = 'none';
+    if (onb) onb.style.display = 'none';
+    
     if(kind==='aiTranslator'){
       openAiTranslatorModal();
       return;
@@ -2433,6 +2607,12 @@
     const allFooters = document.querySelectorAll('.bottom');
     allFooters.forEach(footer => footer.remove());
     
+    // Скрываем стартовый экран
+    const welcome = document.getElementById('welcome');
+    if (welcome) {
+      welcome.style.display = 'none';
+    }
+    
     // Анимация перехода между вопросами
     const currentQ = document.querySelector('#onb [id^="q"]:not([style*="display: none"])');
     const nextQ = document.getElementById('q'+n);
@@ -2469,12 +2649,12 @@
       }, 300);
     } else {
       // Простое переключение без анимации
-    for(let i=1;i<=8;i++){ document.getElementById('q'+i).style.display = (i===n)?'':'none' }
+      for(let i=1;i<=8;i++){ document.getElementById('q'+i).style.display = (i===n)?'':'none' }
     
-    // Проверяем предупреждение о доходе для вопроса 7
-    if(n === 7) {
-      setTimeout(() => checkIncomeWarning(), 50);
-    }
+      // Проверяем предупреждение о доходе для вопроса 7
+      if(n === 7) {
+        setTimeout(() => checkIncomeWarning(), 50);
+      }
     }
     
     document.getElementById('step').innerText = String(n);
@@ -2548,6 +2728,7 @@
     // Анимация завершения онбординга
     const onb = document.getElementById('onb');
     const home = document.getElementById('home');
+    const welcome = document.getElementById('welcome');
     
     onb.style.opacity = '0';
     onb.style.transform = 'translateY(-20px)';
@@ -2555,6 +2736,7 @@
     
     setTimeout(() => {
       onb.style.display='none';
+      welcome.style.display='none';
       home.style.display='';
       home.style.opacity = '0';
       home.style.transform = 'translateY(20px)';
@@ -2563,7 +2745,7 @@
       setTimeout(() => {
         home.style.opacity = '1';
         home.style.transform = 'translateY(0)';
-    renderChecklist();
+        renderChecklist();
       }, 10);
     }, 400);
   }
@@ -2594,6 +2776,7 @@
       st.track = null; st.tasks=[]; st.profile={};
       const home = document.getElementById('home');
       const onb = document.getElementById('onb');
+      const welcome = document.getElementById('welcome');
       
       home.style.opacity = '0';
       home.style.transform = 'translateY(20px)';
@@ -2601,20 +2784,30 @@
       
       setTimeout(() => {
         home.style.display='none';
-        onb.style.display='';
-        onb.style.opacity = '0';
-        onb.style.transform = 'translateY(-20px)';
-        onb.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+        onb.style.display='none';
+        welcome.style.display='';
+        welcome.style.opacity = '0';
+        welcome.style.transform = 'translateY(-20px)';
+        welcome.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
         
         // Убираем футер при сбросе онбординга
-            // Принудительно удаляем все существующие футеры
-    const allFooters = document.querySelectorAll('.bottom');
-    allFooters.forEach(footer => footer.remove());
+        // Принудительно удаляем все существующие футеры
+        const allFooters = document.querySelectorAll('.bottom');
+        allFooters.forEach(footer => footer.remove());
+        
+        // Сбрасываем стартовый экран к первому шагу
+        document.querySelectorAll('.welcome-step').forEach(s => s.classList.remove('active'));
+        document.getElementById('welcome-step-1').classList.add('active');
+        document.querySelectorAll('.step-dot').forEach((dot, index) => {
+          dot.classList.toggle('active', index === 0);
+        });
+        
+        // Обновляем заголовок
+        document.getElementById('title').textContent = 'eMigrant · Добро пожаловать';
         
         setTimeout(() => {
-          onb.style.opacity = '1';
-          onb.style.transform = 'translateY(0)';
-      showQ(1);
+          welcome.style.opacity = '1';
+          welcome.style.transform = 'translateY(0)';
         }, 10);
       }, 400);
     }
