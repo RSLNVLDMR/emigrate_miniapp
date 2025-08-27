@@ -4,9 +4,25 @@
     {
       "src": "index.html",
       "use": "@vercel/static"
+    },
+    {
+      "src": "templates/**",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "*.pdf",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
+    {
+      "src": "/templates/(.*)",
+      "dest": "/templates/$1"
+    },
+    {
+      "src": "/(.*)\\.pdf",
+      "dest": "/$1.pdf"
+    },
     {
       "src": "/(.*)",
       "dest": "/index.html"

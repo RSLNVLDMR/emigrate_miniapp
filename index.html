@@ -2332,6 +2332,9 @@
 
   // ====== Конфиг AI-модуля
   const BACKEND_BASE = ""; // ← если есть сервер/бот API, укажите базовый URL
+  
+  // ====== Vercel домен для файлов
+  const VERCEL_DOMAIN = "https://emigrate-miniapp-five.vercel.app";
   const ENDPOINTS = BACKEND_BASE ? {
     upload: BACKEND_BASE + "/upload",
     analyze: BACKEND_BASE + "/analyze",
@@ -3662,8 +3665,8 @@
       return;
     }
     
-    // Путь к файлу в папке templates
-    const filePath = `templates/${filename}`;
+    // Путь к файлу в папке templates с правильным доменом
+    const filePath = `${VERCEL_DOMAIN}/templates/${filename}`;
     console.log('Скачиваем файл:', filePath);
     
     // Список доступных файлов
@@ -3723,7 +3726,7 @@
       downloadFile(filePath, filename);
     } else {
       // Файла нет - используем мазовецкий как fallback
-      const fallbackPath = 'templates/załącznik_mazowieckie.pdf';
+      const fallbackPath = `${VERCEL_DOMAIN}/templates/załącznik_mazowieckie.pdf`;
       
       // Настраиваем ручную ссылку для fallback файла
       const manualDownload = document.getElementById('załącznik_manual_download');
