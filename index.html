@@ -3595,7 +3595,7 @@
           
           // Показываем ручную ссылку для скачивания
           manualDownload.style.display = 'block';
-          manualLink.href = encodeURI(`templates/${filename}`);
+          manualLink.href = encodeURI(`${VERCEL_DOMAIN}/templates/${filename}`);
           manualLink.download = filename;
           
           // Скрываем предупреждение о недоступности
