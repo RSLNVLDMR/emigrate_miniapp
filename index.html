@@ -2306,7 +2306,13 @@
       }
     } catch (error) {
       console.error('Ошибка при проверке состояния после таймаута:', error);
-      forceRecovery();
+      // Простое восстановление - показываем приветственный экран
+      try {
+        const welcome = document.getElementById('welcome');
+        if (welcome) welcome.style.display = 'block';
+      } catch (e) {
+        console.error('Не удалось восстановить приветственный экран:', e);
+      }
     }
   }, 3000); // 3 секунды на загрузку
   
@@ -2339,22 +2345,18 @@
         }
       } catch (recoveryError) {
         console.error('Ошибка при восстановлении интерфейса после отклонения промиса:', recoveryError);
-        forceRecovery();
+        // Простое восстановление - показываем приветственный экран
+        try {
+          const welcome = document.getElementById('welcome');
+          if (welcome) welcome.style.display = 'block';
+        } catch (e) {
+          console.error('Не удалось восстановить приветственный экран:', e);
+        }
       }
     }, 100);
   });
   
-  // Добавляем обработчик для предотвращения белого экрана при ошибках в скриптах
-  window.addEventListener('beforeunload', function(event) {
-    console.log('Страница выгружается, сохраняем состояние...');
-    // Сохраняем текущее состояние перед выгрузкой
-    if (st.track && st.track.trim() !== '') {
-      localStorage.setItem('lastKnownState', JSON.stringify({
-        track: st.track,
-        timestamp: Date.now()
-      }));
-    }
-  });
+
 
   // ====== Функции для стартового экрана
   function nextWelcomeStep(step) {
@@ -2665,10 +2667,7 @@
         <div class="footer-icon icon-calendar"></div>
         <span class="footer-label">Book a slot</span>
       </button>
-      <button onclick="forceRecovery()" class="footer-btn" style="background: var(--warn); color: white;" title="Восстановить приложение">
-        <div class="footer-icon" style="font-size: 16px;">🔄</div>
-        <span class="footer-label">Recovery</span>
-      </button>
+
     `;
     
     console.log('Создаем новый футер с 3 кнопками и CSS иконками (v2.0):', footer.innerHTML);
@@ -2713,21 +2712,23 @@
         renderChecklist();
       } catch (error) {
         console.error('Ошибка при рендере чеклиста в markDone:', error);
-        // В случае ошибки пытаемся восстановить состояние
+        // В случае ошибки показываем приветственный экран
         try {
-          forceRecovery();
-        } catch (recoveryError) {
-          console.error('Ошибка при восстановлении в markDone:', recoveryError);
+          const welcome = document.getElementById('welcome');
+          if (welcome) welcome.style.display = 'block';
+        } catch (e) {
+          console.error('Не удалось восстановить приветственный экран:', e);
         }
       }
       
     } catch (error) {
       console.error('Ошибка в markDone:', error);
-      // В случае ошибки пытаемся восстановить состояние
+      // В случае ошибки показываем приветственный экран
       try {
-        forceRecovery();
-      } catch (recoveryError) {
-        console.error('Ошибка при восстановлении в markDone:', recoveryError);
+        const welcome = document.getElementById('welcome');
+        if (welcome) welcome.style.display = 'block';
+      } catch (e) {
+        console.error('Не удалось восстановить приветственный экран:', e);
       }
     }
   }
@@ -2922,11 +2923,12 @@
       
     } catch (error) {
       console.error('Ошибка в openModule:', error);
-      // В случае ошибки пытаемся восстановить состояние
+      // В случае ошибки показываем приветственный экран
       try {
-        forceRecovery();
-      } catch (recoveryError) {
-        console.error('Ошибка при восстановлении в openModule:', recoveryError);
+        const welcome = document.getElementById('welcome');
+        if (welcome) welcome.style.display = 'block';
+      } catch (e) {
+        console.error('Не удалось восстановить приветственный экран:', e);
       }
     }
   }
@@ -3175,11 +3177,12 @@
       
     } catch (error) {
       console.error('Ошибка в finishOnb:', error);
-      // В случае ошибки пытаемся восстановить состояние
+      // В случае ошибки показываем приветственный экран
       try {
-        forceRecovery();
-      } catch (recoveryError) {
-        console.error('Ошибка при восстановлении в finishOnb:', recoveryError);
+        const welcome = document.getElementById('welcome');
+        if (welcome) welcome.style.display = 'block';
+      } catch (e) {
+        console.error('Не удалось восстановить приветственный экран:', e);
       }
     }
   }
@@ -5897,57 +5900,54 @@
     }, 2000);
   }
 
-  // ====== Функция восстановления состояния
-  function forceRecovery() {
-    console.log('Принудительное восстановление состояния');
+
+  
+  // ====== Автозагрузка
+  (function init(){
+    console.log('🚀 Начинаем инициализацию приложения...');
     
     try {
-      // Очищаем все футеры
-      const allFooters = document.querySelectorAll('.bottom');
-      allFooters.forEach(footer => footer.remove());
-      
-      // Принудительно показываем все основные контейнеры
+      // Простая инициализация - показываем приветственный экран
       const welcome = document.getElementById('welcome');
       const onb = document.getElementById('onb');
       const home = document.getElementById('home');
       
-      // Сначала показываем приветственный экран по умолчанию
-      if (welcome) welcome.style.display = 'block';
-      if (onb) onb.style.display = 'none';
-      if (home) home.style.display = 'none';
+      console.log('Найдены элементы:', {
+        welcome: !!welcome,
+        onb: !!onb,
+        home: !!home
+      });
       
-      // Проверяем состояние и восстанавливаем интерфейс
-      if(st.track && st.track.trim() !== ''){
-        console.log('Восстанавливаем состояние с треком:', st.track);
-        
-        // Скрываем стартовые экраны
-        if (welcome) welcome.style.display = 'none';
-        if (onb) onb.style.display = 'none';
-        if (home) home.style.display = 'block';
-        
-        // Принудительно рендерим чеклист
+      if (!welcome || !onb || !home) {
+        console.error('❌ Не найдены необходимые элементы DOM');
+        return;
+      }
+      
+      // Скрываем все экраны
+      welcome.style.display = 'none';
+      onb.style.display = 'none';
+      home.style.display = 'none';
+      
+      // Проверяем состояние
+      if (st.track && st.track.trim() !== '') {
+        console.log('📋 Показываем чеклист для существующего трека:', st.track);
+        home.style.display = 'block';
         try {
           renderChecklist();
         } catch (error) {
-          console.error('Ошибка при рендере чеклиста в forceRecovery:', error);
-          // Если что-то пошло не так, показываем онбординг
-          if (welcome) welcome.style.display = 'none';
-          if (onb) onb.style.display = 'block';
-          if (home) home.style.display = 'none';
-          showQ(1);
+          console.error('❌ Ошибка при рендере чеклиста:', error);
+          // В случае ошибки показываем приветственный экран
+          welcome.style.display = 'block';
+          onb.style.display = 'none';
+          home.style.display = 'none';
         }
       } else {
-        console.log('Нет трека, показываем приветственный экран в forceRecovery');
-        // Показываем приветственный экран
-        if (welcome) {
-          welcome.style.display = 'block';
-          welcome.style.opacity = '1';
-          welcome.style.transform = 'translateY(0)';
-        }
-        if (onb) onb.style.display = 'none';
-        if (home) home.style.display = 'none';
+        console.log('👋 Показываем приветственный экран');
+        welcome.style.display = 'block';
+        onb.style.display = 'none';
+        home.style.display = 'none';
         
-        // Убеждаемся, что приветственный экран настроен правильно
+        // Настраиваем приветственный экран
         try {
           const welcomeSteps = document.querySelectorAll('.welcome-step');
           if (welcomeSteps.length > 0) {
@@ -5963,216 +5963,30 @@
             });
           }
           
-          // Обновляем заголовок
           const titleEl = document.getElementById('title');
           if (titleEl) titleEl.textContent = 'eMigrant · Добро пожаловать';
           
-          console.log('Приветственный экран успешно восстановлен в forceRecovery');
+          console.log('✅ Приветственный экран настроен');
         } catch (error) {
-          console.error('Ошибка при настройке приветственного экрана в forceRecovery:', error);
+          console.error('❌ Ошибка при настройке приветственного экрана:', error);
         }
       }
-    } catch (error) {
-      console.error('Ошибка в forceRecovery:', error);
-      // В случае критической ошибки перезагружаем страницу
-      if (confirm('Критическая ошибка. Перезагрузить страницу?')) {
-        window.location.reload();
-      }
-    }
-  }
-  
-  // Добавляем функцию в глобальную область для отладки
-  window.forceRecovery = forceRecovery;
-  
-  // ====== Автозагрузка
-  (function init(){
-    // Проверяем, есть ли сохраненное состояние с ошибкой
-    try {
-      const lastKnownState = localStorage.getItem('lastKnownState');
-      if (lastKnownState) {
-        const state = JSON.parse(lastKnownState);
-        const timeDiff = Date.now() - state.timestamp;
-        
-        // Если состояние было сохранено менее 5 минут назад, восстанавливаем его
-        if (timeDiff < 5 * 60 * 1000) {
-          console.log('Восстанавливаем состояние после ошибки:', state);
-          st.track = state.track;
-          // Очищаем сохраненное состояние
-          localStorage.removeItem('lastKnownState');
-        }
-      }
-    } catch (error) {
-      console.error('Ошибка при восстановлении состояния:', error);
-      localStorage.removeItem('lastKnownState');
-    }
-    // Добавляем timestamp для принудительного обновления
-    const timestamp = Date.now();
-    console.log('Инициализация приложения, timestamp:', timestamp);
-    
-    // Принудительно удаляем все существующие футеры
-    const allFooters = document.querySelectorAll('.bottom');
-    console.log('При инициализации найдено футеров:', allFooters.length);
-    allFooters.forEach(footer => footer.remove());
-    
-    // Добавляем дополнительную проверку состояния
-    if (!st.track || st.track.trim() === '') {
-      // Проверяем, есть ли данные в localStorage, но не в состоянии
-      const savedTrack = localStorage.getItem('track');
-      const savedProfile = localStorage.getItem('profile');
       
-      if (savedTrack && savedProfile) {
-        try {
-          const profile = JSON.parse(savedProfile);
-          if (profile.track) {
-            console.log('Восстанавливаем трек из localStorage:', profile.track);
-            st.track = profile.track;
-            st.profile = profile;
-          }
-        } catch (error) {
-          console.error('Ошибка при восстановлении профиля:', error);
-        }
-      }
-    }
-    
-    // Убеждаемся, что приветственный экран настроен правильно
-    try {
-      const welcomeSteps = document.querySelectorAll('.welcome-step');
-      if (welcomeSteps.length > 0) {
-        welcomeSteps.forEach(s => s.classList.remove('active'));
-        const firstStep = document.getElementById('welcome-step-1');
-        if (firstStep) firstStep.classList.add('active');
-      }
-      
-      const stepDots = document.querySelectorAll('.step-dot');
-      if (stepDots.length > 0) {
-        stepDots.forEach((dot, index) => {
-          dot.classList.toggle('active', index === 0);
-        });
-      }
-      
-      // Обновляем заголовок
-      const titleEl = document.getElementById('title');
-      if (titleEl) titleEl.textContent = 'eMigrant · Добро пожаловать';
-      
-      console.log('Приветственный экран настроен при инициализации');
-    } catch (error) {
-      console.error('Ошибка при настройке приветственного экрана при инициализации:', error);
-    }
-    
-    // Принудительно показываем все основные контейнеры
-    const welcome = document.getElementById('welcome');
-    const onb = document.getElementById('onb');
-    const home = document.getElementById('home');
-    
-    // Показываем приветственный экран по умолчанию
-    if (welcome) {
-      welcome.style.display = 'block';
-      welcome.style.opacity = '1';
-      welcome.style.transform = 'translateY(0)';
-      console.log('Приветственный экран показан');
-    }
-    if (onb) onb.style.display = 'none';
-    if (home) home.style.display = 'none';
-    
-    // Проверяем состояние и восстанавливаем интерфейс
-    if(st.track && st.track.trim() !== ''){
-      console.log('Восстанавливаем состояние с треком:', st.track);
-      
-      // Скрываем стартовые экраны и показываем чеклист
-      if (welcome) welcome.style.display = 'none';
-      if (onb) onb.style.display = 'none';
-      if (home) home.style.display = 'block';
-      
-      // Принудительно рендерим чеклист
-      try {
-        renderChecklist();
-      } catch (error) {
-        console.error('Ошибка при рендере чеклиста:', error);
-        // Если что-то пошло не так, показываем онбординг
-        if (welcome) welcome.style.display = 'none';
-        if (onb) onb.style.display = 'block';
-        if (home) home.style.display = 'none';
-        showQ(1);
-      }
-      
-      // Проверяем, есть ли активная дата завершения анализа
-      const contractTimerEnd = localStorage.getItem('contractTimerEnd');
-      if(contractTimerEnd){
-        const endTime = parseInt(contractTimerEnd);
-        const now = new Date().getTime();
-        if(endTime > now){
-          // Дата еще актуальна - показываем её
-          const completionDate = new Date(endTime);
-          const dateEl = el('ct_completion_date');
-          const timeEl = el('ct_completion_time');
-          
-          if(dateEl && timeEl){
-            const dateOptions = { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            };
-            const timeOptions = { 
-              hour: '2-digit', 
-              minute: '2-digit' 
-            };
-            
-            dateEl.innerText = completionDate.toLocaleDateString('ru-RU', dateOptions);
-            timeEl.innerText = completionDate.toLocaleTimeString('ru-RU', timeOptions);
-          }
-        } else {
-          // Дата истекла - очищаем
-          localStorage.removeItem('contractTimerEnd');
-        }
-      }
-
-      // Проверяем, есть ли активная дата завершения анализа для załącznik
-      const załącznikTimerEnd = localStorage.getItem('załącznikTimerEnd');
-      if(załącznikTimerEnd){
-        const endTime = parseInt(załącznikTimerEnd);
-        const now = new Date().getTime();
-        if(endTime > now){
-          // Дата еще актуальна - показываем её
-          const completionDate = new Date(endTime);
-          const dateEl = el('załącznik_completion_date');
-          const timeEl = el('załącznik_completion_time');
-          
-          if(dateEl && timeEl){
-            const dateOptions = { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            };
-            const timeOptions = { 
-              hour: '2-digit', 
-              minute: '2-digit' 
-            };
-            
-            dateEl.innerText = completionDate.toLocaleDateString('ru-RU', dateOptions);
-            timeEl.innerText = completionDate.toLocaleTimeString('ru-RU', timeOptions);
-          }
-        } else {
-          // Дата истекла - очищаем
-          localStorage.removeItem('załącznikTimerEnd');
-        }
-      }
-    } else {
-      console.log('Нет трека, приветственный экран уже показан');
-      // Принудительно удаляем все существующие футеры
+      // Убираем футеры
       const allFooters = document.querySelectorAll('.bottom');
       allFooters.forEach(footer => footer.remove());
       
-      // Приветственный экран уже показан выше, просто убеждаемся что он виден
-      if (welcome && welcome.style.display !== 'block') {
-        welcome.style.display = 'block';
-        welcome.style.opacity = '1';
-        welcome.style.transform = 'translateY(0)';
-        console.log('Принудительно показан приветственный экран');
-      }
+      console.log('✅ Инициализация завершена');
       
-      console.log('Приветственный экран готов к использованию');
+    } catch (error) {
+      console.error('❌ Критическая ошибка при инициализации:', error);
+      // В случае ошибки показываем приветственный экран
+      try {
+        const welcome = document.getElementById('welcome');
+        if (welcome) welcome.style.display = 'block';
+      } catch (e) {
+        console.error('❌ Не удалось показать приветственный экран:', e);
+      }
     }
     
     // Добавляем обработчик для восстановления состояния при фокусе
@@ -6186,8 +6000,13 @@
           renderChecklist();
         } catch (error) {
           console.error('Ошибка при восстановлении чеклиста:', error);
-          // В случае ошибки вызываем принудительное восстановление
-          forceRecovery();
+          // В случае ошибки показываем приветственный экран
+          try {
+            const welcome = document.getElementById('welcome');
+            if (welcome) welcome.style.display = 'block';
+          } catch (e) {
+            console.error('Не удалось восстановить приветственный экран:', e);
+          }
         }
       }
     });
@@ -6204,8 +6023,13 @@
             renderChecklist();
           } catch (error) {
             console.error('Ошибка при восстановлении чеклиста:', error);
-            // В случае ошибки вызываем принудительное восстановление
-            forceRecovery();
+            // В случае ошибки показываем приветственный экран
+            try {
+              const welcome = document.getElementById('welcome');
+              if (welcome) welcome.style.display = 'block';
+            } catch (e) {
+              console.error('Не удалось восстановить приветственный экран:', e);
+            }
           }
         }
       }
@@ -6292,7 +6116,13 @@
               }
             } catch (error) {
               console.error('Ошибка при восстановлении от белого экрана:', error);
-              forceRecovery();
+              // В случае ошибки показываем приветственный экран
+              try {
+                const welcome = document.getElementById('welcome');
+                if (welcome) welcome.style.display = 'block';
+              } catch (e) {
+                console.error('Не удалось восстановить приветственный экран:', e);
+              }
             }
           }
         }
@@ -6313,7 +6143,13 @@
               }
             } catch (error) {
               console.error('Ошибка при восстановлении после фоновой загрузки:', error);
-              forceRecovery();
+              // В случае ошибки показываем приветственный экран
+              try {
+                const welcome = document.getElementById('welcome');
+                if (welcome) welcome.style.display = 'block';
+              } catch (e) {
+                console.error('Не удалось восстановить приветственный экран:', e);
+              }
             }
           }, 100);
         }
@@ -6333,7 +6169,13 @@
             }
           } catch (error) {
             console.error('Ошибка при восстановлении после загрузки DOM:', error);
-            forceRecovery();
+            // В случае ошибки показываем приветственный экран
+            try {
+              const welcome = document.getElementById('welcome');
+              if (welcome) welcome.style.display = 'block';
+            } catch (e) {
+              console.error('Не удалось восстановить приветственный экран:', e);
+            }
           }
         }, 100);
       });
