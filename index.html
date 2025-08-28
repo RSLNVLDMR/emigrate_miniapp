@@ -2386,14 +2386,43 @@
   }
 
   function startOnboarding() {
-    // Скрываем стартовый экран
-    document.getElementById('welcome').style.display = 'none';
-    
-    // Показываем онбординг
-    document.getElementById('onb').style.display = 'block';
-    
-    // Обновляем заголовок
-    document.getElementById('title').textContent = 'eMigrant · Онбординг';
+    try {
+      console.log('🚀 Начинаем онбординг');
+      
+      // Скрываем стартовый экран
+      const welcome = document.getElementById('welcome');
+      if (welcome) {
+        welcome.style.display = 'none';
+        console.log('Скрыт приветственный экран');
+      }
+      
+      // Показываем онбординг
+      const onb = document.getElementById('onb');
+      if (onb) {
+        onb.style.display = 'block';
+        console.log('Показан онбординг');
+      }
+      
+      // Обновляем заголовок
+      const titleEl = document.getElementById('title');
+      if (titleEl) {
+        titleEl.textContent = 'eMigrant · Онбординг';
+        console.log('Заголовок обновлен');
+      }
+      
+      // Показываем первый вопрос
+      showQ(1);
+      
+    } catch (error) {
+      console.error('❌ Ошибка в startOnboarding:', error);
+      // В случае ошибки показываем приветственный экран
+      try {
+        const welcome = document.getElementById('welcome');
+        if (welcome) welcome.style.display = 'block';
+      } catch (e) {
+        console.error('Не удалось восстановить приветственный экран:', e);
+      }
+    }
   }
 
   // ====== Custom checkbox handling
@@ -2959,6 +2988,9 @@
         return;
       }
       
+      // Показываем онбординг
+      onb.style.display = 'block';
+      
       // Анимация перехода между вопросами
       const currentQ = document.querySelector('#onb [id^="q"]:not([style*="display: none"])');
       const nextQ = document.getElementById('q'+n);
@@ -3035,11 +3067,12 @@
       
     } catch (error) {
       console.error('Ошибка в showQ:', error);
-      // В случае ошибки пытаемся восстановить состояние
+      // В случае ошибки показываем приветственный экран
       try {
-        forceRecovery();
-      } catch (recoveryError) {
-        console.error('Ошибка при восстановлении в showQ:', recoveryError);
+        const welcome = document.getElementById('welcome');
+        if (welcome) welcome.style.display = 'block';
+      } catch (e) {
+        console.error('Не удалось восстановить приветственный экран:', e);
       }
     }
   }
@@ -5923,15 +5956,14 @@
         return;
       }
       
-      // Скрываем все экраны
-      welcome.style.display = 'none';
-      onb.style.display = 'none';
-      home.style.display = 'none';
-      
       // Проверяем состояние
       if (st.track && st.track.trim() !== '') {
         console.log('📋 Показываем чеклист для существующего трека:', st.track);
+        // Скрываем стартовые экраны
+        welcome.style.display = 'none';
+        onb.style.display = 'none';
         home.style.display = 'block';
+        
         try {
           renderChecklist();
         } catch (error) {
@@ -5943,6 +5975,7 @@
         }
       } else {
         console.log('👋 Показываем приветственный экран');
+        // Показываем приветственный экран
         welcome.style.display = 'block';
         onb.style.display = 'none';
         home.style.display = 'none';
