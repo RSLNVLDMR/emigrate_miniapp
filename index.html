@@ -70,17 +70,26 @@
       background-color: #ffffff !important;
       color: #000000 !important;
       width: 100% !important;
+      min-height: 100vh !important;
     }
     
     /* Приветственный экран по умолчанию видим */
     #welcome {
       display: block !important;
-      min-height: 100vh !important;
     }
     
     /* Остальные экраны скрыты по умолчанию */
     #onb, #home {
       display: none !important;
+    }
+    
+    /* Разрешаем JavaScript изменять display для экранов */
+    #welcome.hidden, #onb.hidden, #home.hidden {
+      display: none !important;
+    }
+    
+    #welcome.visible, #onb.visible, #home.visible {
+      display: block !important;
     }
     
     /* Принудительно показываем все элементы внутри приветственного экрана */
@@ -2445,14 +2454,16 @@
       // Скрываем стартовый экран
       const welcome = document.getElementById('welcome');
       if (welcome) {
-        welcome.style.display = 'none';
+        welcome.classList.add('hidden');
+        welcome.classList.remove('visible');
         console.log('Скрыт приветственный экран');
       }
       
       // Показываем онбординг
       const onb = document.getElementById('onb');
       if (onb) {
-        onb.style.display = 'block';
+        onb.classList.remove('hidden');
+        onb.classList.add('visible');
         console.log('Показан онбординг');
       }
       
@@ -2471,7 +2482,10 @@
       // В случае ошибки показываем приветственный экран
       try {
         const welcome = document.getElementById('welcome');
-        if (welcome) welcome.style.display = 'block';
+        if (welcome) {
+          welcome.classList.remove('hidden');
+          welcome.classList.add('visible');
+        }
       } catch (e) {
         console.error('Не удалось восстановить приветственный экран:', e);
       }
@@ -3028,7 +3042,8 @@
       // Скрываем стартовый экран
       const welcome = document.getElementById('welcome');
       if (welcome) {
-        welcome.style.display = 'none';
+        welcome.classList.add('hidden');
+        welcome.classList.remove('visible');
         console.log('Скрываем приветственный экран, показываем онбординг');
       }
       
@@ -3042,7 +3057,8 @@
       }
       
       // Показываем онбординг
-      onb.style.display = 'block';
+      onb.classList.remove('hidden');
+      onb.classList.add('visible');
       
       // Показываем нужный вопрос
       console.log('Показываем вопрос', n, 'из 8');
@@ -3295,15 +3311,18 @@
         
         setTimeout(() => {
           // Скрываем все экраны
-          home.style.display = 'none';
-          onb.style.display = 'none';
+          home.classList.add('hidden');
+          home.classList.remove('visible');
+          onb.classList.add('hidden');
+          onb.classList.remove('visible');
           
           // Убираем футер при сбросе онбординга
           const allFooters = document.querySelectorAll('.bottom');
           allFooters.forEach(footer => footer.remove());
           
           // Показываем приветственный экран
-          welcome.style.display = 'block';
+          welcome.classList.remove('hidden');
+          welcome.classList.add('visible');
           welcome.style.opacity = '0';
           welcome.style.transform = 'translateY(-20px)';
           welcome.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
@@ -3343,9 +3362,18 @@
         const onb = document.getElementById('onb');
         const home = document.getElementById('home');
         
-        if (welcome) welcome.style.display = 'block';
-        if (onb) onb.style.display = 'none';
-        if (home) home.style.display = 'none';
+        if (welcome) {
+          welcome.classList.remove('hidden');
+          welcome.classList.add('visible');
+        }
+        if (onb) {
+          onb.classList.add('hidden');
+          onb.classList.remove('visible');
+        }
+        if (home) {
+          home.classList.add('hidden');
+          home.classList.remove('visible');
+        }
         
         console.log('Принудительно показан приветственный экран после ошибки');
       } catch (recoveryError) {
