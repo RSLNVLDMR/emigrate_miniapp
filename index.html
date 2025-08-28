@@ -5911,8 +5911,8 @@
       const onb = document.getElementById('onb');
       const home = document.getElementById('home');
       
-      // Сначала скрываем все экраны
-      if (welcome) welcome.style.display = 'none';
+      // Сначала показываем приветственный экран по умолчанию
+      if (welcome) welcome.style.display = 'block';
       if (onb) onb.style.display = 'none';
       if (home) home.style.display = 'none';
       
@@ -5937,9 +5937,13 @@
           showQ(1);
         }
       } else {
-        console.log('Нет трека, показываем приветственный экран');
+        console.log('Нет трека, показываем приветственный экран в forceRecovery');
         // Показываем приветственный экран
-        if (welcome) welcome.style.display = 'block';
+        if (welcome) {
+          welcome.style.display = 'block';
+          welcome.style.opacity = '1';
+          welcome.style.transform = 'translateY(0)';
+        }
         if (onb) onb.style.display = 'none';
         if (home) home.style.display = 'none';
         
@@ -6030,12 +6034,43 @@
       }
     }
     
+    // Убеждаемся, что приветственный экран настроен правильно
+    try {
+      const welcomeSteps = document.querySelectorAll('.welcome-step');
+      if (welcomeSteps.length > 0) {
+        welcomeSteps.forEach(s => s.classList.remove('active'));
+        const firstStep = document.getElementById('welcome-step-1');
+        if (firstStep) firstStep.classList.add('active');
+      }
+      
+      const stepDots = document.querySelectorAll('.step-dot');
+      if (stepDots.length > 0) {
+        stepDots.forEach((dot, index) => {
+          dot.classList.toggle('active', index === 0);
+        });
+      }
+      
+      // Обновляем заголовок
+      const titleEl = document.getElementById('title');
+      if (titleEl) titleEl.textContent = 'eMigrant · Добро пожаловать';
+      
+      console.log('Приветственный экран настроен при инициализации');
+    } catch (error) {
+      console.error('Ошибка при настройке приветственного экрана при инициализации:', error);
+    }
+    
     // Принудительно показываем все основные контейнеры
     const welcome = document.getElementById('welcome');
     const onb = document.getElementById('onb');
     const home = document.getElementById('home');
     
-    if (welcome) welcome.style.display = 'block';
+    // Показываем приветственный экран по умолчанию
+    if (welcome) {
+      welcome.style.display = 'block';
+      welcome.style.opacity = '1';
+      welcome.style.transform = 'translateY(0)';
+      console.log('Приветственный экран показан');
+    }
     if (onb) onb.style.display = 'none';
     if (home) home.style.display = 'none';
     
@@ -6124,40 +6159,20 @@
         }
       }
     } else {
-      console.log('Нет трека, показываем приветственный экран');
+      console.log('Нет трека, приветственный экран уже показан');
       // Принудительно удаляем все существующие футеры
       const allFooters = document.querySelectorAll('.bottom');
       allFooters.forEach(footer => footer.remove());
       
-      // Показываем приветственный экран
-      if (welcome) welcome.style.display = 'block';
-      if (onb) onb.style.display = 'none';
-      if (home) home.style.display = 'none';
-      
-      // Убеждаемся, что приветственный экран настроен правильно
-      try {
-        const welcomeSteps = document.querySelectorAll('.welcome-step');
-        if (welcomeSteps.length > 0) {
-          welcomeSteps.forEach(s => s.classList.remove('active'));
-          const firstStep = document.getElementById('welcome-step-1');
-          if (firstStep) firstStep.classList.add('active');
-        }
-        
-        const stepDots = document.querySelectorAll('.step-dot');
-        if (stepDots.length > 0) {
-          stepDots.forEach((dot, index) => {
-            dot.classList.toggle('active', index === 0);
-          });
-        }
-        
-        // Обновляем заголовок
-        const titleEl = document.getElementById('title');
-        if (titleEl) titleEl.textContent = 'eMigrant · Добро пожаловать';
-        
-        console.log('Приветственный экран успешно настроен');
-      } catch (error) {
-        console.error('Ошибка при настройке приветственного экрана:', error);
+      // Приветственный экран уже показан выше, просто убеждаемся что он виден
+      if (welcome && welcome.style.display !== 'block') {
+        welcome.style.display = 'block';
+        welcome.style.opacity = '1';
+        welcome.style.transform = 'translateY(0)';
+        console.log('Принудительно показан приветственный экран');
       }
+      
+      console.log('Приветственный экран готов к использованию');
     }
     
     // Добавляем обработчик для восстановления состояния при фокусе
