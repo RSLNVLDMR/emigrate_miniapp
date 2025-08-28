@@ -2242,7 +2242,119 @@
 <script>
   // ====== Telegram init
   const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
-  try { tg && tg.ready(); tg && tg.expand(); } catch(e) {}
+  try { 
+    if (tg) {
+      tg.ready(); 
+      tg.expand(); 
+      console.log('Telegram WebApp инициализирован');
+    }
+  } catch(e) {
+    console.error('Ошибка инициализации Telegram WebApp:', e);
+  }
+  
+  // Добавляем глобальный обработчик ошибок для предотвращения белого экрана
+  window.addEventListener('error', function(event) {
+    console.error('Глобальная ошибка:', event.error);
+    // Пытаемся восстановить интерфейс
+    setTimeout(() => {
+      try {
+        if (st.track && st.track.trim() !== '') {
+          const welcome = document.getElementById('welcome');
+          const onb = document.getElementById('onb');
+          const home = document.getElementById('home');
+          
+          if (welcome) welcome.style.display = 'none';
+          if (onb) onb.style.display = 'none';
+          if (home) home.style.display = 'block';
+          
+          renderChecklist();
+        } else {
+          showQ(1);
+        }
+      } catch (recoveryError) {
+        console.error('Ошибка при восстановлении интерфейса:', recoveryError);
+        // Последняя попытка - перезагружаем страницу
+        if (confirm('Произошла ошибка. Перезагрузить страницу?')) {
+          window.location.reload();
+        }
+      }
+    }, 100);
+  });
+  
+  // Добавляем обработчик для предотвращения белого экрана при медленной загрузке
+  let loadingTimeout = setTimeout(() => {
+    console.log('Проверяем состояние после таймаута загрузки...');
+    try {
+      if (st.track && st.track.trim() !== '') {
+        const welcome = document.getElementById('welcome');
+        const onb = document.getElementById('onb');
+        const home = document.getElementById('home');
+        
+        if (welcome && welcome.style.display !== 'none') {
+          console.log('Принудительно скрываем welcome и показываем чеклист');
+          welcome.style.display = 'none';
+          if (onb) onb.style.display = 'none';
+          if (home) home.style.display = 'block';
+          renderChecklist();
+        }
+      } else {
+        const welcome = document.getElementById('welcome');
+        if (welcome && welcome.style.display !== 'none') {
+          console.log('Принудительно показываем онбординг');
+          showQ(1);
+        }
+      }
+    } catch (error) {
+      console.error('Ошибка при проверке состояния после таймаута:', error);
+      forceRecovery();
+    }
+  }, 3000); // 3 секунды на загрузку
+  
+  // Очищаем таймаут, если страница загрузилась нормально
+  window.addEventListener('load', function() {
+    clearTimeout(loadingTimeout);
+    console.log('Страница загружена, таймаут очищен');
+  });
+  
+  // Добавляем обработчик для unhandledrejection
+  window.addEventListener('unhandledrejection', function(event) {
+    console.error('Необработанное отклонение промиса:', event.reason);
+    event.preventDefault();
+    
+    // Пытаемся восстановить интерфейс при ошибке промиса
+    setTimeout(() => {
+      try {
+        if (st.track && st.track.trim() !== '') {
+          const welcome = document.getElementById('welcome');
+          const onb = document.getElementById('onb');
+          const home = document.getElementById('home');
+          
+          if (welcome) welcome.style.display = 'none';
+          if (onb) onb.style.display = 'none';
+          if (home) home.style.display = 'block';
+          
+          renderChecklist();
+        } else {
+          showQ(1);
+        }
+      } catch (recoveryError) {
+        console.error('Ошибка при восстановлении интерфейса после отклонения промиса:', recoveryError);
+        forceRecovery();
+      }
+    }, 100);
+  });
+  
+  // Добавляем обработчик для предотвращения белого экрана при ошибках в скриптах
+  window.addEventListener('beforeunload', function(event) {
+    console.log('Страница выгружается, сохраняем состояние...');
+    // Сохраняем текущее состояние перед выгрузкой
+    if (st.track && st.track.trim() !== '') {
+      localStorage.setItem('lastKnownState', JSON.stringify({
+        track: st.track,
+        timestamp: Date.now()
+      }));
+    }
+  });
 
   // ====== Функции для стартового экрана
   function nextWelcomeStep(step) {
@@ -2405,62 +2517,126 @@
 
   // ====== Checklist render
   function renderChecklist(){
-    const title = st.profile?.trackLabel ? `eMigrant · Чеклист (${st.profile.trackLabel})` : 'eMigrant · Чеклист';
-    document.getElementById('title').innerText = title;
-    
-    // Скрываем стартовый экран и онбординг
-    const welcome = document.getElementById('welcome');
-    const onb = document.getElementById('onb');
-    if (welcome) welcome.style.display = 'none';
-    if (onb) onb.style.display = 'none';
-
-    const tasksDiv = document.getElementById('tasks');
-    tasksDiv.innerHTML = '';
-    const done = st.tasks.filter(t=>t.status==='done').length;
-    const total = st.tasks.length || 1;
-    document.getElementById('doneCount').innerText = done;
-    document.getElementById('totalCount').innerText = total;
-    document.getElementById('progressBar').style.width = Math.round(done/total*100)+'%';
-    document.getElementById('officeHint').innerText = st.profile?.voivodeship ? officeHintByVoiv(st.profile.voivodeship) : '';
-
-    st.tasks.forEach((t, index)=>{
-      const card = document.createElement('div');
-      card.className='card';
-      card.style.opacity = '0';
-      card.style.transform = 'translateY(20px)';
-      card.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    try {
+      console.log('Начинаем рендер чеклиста');
       
-      const badgeClass = t.status==='done'?'ok':(t.status==='inreview'?'warn':'');
-      card.innerHTML = `
-        <div class="row" style="align-items:center">
-          <div style="flex:3">
-            <h3 style="margin:0 0 6px">${t.title}</h3>
-            <span class="badge ${badgeClass}">${t.status==='todo'?'To do':t.status==='inreview'?'In review':'Done'}</span>
-            ${(t.requiresAI && t.status!=='done')?'<div class="ai-badge" style="margin-top:6px;display:inline-flex;align-items:center;gap:4px;padding:4px 8px;background:var(--muted);color:white;border-radius:4px;font-size:11px;font-weight:500;"><span style="font-size:12px;">🤖</span>AI</div>':''}
-          </div>
-          <div style="flex:2">
-            <div class="row">
-              <button class="primary" onclick="openModule('${t.kind}')">Открыть</button>
-              ${t.status!=='done'?'<button onclick="markDone(\''+t.id+'\')">Сделано</button>':''}
+      // Проверяем, что все необходимые элементы существуют
+      const titleEl = document.getElementById('title');
+      const welcome = document.getElementById('welcome');
+      const onb = document.getElementById('onb');
+      const home = document.getElementById('home');
+      const tasksDiv = document.getElementById('tasks');
+      const doneCountEl = document.getElementById('doneCount');
+      const totalCountEl = document.getElementById('totalCount');
+      const progressBarEl = document.getElementById('progressBar');
+      const officeHintEl = document.getElementById('officeHint');
+      
+      if (!titleEl || !welcome || !onb || !home || !tasksDiv || !doneCountEl || !totalCountEl || !progressBarEl || !officeHintEl) {
+        console.error('Не найдены необходимые элементы DOM:', {
+          title: !!titleEl,
+          welcome: !!welcome,
+          onb: !!onb,
+          home: !!home,
+          tasks: !!tasksDiv,
+          doneCount: !!doneCountEl,
+          totalCount: !!totalCountEl,
+          progressBar: !!progressBarEl,
+          officeHint: !!officeHintEl
+        });
+        throw new Error('Не найдены необходимые элементы DOM');
+      }
+      
+      // Обновляем заголовок
+      const title = st.profile?.trackLabel ? `eMigrant · Чеклист (${st.profile.trackLabel})` : 'eMigrant · Чеклист';
+      titleEl.innerText = title;
+      
+      // Скрываем стартовый экран и онбординг
+      welcome.style.display = 'none';
+      onb.style.display = 'none';
+      home.style.display = 'block';
+      
+      // Очищаем и рендерим задачи
+      tasksDiv.innerHTML = '';
+      
+      if (!st.tasks || !Array.isArray(st.tasks)) {
+        console.warn('Задачи не найдены или некорректны, создаем базовые');
+        st.tasks = baseTasks(st.track);
+        localStorage.setItem('tasks', JSON.stringify(st.tasks));
+      }
+      
+      const done = st.tasks.filter(t => t.status === 'done').length;
+      const total = st.tasks.length || 1;
+      
+      doneCountEl.innerText = done;
+      totalCountEl.innerText = total;
+      progressBarEl.style.width = Math.round(done/total*100)+'%';
+      
+      if (st.profile?.voivodeship) {
+        officeHintEl.innerText = officeHintByVoiv(st.profile.voivodeship);
+      } else {
+        officeHintEl.innerText = '';
+      }
+
+      // Рендерим каждую задачу
+      st.tasks.forEach((t, index) => {
+        if (!t || !t.id || !t.title) {
+          console.warn('Пропускаем некорректную задачу:', t);
+          return;
+        }
+        
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        card.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+        
+        const badgeClass = t.status === 'done' ? 'ok' : (t.status === 'inreview' ? 'warn' : '');
+        card.innerHTML = `
+          <div class="row" style="align-items:center">
+            <div style="flex:3">
+              <h3 style="margin:0 0 6px">${t.title}</h3>
+              <span class="badge ${badgeClass}">${t.status === 'todo' ? 'To do' : t.status === 'inreview' ? 'In review' : 'Done'}</span>
+              ${(t.requiresAI && t.status !== 'done') ? '<div class="ai-badge" style="margin-top:6px;display:inline-flex;align-items:center;gap:4px;padding:4px 8px;background:var(--muted);color:white;border-radius:4px;font-size:11px;font-weight:500;"><span style="font-size:12px;">🤖</span>AI</div>' : ''}
+            </div>
+            <div style="flex:2">
+              <div class="row">
+                <button class="primary" onclick="openModule('${t.kind}')">Открыть</button>
+                ${t.status !== 'done' ? '<button onclick="markDone(\''+t.id+'\')">Сделано</button>' : ''}
+              </div>
             </div>
           </div>
-        </div>
-      `;
-      tasksDiv.appendChild(card);
+        `;
+        tasksDiv.appendChild(card);
+        
+        // Анимация появления карточки с задержкой
+        setTimeout(() => {
+          card.style.opacity = '1';
+          card.style.transform = 'translateY(0)';
+        }, index * 100);
+      });
       
-      // Анимация появления карточки с задержкой
-      setTimeout(() => {
-        card.style.opacity = '1';
-        card.style.transform = 'translateY(0)';
-      }, index * 100);
-    });
-    
-    // Принудительно удаляем все существующие футеры
-    const allFooters = document.querySelectorAll('.bottom');
-    allFooters.forEach(footer => footer.remove());
-    
-    // Создаем футер после рендера чеклиста
-    createFooter();
+      // Принудительно удаляем все существующие футеры
+      const allFooters = document.querySelectorAll('.bottom');
+      allFooters.forEach(footer => footer.remove());
+      
+      // Создаем футер после рендера чеклиста
+      createFooter();
+      
+      console.log('Чеклист успешно отрендерен');
+      
+    } catch (error) {
+      console.error('Ошибка при рендере чеклиста:', error);
+      // В случае ошибки показываем онбординг
+      const welcome = document.getElementById('welcome');
+      const onb = document.getElementById('onb');
+      const home = document.getElementById('home');
+      
+      if (welcome) welcome.style.display = 'none';
+      if (onb) onb.style.display = 'block';
+      if (home) home.style.display = 'none';
+      
+      showQ(1);
+    }
   }
   
   // Функция создания футера
@@ -2489,6 +2665,10 @@
         <div class="footer-icon icon-calendar"></div>
         <span class="footer-label">Book a slot</span>
       </button>
+      <button onclick="forceRecovery()" class="footer-btn" style="background: var(--warn); color: white;" title="Восстановить приложение">
+        <div class="footer-icon" style="font-size: 16px;">🔄</div>
+        <span class="footer-label">Recovery</span>
+      </button>
     `;
     
     console.log('Создаем новый футер с 3 кнопками и CSS иконками (v2.0):', footer.innerHTML);
@@ -2505,162 +2685,360 @@
   }
 
   function markDone(id){
-    st.tasks = st.tasks.map(t=> t.id===id ? {...t, status:'done'} : t);
-    localStorage.setItem('tasks', JSON.stringify(st.tasks));
-    renderChecklist();
+    try {
+      console.log('Отмечаем задачу как выполненную:', id);
+      
+      if (!id) {
+        console.error('Не указан ID задачи');
+        return;
+      }
+      
+      if (!st.tasks || !Array.isArray(st.tasks)) {
+        console.error('Задачи не найдены');
+        return;
+      }
+      
+      const taskIndex = st.tasks.findIndex(t => t.id === id);
+      if (taskIndex === -1) {
+        console.error('Задача с ID', id, 'не найдена');
+        return;
+      }
+      
+      st.tasks[taskIndex] = { ...st.tasks[taskIndex], status: 'done' };
+      localStorage.setItem('tasks', JSON.stringify(st.tasks));
+      
+      console.log('Задача', id, 'отмечена как выполненная');
+      
+      try {
+        renderChecklist();
+      } catch (error) {
+        console.error('Ошибка при рендере чеклиста в markDone:', error);
+        // В случае ошибки пытаемся восстановить состояние
+        try {
+          forceRecovery();
+        } catch (recoveryError) {
+          console.error('Ошибка при восстановлении в markDone:', recoveryError);
+        }
+      }
+      
+    } catch (error) {
+      console.error('Ошибка в markDone:', error);
+      // В случае ошибки пытаемся восстановить состояние
+      try {
+        forceRecovery();
+      } catch (recoveryError) {
+        console.error('Ошибка при восстановлении в markDone:', recoveryError);
+      }
+    }
   }
 
   // ====== Навигация
   function openChecklist(){
-    const onb = document.getElementById('onb');
-    const home = document.getElementById('home');
-    const welcome = document.getElementById('welcome');
-    
-    // Скрываем онбординг и стартовый экран
-    onb.style.opacity = '0';
-    onb.style.transform = 'translateY(-20px)';
-    onb.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-    welcome.style.opacity = '0';
-    welcome.style.transform = 'translateY(-20px)';
-    welcome.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-    
-    setTimeout(() => {
-      onb.style.display = 'none';
-      welcome.style.display = 'none';
-      home.style.display = 'block';
-      home.style.opacity = '0';
-      home.style.transform = 'translateY(20px)';
-      home.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    try {
+      console.log('Открываем чеклист');
+      
+      const onb = document.getElementById('onb');
+      const home = document.getElementById('home');
+      const welcome = document.getElementById('welcome');
+      
+      if (!onb || !home || !welcome) {
+        console.error('Не найдены необходимые элементы для навигации');
+        return;
+      }
+      
+      // Скрываем онбординг и стартовый экран
+      onb.style.opacity = '0';
+      onb.style.transform = 'translateY(-20px)';
+      onb.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+      welcome.style.opacity = '0';
+      welcome.style.transform = 'translateY(-20px)';
+      welcome.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
       
       setTimeout(() => {
-        home.style.opacity = '1';
-        home.style.transform = 'translateY(0)';
-        renderChecklist();
-      }, 10);
-    }, 400);
+        onb.style.display = 'none';
+        welcome.style.display = 'none';
+        home.style.display = 'block';
+        home.style.opacity = '0';
+        home.style.transform = 'translateY(20px)';
+        home.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+        
+        setTimeout(() => {
+          home.style.opacity = '1';
+          home.style.transform = 'translateY(0)';
+          
+          // Принудительно рендерим чеклист
+          try {
+            renderChecklist();
+          } catch (error) {
+            console.error('Ошибка при рендере чеклиста в openChecklist:', error);
+            // В случае ошибки показываем онбординг
+            onb.style.display = 'block';
+            welcome.style.display = 'none';
+            home.style.display = 'none';
+            showQ(1);
+          }
+        }, 10);
+      }, 400);
+      
+    } catch (error) {
+      console.error('Ошибка в openChecklist:', error);
+      // В случае ошибки показываем онбординг
+      const onb = document.getElementById('onb');
+      const welcome = document.getElementById('welcome');
+      const home = document.getElementById('home');
+      
+      if (onb) onb.style.display = 'block';
+      if (welcome) welcome.style.display = 'none';
+      if (home) home.style.display = 'none';
+      
+      showQ(1);
+    }
   }
 
   function openModule(kind){
-    // Скрываем стартовый экран и онбординг при открытии модулей
-    const welcome = document.getElementById('welcome');
-    const onb = document.getElementById('onb');
-    if (welcome) welcome.style.display = 'none';
-    if (onb) onb.style.display = 'none';
-    
-    if(kind==='aiTranslator'){
-      openAiTranslatorModal();
-      return;
-    }
-    if(kind==='slot'){
-      console.log('openModule: kind=slot, вызываю openBookSlotModal');
-      openBookSlotModal();
-      return;
-    }
-    if(kind==='bookAssistant'){
-      const text = prompt('Коротко опишите, о чём поговорить. Заявка уйдёт в отдельный чат-аккаунт.');
-      alert('Заявка отправлена. Нажмите ОК, чтобы открыть чат с ассистентом.');
-      if(tg && tg.openTelegramLink) tg.openTelegramLink('https://t.me/'+(tg.initDataUnsafe?.user?.username||''));
-      return;
-    }
-    if(kind==='photos'){
-      openPhotosModal();
-      return;
-    }
-    if(kind==='insurance'){
-      openInsuranceModal();
-      return;
-    }
-    if(kind==='wniosek'){
-      const path = confirm('У вас уже есть готовый скан внеска? (OK — загрузить скан; Отмена — пройти анкету и сгенерировать PDF)');
-      if(path){
-        alert('Загрузите скан. AI-проверка: подпись, даты, совпадение ФИО.');
-      } else {
-        alert('Откроется анкета внеска → затем можно сгенерировать PDF и распечатать.');
+    try {
+      console.log('Открываем модуль:', kind);
+      
+      // Скрываем стартовый экран и онбординг при открытии модулей
+      const welcome = document.getElementById('welcome');
+      const onb = document.getElementById('onb');
+      if (welcome) welcome.style.display = 'none';
+      if (onb) onb.style.display = 'none';
+      
+      if(kind==='aiTranslator'){
+        try {
+          openAiTranslatorModal();
+        } catch (error) {
+          console.error('Ошибка при открытии AI Translator:', error);
+        }
+        return;
       }
-      return;
-    }
-    if(kind==='contract'){ openContractModal(); return; }
-    if(kind==='załącznik'){ openZałącznikModal(); return; }
-    if(kind==='attachmentHR'){
-      alert('Скачайте шаблон, отдайте HR. Затем загрузите подписанный/с печатью документ (AI-проверка).');
-      return;
-    }
-    if(kind==='rent'){
-      openRentModal();
-      return;
-    }
-    if(kind==='university'){
-      alert('Справка из вуза: Загрузка → AI-проверка. Если нет — инструкция, где получить.');
-      return;
-    }
-    if(kind==='funds'){
-      alert('Информация о средствах: Загрузите банковскую справку. AI-проверка — сумма/дата/реквизиты.');
-      return;
-    }
-    if(kind==='skarb'){
-      openOplataModal();
-      return;
+      if(kind==='slot'){
+        console.log('openModule: kind=slot, вызываю openBookSlotModal');
+        try {
+          openBookSlotModal();
+        } catch (error) {
+          console.error('Ошибка при открытии Book Slot:', error);
+        }
+        return;
+      }
+      if(kind==='bookAssistant'){
+        try {
+          const text = prompt('Коротко опишите, о чём поговорить. Заявка уйдёт в отдельный чат-аккаунт.');
+          alert('Заявка отправлена. Нажмите ОК, чтобы открыть чат с ассистентом.');
+          if(tg && tg.openTelegramLink) tg.openTelegramLink('https://t.me/'+(tg.initDataUnsafe?.user?.username||''));
+        } catch (error) {
+          console.error('Ошибка при открытии Book Assistant:', error);
+        }
+        return;
+      }
+      if(kind==='photos'){
+        try {
+          openPhotosModal();
+        } catch (error) {
+          console.error('Ошибка при открытии Photos:', error);
+        }
+        return;
+      }
+      if(kind==='insurance'){
+        try {
+          openInsuranceModal();
+        } catch (error) {
+          console.error('Ошибка при открытии Insurance:', error);
+        }
+        return;
+      }
+      if(kind==='wniosek'){
+        try {
+          const path = confirm('У вас уже есть готовый скан внеска? (OK — загрузить скан; Отмена — пройти анкету и сгенерировать PDF)');
+          if(path){
+            alert('Загрузите скан. AI-проверка: подпись, даты, совпадение ФИО.');
+          } else {
+            alert('Откроется анкета внеска → затем можно сгенерировать PDF и распечатать.');
+          }
+        } catch (error) {
+          console.error('Ошибка при открытии Wniosek:', error);
+        }
+        return;
+      }
+      if(kind==='contract'){ 
+        try {
+          openContractModal(); 
+        } catch (error) {
+          console.error('Ошибка при открытии Contract:', error);
+        }
+        return; 
+      }
+      if(kind==='załącznik'){ 
+        try {
+          openZałącznikModal(); 
+        } catch (error) {
+          console.error('Ошибка при открытии Załącznik:', error);
+        }
+        return; 
+      }
+      if(kind==='attachmentHR'){
+        try {
+          alert('Скачайте шаблон, отдайте HR. Затем загрузите подписанный/с печатью документ (AI-проверка).');
+        } catch (error) {
+          console.error('Ошибка при открытии Attachment HR:', error);
+        }
+        return;
+      }
+      if(kind==='rent'){
+        try {
+          openRentModal();
+        } catch (error) {
+          console.error('Ошибка при открытии Rent:', error);
+        }
+        return;
+      }
+      if(kind==='university'){
+        try {
+          alert('Справка из вуза: Загрузка → AI-проверка. Если нет — инструкция, где получить.');
+        } catch (error) {
+          console.error('Ошибка при открытии University:', error);
+        }
+        return;
+      }
+      if(kind==='funds'){
+        try {
+          alert('Информация о средствах: Загрузите банковскую справку. AI-проверка — сумма/дата/реквизиты.');
+        } catch (error) {
+          console.error('Ошибка при открытии Funds:', error);
+        }
+        return;
+      }
+      if(kind==='skarb'){
+        try {
+          openOplataModal();
+        } catch (error) {
+          console.error('Ошибка при открытии Skarb:', error);
+        }
+        return;
+      }
+      
+      console.log('Модуль', kind, 'успешно открыт');
+      
+    } catch (error) {
+      console.error('Ошибка в openModule:', error);
+      // В случае ошибки пытаемся восстановить состояние
+      try {
+        forceRecovery();
+      } catch (recoveryError) {
+        console.error('Ошибка при восстановлении в openModule:', recoveryError);
+      }
     }
   }
 
   // ====== Онбординг
   function showQ(n){
-    // Убираем футер во время онбординга
-    // Принудительно удаляем все существующие футеры
-    const allFooters = document.querySelectorAll('.bottom');
-    allFooters.forEach(footer => footer.remove());
-    
-    // Скрываем стартовый экран
-    const welcome = document.getElementById('welcome');
-    if (welcome) {
-      welcome.style.display = 'none';
-    }
-    
-    // Анимация перехода между вопросами
-    const currentQ = document.querySelector('#onb [id^="q"]:not([style*="display: none"])');
-    const nextQ = document.getElementById('q'+n);
-    
-    if(currentQ && nextQ && currentQ !== nextQ){
-      // Анимация исчезновения текущего вопроса
-      currentQ.style.opacity = '0';
-      currentQ.style.transform = 'translateX(-20px)';
-      currentQ.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    try {
+      console.log('Показываем вопрос:', n);
       
-      setTimeout(() => {
-        // Скрываем все вопросы
-        for(let i=1;i<=8;i++){ 
-          const q = document.getElementById('q'+i);
-          q.style.display = (i===n)?'':'none';
-          q.style.opacity = '1';
-          q.style.transform = 'translateX(0)';
-        }
-        
-        // Анимация появления следующего вопроса
-        nextQ.style.opacity = '0';
-        nextQ.style.transform = 'translateX(20px)';
-        nextQ.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+      // Убираем футер во время онбординга
+      // Принудительно удаляем все существующие футеры
+      const allFooters = document.querySelectorAll('.bottom');
+      allFooters.forEach(footer => footer.remove());
+      
+      // Скрываем стартовый экран
+      const welcome = document.getElementById('welcome');
+      if (welcome) {
+        welcome.style.display = 'none';
+      }
+      
+      // Проверяем, что все необходимые элементы существуют
+      const onb = document.getElementById('onb');
+      const stepEl = document.getElementById('step');
+      
+      if (!onb) {
+        console.error('Не найден элемент онбординга');
+        return;
+      }
+      
+      // Анимация перехода между вопросами
+      const currentQ = document.querySelector('#onb [id^="q"]:not([style*="display: none"])');
+      const nextQ = document.getElementById('q'+n);
+      
+      if (!nextQ) {
+        console.error('Не найден вопрос:', n);
+        return;
+      }
+      
+      if(currentQ && nextQ && currentQ !== nextQ){
+        // Анимация исчезновения текущего вопроса
+        currentQ.style.opacity = '0';
+        currentQ.style.transform = 'translateX(-20px)';
+        currentQ.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
         
         setTimeout(() => {
-          nextQ.style.opacity = '1';
-          nextQ.style.transform = 'translateX(0)';
-          
-          // Проверяем предупреждение о доходе для вопроса 7
-          if(n === 7) {
-            setTimeout(() => checkIncomeWarning(), 50);
+          // Скрываем все вопросы
+          for(let i=1;i<=8;i++){ 
+            const q = document.getElementById('q'+i);
+            if (q) {
+              q.style.display = (i===n)?'':'none';
+              q.style.opacity = '1';
+              q.style.transform = 'translateX(0)';
+            }
           }
-        }, 10);
-      }, 300);
-    } else {
-      // Простое переключение без анимации
-      for(let i=1;i<=8;i++){ document.getElementById('q'+i).style.display = (i===n)?'':'none' }
-    
-      // Проверяем предупреждение о доходе для вопроса 7
-      if(n === 7) {
-        setTimeout(() => checkIncomeWarning(), 50);
+          
+          // Анимация появления следующего вопроса
+          nextQ.style.opacity = '0';
+          nextQ.style.transform = 'translateX(20px)';
+          nextQ.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+          
+          setTimeout(() => {
+            nextQ.style.opacity = '1';
+            nextQ.style.transform = 'translateX(0)';
+            
+            // Проверяем предупреждение о доходе для вопроса 7
+            if(n === 7) {
+              setTimeout(() => {
+                try {
+                  checkIncomeWarning();
+                } catch (error) {
+                  console.error('Ошибка при проверке предупреждения о доходе:', error);
+                }
+              }, 50);
+            }
+          }, 10);
+        }, 300);
+      } else {
+        // Простое переключение без анимации
+        for(let i=1;i<=8;i++){ 
+          const q = document.getElementById('q'+i);
+          if (q) {
+            q.style.display = (i===n)?'':'none';
+          }
+        }
+      
+        // Проверяем предупреждение о доходе для вопроса 7
+        if(n === 7) {
+          setTimeout(() => {
+            try {
+              checkIncomeWarning();
+            } catch (error) {
+              console.error('Ошибка при проверке предупреждения о доходе:', error);
+            }
+          }, 50);
+        }
+      }
+      
+      if (stepEl) {
+        stepEl.innerText = String(n);
+      }
+      
+      console.log('Вопрос', n, 'успешно показан');
+      
+    } catch (error) {
+      console.error('Ошибка в showQ:', error);
+      // В случае ошибки пытаемся восстановить состояние
+      try {
+        forceRecovery();
+      } catch (recoveryError) {
+        console.error('Ошибка при восстановлении в showQ:', recoveryError);
       }
     }
-    
-    document.getElementById('step').innerText = String(n);
   }
   function prevQ(n){ showQ(n) }
 
@@ -2685,72 +3063,124 @@
   function nextQValidated(curr,next){ if(isAnswered(curr)){ showQ(next); } }
 
   function finishOnb(){
-    for(let i=1;i<=8;i++){ if(!isAnswered(i)){ showQ(i); return; } }
-
-    const firstName = document.getElementById('firstName').value.trim();
-    const lastName = document.getElementById('lastName').value.trim();
-    const voivodeship = document.getElementById('voivodeship').value;
-    const citizenship = document.getElementById('citizenship').value;
-    const stayLength = document.getElementById('stayLength').value;
-    const currentStatus = document.getElementById('currentStatus').value;
-    const income = document.getElementById('income').value;
-    const goal = document.getElementById('goal').value;
-    const grounds = Array.from(document.querySelectorAll('.grounds')).filter(el=>el.checked).map(el=>el.value);
-
-    // Проверяем, есть ли конфликт между доходом и основанием "Работа"
-    const workGrounds = ['UoP', 'UoD', 'UoZ'];
-    const hasWorkGround = workGrounds.some(ground => grounds.includes(ground));
-    
-    if(income === '<4666' && hasWorkGround){
-      const proceed = confirm(
-        '⚠️ Внимание! С доходом ниже 4666 PLN ты не сможешь податься на карту побыту по работе.\n\n' +
-        'Ты уверен, что хочешь продолжить с текущими данными?\n\n' +
-        'Рекомендуем:\n' +
-        '• Увеличить доход до 4666+ PLN\n' +
-        '• Выбрать другие основания (Учёба, Семья)\n' +
-        '• Обратиться за консультацией'
-      );
+    try {
+      console.log('Завершаем онбординг');
       
-      if(!proceed){
-        showQ(7); // Возвращаемся к вопросу о доходе
+      // Проверяем все вопросы
+      for(let i=1;i<=8;i++){ 
+        if(!isAnswered(i)){ 
+          showQ(i); 
+          return; 
+        } 
+      }
+
+      // Получаем все значения из формы
+      const firstName = document.getElementById('firstName')?.value?.trim();
+      const lastName = document.getElementById('lastName')?.value?.trim();
+      const voivodeship = document.getElementById('voivodeship')?.value;
+      const citizenship = document.getElementById('citizenship')?.value;
+      const stayLength = document.getElementById('stayLength')?.value;
+      const currentStatus = document.getElementById('currentStatus')?.value;
+      const income = document.getElementById('income')?.value;
+      const goal = document.getElementById('goal')?.value;
+      const grounds = Array.from(document.querySelectorAll('.grounds')).filter(el=>el.checked).map(el=>el.value);
+
+      // Проверяем, что все значения получены
+      if (!firstName || !lastName || !voivodeship || !citizenship || !stayLength || !currentStatus || !income || !goal || grounds.length === 0) {
+        console.error('Не все поля заполнены:', { firstName, lastName, voivodeship, citizenship, stayLength, currentStatus, income, goal, grounds });
+        alert('Пожалуйста, заполните все поля');
         return;
       }
-    }
 
-    const track = determineTrack(grounds);
-    const trackLabel = track==='work'?'Работа':track==='study'?'Учёба':track==='family'?'Семья':'Бизнес';
+      // Проверяем, есть ли конфликт между доходом и основанием "Работа"
+      const workGrounds = ['UoP', 'UoD', 'UoZ'];
+      const hasWorkGround = workGrounds.some(ground => grounds.includes(ground));
+      
+      if(income === '<4666' && hasWorkGround){
+        const proceed = confirm(
+          '⚠️ Внимание! С доходом ниже 4666 PLN ты не сможешь податься на карту побыту по работе.\n\n' +
+          'Ты уверен, что хочешь продолжить с текущими данными?\n\n' +
+          'Рекомендуем:\n' +
+          '• Увеличить доход до 4666+ PLN\n' +
+          '• Выбрать другие основания (Учёба, Семья)\n' +
+          '• Обратиться за консультацией'
+        );
+        
+        if(!proceed){
+          showQ(7); // Возвращаемся к вопросу о доходе
+          return;
+        }
+      }
 
-    st.profile = { firstName, lastName, voivodeship, citizenship, stayLength, currentStatus, grounds, income, goal, track, trackLabel };
-    localStorage.setItem('profile', JSON.stringify(st.profile));
+      const track = determineTrack(grounds);
+      const trackLabel = track==='work'?'Работа':track==='study'?'Учёба':track==='family'?'Семья':'Бизнес';
 
-    st.track = track;
-    st.tasks = baseTasks(track);
-    localStorage.setItem('track', track);
-    localStorage.setItem('tasks', JSON.stringify(st.tasks));
+      console.log('Создаем профиль:', { track, trackLabel });
 
-    // Анимация завершения онбординга
-    const onb = document.getElementById('onb');
-    const home = document.getElementById('home');
-    const welcome = document.getElementById('welcome');
-    
-    onb.style.opacity = '0';
-    onb.style.transform = 'translateY(-20px)';
-    onb.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-    
-    setTimeout(() => {
-      onb.style.display='none';
-      welcome.style.display='none';
-      home.style.display='';
-      home.style.opacity = '0';
-      home.style.transform = 'translateY(20px)';
-      home.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+      // Сохраняем данные
+      st.profile = { firstName, lastName, voivodeship, citizenship, stayLength, currentStatus, grounds, income, goal, track, trackLabel };
+      localStorage.setItem('profile', JSON.stringify(st.profile));
+
+      st.track = track;
+      st.tasks = baseTasks(track);
+      localStorage.setItem('track', track);
+      localStorage.setItem('tasks', JSON.stringify(st.tasks));
+
+      // Анимация завершения онбординга
+      const onb = document.getElementById('onb');
+      const home = document.getElementById('home');
+      const welcome = document.getElementById('welcome');
+      
+      if (!onb || !home || !welcome) {
+        console.error('Не найдены необходимые элементы для анимации');
+        // Принудительно показываем чеклист
+        if (onb) onb.style.display = 'none';
+        if (welcome) welcome.style.display = 'none';
+        if (home) home.style.display = 'block';
+        renderChecklist();
+        return;
+      }
+      
+      onb.style.opacity = '0';
+      onb.style.transform = 'translateY(-20px)';
+      onb.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
       
       setTimeout(() => {
-        home.style.opacity = '1';
-        home.style.transform = 'translateY(0)';
-        renderChecklist();
-      }, 10);
-    }, 400);
+        onb.style.display='none';
+        welcome.style.display='none';
+        home.style.display='block';
+        home.style.opacity = '0';
+        home.style.transform = 'translateY(20px)';
+        home.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+        
+        setTimeout(() => {
+          home.style.opacity = '1';
+          home.style.transform = 'translateY(0)';
+          
+          try {
+            renderChecklist();
+          } catch (error) {
+            console.error('Ошибка при рендере чеклиста в finishOnb:', error);
+            // В случае ошибки показываем онбординг
+            onb.style.display = 'block';
+            welcome.style.display = 'none';
+            home.style.display = 'none';
+            showQ(1);
+          }
+        }, 10);
+      }, 400);
+      
+      console.log('Онбординг успешно завершен');
+      
+    } catch (error) {
+      console.error('Ошибка в finishOnb:', error);
+      // В случае ошибки пытаемся восстановить состояние
+      try {
+        forceRecovery();
+      } catch (recoveryError) {
+        console.error('Ошибка при восстановлении в finishOnb:', recoveryError);
+      }
+    }
   }
 
   // ====== Проверка дохода для карты побыту
@@ -2772,17 +3202,28 @@
 
   // ====== Reset (тесты)
   function resetOnb(){
-    if(confirm("Сбросить анкету и начать сначала?")){
-      localStorage.removeItem('track');
-      localStorage.removeItem('tasks');
-      localStorage.removeItem('profile');
-      st.track = null; st.tasks=[]; st.profile={};
-      const home = document.getElementById('home');
-      const onb = document.getElementById('onb');
-      const welcome = document.getElementById('welcome');
-      
-      home.style.opacity = '0';
-      home.style.transform = 'translateY(20px)';
+    try {
+      if(confirm("Сбросить анкету и начать сначала?")){
+        console.log('Сбрасываем онбординг');
+        
+        localStorage.removeItem('track');
+        localStorage.removeItem('tasks');
+        localStorage.removeItem('profile');
+        st.track = null; 
+        st.tasks = []; 
+        st.profile = {};
+        
+        const home = document.getElementById('home');
+        const onb = document.getElementById('onb');
+        const welcome = document.getElementById('welcome');
+        
+        if (!home || !onb || !welcome) {
+          console.error('Не найдены необходимые элементы для сброса');
+          return;
+        }
+        
+        home.style.opacity = '0';
+        home.style.transform = 'translateY(20px)';
       home.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
       
       setTimeout(() => {
@@ -2813,6 +3254,15 @@
           welcome.style.transform = 'translateY(0)';
         }, 10);
       }, 400);
+      }
+    } catch (error) {
+      console.error('Ошибка в resetOnb:', error);
+      // В случае ошибки пытаемся восстановить состояние
+      try {
+        forceRecovery();
+      } catch (recoveryError) {
+        console.error('Ошибка при восстановлении в resetOnb:', recoveryError);
+      }
     }
   }
 
@@ -5418,8 +5868,86 @@
     }, 2000);
   }
 
+  // ====== Функция восстановления состояния
+  function forceRecovery() {
+    console.log('Принудительное восстановление состояния');
+    
+    try {
+      // Очищаем все футеры
+      const allFooters = document.querySelectorAll('.bottom');
+      allFooters.forEach(footer => footer.remove());
+      
+      // Принудительно показываем все основные контейнеры
+      const welcome = document.getElementById('welcome');
+      const onb = document.getElementById('onb');
+      const home = document.getElementById('home');
+      
+      if (welcome) welcome.style.display = 'block';
+      if (onb) onb.style.display = 'block';
+      if (home) home.style.display = 'block';
+      
+      // Проверяем состояние и восстанавливаем интерфейс
+      if(st.track && st.track.trim() !== ''){
+        console.log('Восстанавливаем состояние с треком:', st.track);
+        
+        // Скрываем стартовые экраны
+        if (welcome) welcome.style.display = 'none';
+        if (onb) onb.style.display = 'none';
+        if (home) home.style.display = 'block';
+        
+        // Принудительно рендерим чеклист
+        try {
+          renderChecklist();
+        } catch (error) {
+          console.error('Ошибка при рендере чеклиста в forceRecovery:', error);
+          // Если что-то пошло не так, показываем онбординг
+          if (welcome) welcome.style.display = 'none';
+          if (onb) onb.style.display = 'block';
+          if (home) home.style.display = 'none';
+          showQ(1);
+        }
+      } else {
+        console.log('Нет трека, показываем онбординг');
+        // Показываем онбординг
+        if (welcome) welcome.style.display = 'none';
+        if (onb) onb.style.display = 'block';
+        if (home) home.style.display = 'none';
+        
+        showQ(1);
+      }
+    } catch (error) {
+      console.error('Ошибка в forceRecovery:', error);
+      // В случае критической ошибки перезагружаем страницу
+      if (confirm('Критическая ошибка. Перезагрузить страницу?')) {
+        window.location.reload();
+      }
+    }
+  }
+  
+  // Добавляем функцию в глобальную область для отладки
+  window.forceRecovery = forceRecovery;
+  
   // ====== Автозагрузка
   (function init(){
+    // Проверяем, есть ли сохраненное состояние с ошибкой
+    try {
+      const lastKnownState = localStorage.getItem('lastKnownState');
+      if (lastKnownState) {
+        const state = JSON.parse(lastKnownState);
+        const timeDiff = Date.now() - state.timestamp;
+        
+        // Если состояние было сохранено менее 5 минут назад, восстанавливаем его
+        if (timeDiff < 5 * 60 * 1000) {
+          console.log('Восстанавливаем состояние после ошибки:', state);
+          st.track = state.track;
+          // Очищаем сохраненное состояние
+          localStorage.removeItem('lastKnownState');
+        }
+      }
+    } catch (error) {
+      console.error('Ошибка при восстановлении состояния:', error);
+      localStorage.removeItem('lastKnownState');
+    }
     // Добавляем timestamp для принудительного обновления
     const timestamp = Date.now();
     console.log('Инициализация приложения, timestamp:', timestamp);
@@ -5429,10 +5957,55 @@
     console.log('При инициализации найдено футеров:', allFooters.length);
     allFooters.forEach(footer => footer.remove());
     
-    if(st.track){
-      document.getElementById('onb').style.display='none';
-      document.getElementById('home').style.display='';
-      renderChecklist();
+    // Добавляем дополнительную проверку состояния
+    if (!st.track || st.track.trim() === '') {
+      // Проверяем, есть ли данные в localStorage, но не в состоянии
+      const savedTrack = localStorage.getItem('track');
+      const savedProfile = localStorage.getItem('profile');
+      
+      if (savedTrack && savedProfile) {
+        try {
+          const profile = JSON.parse(savedProfile);
+          if (profile.track) {
+            console.log('Восстанавливаем трек из localStorage:', profile.track);
+            st.track = profile.track;
+            st.profile = profile;
+          }
+        } catch (error) {
+          console.error('Ошибка при восстановлении профиля:', error);
+        }
+      }
+    }
+    
+    // Принудительно показываем все основные контейнеры
+    const welcome = document.getElementById('welcome');
+    const onb = document.getElementById('onb');
+    const home = document.getElementById('home');
+    
+    if (welcome) welcome.style.display = 'block';
+    if (onb) onb.style.display = 'block';
+    if (home) home.style.display = 'block';
+    
+    // Проверяем состояние и восстанавливаем интерфейс
+    if(st.track && st.track.trim() !== ''){
+      console.log('Восстанавливаем состояние с треком:', st.track);
+      
+      // Скрываем стартовые экраны
+      if (welcome) welcome.style.display = 'none';
+      if (onb) onb.style.display = 'none';
+      if (home) home.style.display = 'block';
+      
+      // Принудительно рендерим чеклист
+      try {
+        renderChecklist();
+      } catch (error) {
+        console.error('Ошибка при рендере чеклиста:', error);
+        // Если что-то пошло не так, показываем онбординг
+        if (welcome) welcome.style.display = 'none';
+        if (onb) onb.style.display = 'block';
+        if (home) home.style.display = 'none';
+        showQ(1);
+      }
       
       // Проверяем, есть ли активная дата завершения анализа
       const contractTimerEnd = localStorage.getItem('contractTimerEnd');
@@ -5498,10 +6071,181 @@
         }
       }
     } else {
-          // Принудительно удаляем все существующие футеры
-    const allFooters = document.querySelectorAll('.bottom');
-    allFooters.forEach(footer => footer.remove());
+      console.log('Нет трека, показываем онбординг');
+      // Принудительно удаляем все существующие футеры
+      const allFooters = document.querySelectorAll('.bottom');
+      allFooters.forEach(footer => footer.remove());
+      
+      // Показываем онбординг
+      if (welcome) welcome.style.display = 'none';
+      if (onb) onb.style.display = 'block';
+      if (home) home.style.display = 'none';
+      
       showQ(1);
+    }
+    
+    // Добавляем обработчик для восстановления состояния при фокусе
+    window.addEventListener('focus', function() {
+      console.log('Восстанавливаем состояние при фокусе');
+      if(st.track && st.track.trim() !== ''){
+        if (welcome) welcome.style.display = 'none';
+        if (onb) onb.style.display = 'none';
+        if (home) home.style.display = 'block';
+        try {
+          renderChecklist();
+        } catch (error) {
+          console.error('Ошибка при восстановлении чеклиста:', error);
+          // В случае ошибки вызываем принудительное восстановление
+          forceRecovery();
+        }
+      }
+    });
+    
+    // Добавляем обработчик для восстановления состояния при видимости
+    document.addEventListener('visibilitychange', function() {
+      if (!document.hidden) {
+        console.log('Восстанавливаем состояние при изменении видимости');
+        if(st.track && st.track.trim() !== ''){
+          if (welcome) welcome.style.display = 'none';
+          if (onb) onb.style.display = 'none';
+          if (home) home.style.display = 'block';
+          try {
+            renderChecklist();
+          } catch (error) {
+            console.error('Ошибка при восстановлении чеклиста:', error);
+            // В случае ошибки вызываем принудительное восстановление
+            forceRecovery();
+          }
+        }
+      }
+    });
+    
+    // Добавляем обработчик для восстановления состояния при изменении размера окна
+    window.addEventListener('resize', function() {
+      console.log('Восстанавливаем состояние при изменении размера окна');
+      // Небольшая задержка для стабилизации
+      setTimeout(() => {
+        if(st.track && st.track.trim() !== ''){
+          try {
+            renderChecklist();
+          } catch (error) {
+            console.error('Ошибка при восстановлении чеклиста при изменении размера:', error);
+          }
+        }
+      }, 100);
+    });
+    
+    // Добавляем обработчик для восстановления состояния при возвращении в приложение
+    if (tg && tg.onEvent) {
+      try {
+        tg.onEvent('viewportChanged', function() {
+          console.log('Восстанавливаем состояние при изменении viewport');
+          setTimeout(() => {
+            if(st.track && st.track.trim() !== ''){
+              try {
+                renderChecklist();
+              } catch (error) {
+                console.error('Ошибка при восстановлении чеклиста при изменении viewport:', error);
+              }
+            }
+          }, 100);
+        });
+      } catch (e) {
+        console.log('Не удалось добавить обработчик viewportChanged:', e);
+      }
+    }
+    
+    // Добавляем периодическую проверку состояния каждые 5 секунд
+    setInterval(function() {
+      if (document.hidden) return; // Не проверяем, если страница не видна
+      
+      // Проверяем, что основной контент виден
+      const home = document.getElementById('home');
+      if (st.track && st.track.trim() !== '' && home && home.style.display === 'block') {
+        const tasksDiv = document.getElementById('tasks');
+        if (!tasksDiv || tasksDiv.children.length === 0) {
+          console.log('Обнаружен пустой чеклист, восстанавливаем...');
+          try {
+            renderChecklist();
+          } catch (error) {
+            console.error('Ошибка при периодическом восстановлении:', error);
+          }
+        }
+      }
+      
+      // Дополнительная проверка - если страница видна, но контент не отображается
+      if (!document.hidden) {
+        const welcome = document.getElementById('welcome');
+        const onb = document.getElementById('onb');
+        const home = document.getElementById('home');
+        
+        if (welcome && onb && home) {
+          const welcomeVisible = welcome.style.display !== 'none';
+          const onbVisible = onb.style.display !== 'none';
+          const homeVisible = home.style.display !== 'none';
+          
+          // Если ни один экран не виден, это может быть белый экран
+          if (!welcomeVisible && !onbVisible && !homeVisible) {
+            console.log('Обнаружен потенциальный белый экран, восстанавливаем...');
+            try {
+              if (st.track && st.track.trim() !== '') {
+                welcome.style.display = 'none';
+                onb.style.display = 'none';
+                home.style.display = 'block';
+                renderChecklist();
+              } else {
+                welcome.style.display = 'block';
+                onb.style.display = 'none';
+                home.style.display = 'none';
+                showQ(1);
+              }
+            } catch (error) {
+              console.error('Ошибка при восстановлении от белого экрана:', error);
+              forceRecovery();
+            }
+          }
+        }
+      }
+    }, 5000);
+    
+    // Добавляем обработчик для случая, когда страница загружается в фоновом режиме
+    if (document.hidden) {
+      document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) {
+          console.log('Страница стала видимой, восстанавливаем состояние...');
+          setTimeout(() => {
+            try {
+              if (st.track && st.track.trim() !== '') {
+                renderChecklist();
+              } else {
+                showQ(1);
+              }
+            } catch (error) {
+              console.error('Ошибка при восстановлении после фоновой загрузки:', error);
+              forceRecovery();
+            }
+          }, 100);
+        }
+      });
+    }
+    
+    // Добавляем обработчик для случая, когда страница загружается медленно
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM загружен, проверяем состояние...');
+        setTimeout(() => {
+          try {
+            if (st.track && st.track.trim() !== '') {
+              renderChecklist();
+            } else {
+              showQ(1);
+            }
+          } catch (error) {
+            console.error('Ошибка при восстановлении после загрузки DOM:', error);
+            forceRecovery();
+          }
+        }, 100);
+      });
     }
   })();
 </script>
