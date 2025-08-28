@@ -61,6 +61,31 @@
     /* Когда хедер скрыт, убираем отступ сверху */
     .wrap.no-header{padding-top:16px}
     
+    /* Принудительные стили для экранов */
+    #welcome, #onb, #home {
+      display: block !important;
+      opacity: 1 !important;
+      visibility: visible !important;
+      position: relative !important;
+      z-index: 9999 !important;
+      background-color: #ffffff !important;
+      color: #000000 !important;
+      min-height: 100vh !important;
+      width: 100% !important;
+    }
+    
+    /* Принудительно показываем все элементы внутри экранов */
+    #welcome *, #onb *, #home * {
+      display: block !important;
+      opacity: 1 !important;
+      visibility: visible !important;
+    }
+    
+    /* Скрываем все экраны кроме приветственного по умолчанию */
+    #onb, #home {
+      display: none !important;
+    }
+    
     .card{
       background:var(--card);
       border:1px solid var(--line);
@@ -5909,79 +5934,112 @@
 
 
   
-  // ====== Автозагрузка
-  (function init(){
-    console.log('🚀 Начинаем инициализацию приложения...');
-    
+  // ====== Простая функция для принудительного показа приветственного экрана
+  function forceShowWelcome() {
+    console.log('🔧 Принудительно показываем приветственный экран');
     try {
-      // Простая инициализация - показываем приветственный экран
       const welcome = document.getElementById('welcome');
       const onb = document.getElementById('onb');
       const home = document.getElementById('home');
       
-      console.log('Найдены элементы:', {
-        welcome: !!welcome,
-        onb: !!onb,
-        home: !!home
-      });
-      
-      if (!welcome || !onb || !home) {
-        console.error('❌ Не найдены необходимые элементы DOM');
-        return;
+      if (welcome) {
+        welcome.style.display = 'block';
+        welcome.style.opacity = '1';
+        welcome.style.visibility = 'visible';
+        welcome.style.position = 'relative';
+        welcome.style.zIndex = '9999';
+        welcome.style.backgroundColor = '#ffffff';
+        welcome.style.color = '#000000';
+        welcome.style.minHeight = '100vh';
+        welcome.style.width = '100%';
+        console.log('✅ Приветственный экран настроен с принудительными стилями');
       }
-      
-      // ВСЕГДА показываем приветственный экран в начале
-      console.log('👋 Показываем приветственный экран в начале');
-      welcome.style.display = 'block';
-      onb.style.display = 'none';
-      home.style.display = 'none';
+      if (onb) {
+        onb.style.display = 'none';
+      }
+      if (home) {
+        home.style.display = 'none';
+      }
       
       // Настраиваем приветственный экран
-      try {
-        const welcomeSteps = document.querySelectorAll('.welcome-step');
-        if (welcomeSteps.length > 0) {
-          welcomeSteps.forEach(s => s.classList.remove('active'));
-          const firstStep = document.getElementById('welcome-step-1');
-          if (firstStep) firstStep.classList.add('active');
+      const welcomeSteps = document.querySelectorAll('.welcome-step');
+      if (welcomeSteps.length > 0) {
+        welcomeSteps.forEach(s => {
+          s.classList.remove('active');
+          s.style.display = 'block';
+          s.style.opacity = '1';
+          s.style.visibility = 'visible';
+        });
+        const firstStep = document.getElementById('welcome-step-1');
+        if (firstStep) {
+          firstStep.classList.add('active');
+          firstStep.style.display = 'block';
+          firstStep.style.opacity = '1';
+          firstStep.style.visibility = 'visible';
         }
-        
-        const stepDots = document.querySelectorAll('.step-dot');
-        if (stepDots.length > 0) {
-          stepDots.forEach((dot, index) => {
-            dot.classList.toggle('active', index === 0);
-          });
-        }
-        
-        const titleEl = document.getElementById('title');
-        if (titleEl) titleEl.textContent = 'eMigrant · Добро пожаловать';
-        
-        console.log('✅ Приветственный экран настроен');
-      } catch (error) {
-        console.error('❌ Ошибка при настройке приветственного экрана:', error);
       }
       
-      // Проверяем состояние и показываем чеклист если есть трек
-      if (st.track && st.track.trim() !== '') {
-        console.log('📋 Есть существующий трек, но показываем приветственный экран');
-        // Оставляем приветственный экран видимым
+      const stepDots = document.querySelectorAll('.step-dot');
+      if (stepDots.length > 0) {
+        stepDots.forEach((dot, index) => {
+          dot.classList.toggle('active', index === 0);
+          dot.style.display = 'block';
+          dot.style.opacity = '1';
+          dot.style.visibility = 'visible';
+        });
       }
       
-      // Убираем футеры
-      const allFooters = document.querySelectorAll('.bottom');
-      allFooters.forEach(footer => footer.remove());
+      const titleEl = document.getElementById('title');
+      if (titleEl) {
+        titleEl.textContent = 'eMigrant · Добро пожаловать';
+        titleEl.style.display = 'block';
+        titleEl.style.opacity = '1';
+        titleEl.style.visibility = 'visible';
+        titleEl.style.color = '#000000';
+      }
       
-      console.log('✅ Инициализация завершена');
+      // Принудительно показываем все элементы приветственного экрана
+      const welcomeElements = welcome.querySelectorAll('*');
+      welcomeElements.forEach(el => {
+        if (el.style) {
+          el.style.display = el.style.display === 'none' ? 'block' : el.style.display;
+          el.style.opacity = '1';
+          el.style.visibility = 'visible';
+        }
+      });
       
+      console.log('✅ Приветственный экран принудительно показан с полными стилями');
+      return true;
     } catch (error) {
-      console.error('❌ Критическая ошибка при инициализации:', error);
-      // В случае ошибки показываем приветственный экран
-      try {
-        const welcome = document.getElementById('welcome');
-        if (welcome) welcome.style.display = 'block';
-      } catch (e) {
-        console.error('❌ Не удалось показать приветственный экран:', e);
-      }
+      console.error('❌ Ошибка при принудительном показе приветственного экрана:', error);
+      return false;
     }
+  }
+
+  // ====== Автозагрузка
+  (function init(){
+    console.log('🚀 Простая инициализация приложения...');
+    
+    // Убираем все футеры
+    const allFooters = document.querySelectorAll('.bottom');
+    allFooters.forEach(footer => footer.remove());
+    
+    // Принудительно показываем приветственный экран
+    forceShowWelcome();
+    
+    // Добавляем принудительный вызов через небольшую задержку
+    setTimeout(() => {
+      console.log('🔄 Повторно вызываем forceShowWelcome через 100ms');
+      forceShowWelcome();
+    }, 100);
+    
+    // Добавляем принудительный вызов после полной загрузки страницы
+    window.addEventListener('load', function() {
+      console.log('📱 Страница полностью загружена, принудительно показываем приветственный экран');
+      setTimeout(() => {
+        forceShowWelcome();
+      }, 200);
+    });
     
     // Добавляем обработчик для восстановления состояния при фокусе
     window.addEventListener('focus', function() {
