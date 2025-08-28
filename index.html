@@ -63,27 +63,55 @@
     
     /* Принудительные стили для экранов */
     #welcome, #onb, #home {
-      display: block !important;
       opacity: 1 !important;
       visibility: visible !important;
       position: relative !important;
-      z-index: 9999 !important;
+      z-index: 1 !important;
       background-color: #ffffff !important;
       color: #000000 !important;
-      min-height: 100vh !important;
       width: 100% !important;
     }
     
-    /* Принудительно показываем все элементы внутри экранов */
-    #welcome *, #onb *, #home * {
+    /* Приветственный экран по умолчанию видим */
+    #welcome {
       display: block !important;
+      min-height: 100vh !important;
+    }
+    
+    /* Остальные экраны скрыты по умолчанию */
+    #onb, #home {
+      display: none !important;
+    }
+    
+    /* Принудительно показываем все элементы внутри приветственного экрана */
+    #welcome * {
       opacity: 1 !important;
       visibility: visible !important;
     }
     
-    /* Скрываем все экраны кроме приветственного по умолчанию */
-    #onb, #home {
-      display: none !important;
+    /* Восстанавливаем правильное отображение для определенных элементов */
+    #welcome .welcome-step {
+      display: block !important;
+      margin-bottom: 20px !important;
+    }
+    
+    #welcome .welcome-step.active {
+      display: block !important;
+    }
+    
+    #welcome .step-dot {
+      display: inline-block !important;
+      margin: 0 5px !important;
+    }
+    
+    #welcome button {
+      display: inline-block !important;
+      margin: 10px 0 !important;
+    }
+    
+    #welcome p, #welcome h1, #welcome h2, #welcome h3 {
+      display: block !important;
+      margin: 10px 0 !important;
     }
     
     .card{
@@ -5946,13 +5974,7 @@
         welcome.style.display = 'block';
         welcome.style.opacity = '1';
         welcome.style.visibility = 'visible';
-        welcome.style.position = 'relative';
-        welcome.style.zIndex = '9999';
-        welcome.style.backgroundColor = '#ffffff';
-        welcome.style.color = '#000000';
-        welcome.style.minHeight = '100vh';
-        welcome.style.width = '100%';
-        console.log('✅ Приветственный экран настроен с принудительными стилями');
+        console.log('✅ Приветственный экран настроен');
       }
       if (onb) {
         onb.style.display = 'none';
@@ -5998,17 +6020,7 @@
         titleEl.style.color = '#000000';
       }
       
-      // Принудительно показываем все элементы приветственного экрана
-      const welcomeElements = welcome.querySelectorAll('*');
-      welcomeElements.forEach(el => {
-        if (el.style) {
-          el.style.display = el.style.display === 'none' ? 'block' : el.style.display;
-          el.style.opacity = '1';
-          el.style.visibility = 'visible';
-        }
-      });
-      
-      console.log('✅ Приветственный экран принудительно показан с полными стилями');
+      console.log('✅ Приветственный экран принудительно показан');
       return true;
     } catch (error) {
       console.error('❌ Ошибка при принудительном показе приветственного экрана:', error);
