@@ -2991,62 +2991,36 @@
       // Показываем онбординг
       onb.style.display = 'block';
       
-      // Анимация перехода между вопросами
-      const currentQ = document.querySelector('#onb [id^="q"]:not([style*="display: none"])');
-      const nextQ = document.getElementById('q'+n);
+      // Показываем нужный вопрос
+      console.log('Показываем вопрос', n, 'из 8');
       
+      // Скрываем все вопросы сначала
+      for(let i=1;i<=8;i++){ 
+        const q = document.getElementById('q'+i);
+        if (q) {
+          q.style.display = 'none';
+          q.style.opacity = '1';
+          q.style.transform = 'translateX(0)';
+        }
+      }
+      
+      // Показываем нужный вопрос
+      const nextQ = document.getElementById('q'+n);
       if (!nextQ) {
         console.error('Не найден вопрос:', n);
         return;
       }
       
-      if(currentQ && nextQ && currentQ !== nextQ){
-        // Анимация исчезновения текущего вопроса
-        currentQ.style.opacity = '0';
-        currentQ.style.transform = 'translateX(-20px)';
-        currentQ.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-        
-        setTimeout(() => {
-          // Скрываем все вопросы
-          for(let i=1;i<=8;i++){ 
-            const q = document.getElementById('q'+i);
-            if (q) {
-              q.style.display = (i===n)?'':'none';
-              q.style.opacity = '1';
-              q.style.transform = 'translateX(0)';
-            }
-          }
-          
-          // Анимация появления следующего вопроса
-          nextQ.style.opacity = '0';
-          nextQ.style.transform = 'translateX(20px)';
-          nextQ.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-          
-          setTimeout(() => {
-            nextQ.style.opacity = '1';
-            nextQ.style.transform = 'translateX(0)';
-            
-            // Проверяем предупреждение о доходе для вопроса 7
-            if(n === 7) {
-              setTimeout(() => {
-                try {
-                  checkIncomeWarning();
-                } catch (error) {
-                  console.error('Ошибка при проверке предупреждения о доходе:', error);
-                }
-              }, 50);
-            }
-          }, 10);
-        }, 300);
-      } else {
-        // Простое переключение без анимации
-        for(let i=1;i<=8;i++){ 
-          const q = document.getElementById('q'+i);
-          if (q) {
-            q.style.display = (i===n)?'':'none';
-          }
-        }
+      // Показываем вопрос с анимацией
+      nextQ.style.display = 'block';
+      nextQ.style.opacity = '0';
+      nextQ.style.transform = 'translateX(20px)';
+      nextQ.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
       
+      setTimeout(() => {
+        nextQ.style.opacity = '1';
+        nextQ.style.transform = 'translateX(0)';
+        
         // Проверяем предупреждение о доходе для вопроса 7
         if(n === 7) {
           setTimeout(() => {
@@ -3057,7 +3031,7 @@
             }
           }, 50);
         }
-      }
+      }, 10);
       
       if (stepEl) {
         stepEl.innerText = String(n);
@@ -5956,53 +5930,40 @@
         return;
       }
       
-      // Проверяем состояние
+      // ВСЕГДА показываем приветственный экран в начале
+      console.log('👋 Показываем приветственный экран в начале');
+      welcome.style.display = 'block';
+      onb.style.display = 'none';
+      home.style.display = 'none';
+      
+      // Настраиваем приветственный экран
+      try {
+        const welcomeSteps = document.querySelectorAll('.welcome-step');
+        if (welcomeSteps.length > 0) {
+          welcomeSteps.forEach(s => s.classList.remove('active'));
+          const firstStep = document.getElementById('welcome-step-1');
+          if (firstStep) firstStep.classList.add('active');
+        }
+        
+        const stepDots = document.querySelectorAll('.step-dot');
+        if (stepDots.length > 0) {
+          stepDots.forEach((dot, index) => {
+            dot.classList.toggle('active', index === 0);
+          });
+        }
+        
+        const titleEl = document.getElementById('title');
+        if (titleEl) titleEl.textContent = 'eMigrant · Добро пожаловать';
+        
+        console.log('✅ Приветственный экран настроен');
+      } catch (error) {
+        console.error('❌ Ошибка при настройке приветственного экрана:', error);
+      }
+      
+      // Проверяем состояние и показываем чеклист если есть трек
       if (st.track && st.track.trim() !== '') {
-        console.log('📋 Показываем чеклист для существующего трека:', st.track);
-        // Скрываем стартовые экраны
-        welcome.style.display = 'none';
-        onb.style.display = 'none';
-        home.style.display = 'block';
-        
-        try {
-          renderChecklist();
-        } catch (error) {
-          console.error('❌ Ошибка при рендере чеклиста:', error);
-          // В случае ошибки показываем приветственный экран
-          welcome.style.display = 'block';
-          onb.style.display = 'none';
-          home.style.display = 'none';
-        }
-      } else {
-        console.log('👋 Показываем приветственный экран');
-        // Показываем приветственный экран
-        welcome.style.display = 'block';
-        onb.style.display = 'none';
-        home.style.display = 'none';
-        
-        // Настраиваем приветственный экран
-        try {
-          const welcomeSteps = document.querySelectorAll('.welcome-step');
-          if (welcomeSteps.length > 0) {
-            welcomeSteps.forEach(s => s.classList.remove('active'));
-            const firstStep = document.getElementById('welcome-step-1');
-            if (firstStep) firstStep.classList.add('active');
-          }
-          
-          const stepDots = document.querySelectorAll('.step-dot');
-          if (stepDots.length > 0) {
-            stepDots.forEach((dot, index) => {
-              dot.classList.toggle('active', index === 0);
-            });
-          }
-          
-          const titleEl = document.getElementById('title');
-          if (titleEl) titleEl.textContent = 'eMigrant · Добро пожаловать';
-          
-          console.log('✅ Приветственный экран настроен');
-        } catch (error) {
-          console.error('❌ Ошибка при настройке приветственного экрана:', error);
-        }
+        console.log('📋 Есть существующий трек, но показываем приветственный экран');
+        // Оставляем приветственный экран видимым
       }
       
       // Убираем футеры
