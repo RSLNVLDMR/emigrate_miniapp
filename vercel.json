@@ -1,5 +1,10 @@
 {
   "version": 2,
+  "functions": {
+    "api/validate.js": {
+      "includeFiles": "templates/validation/**"
+    }
+  },
   "builds": [
     {
       "src": "index.html",

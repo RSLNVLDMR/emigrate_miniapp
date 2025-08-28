@@ -5788,22 +5788,149 @@
     el('insurance_step3').style.display='none';
     el('insurance_step4').style.display='none';
     
-    if(!ENDPOINTS){
-      showInsuranceCompletionDate();
-      setTimeout(() => {
-        const isDocumentOk = Math.random() > 0.3;
-        if(isDocumentOk){
-          showInsuranceSuccessResult();
+    try {
+      // Конвертируем файл в base64
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        const dataUrl = e.target.result;
+        
+        // Отправляем на валидацию (локальный API сервер)
+        const response = await fetch('/api/validate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            docType: 'insurance',
+            file: {
+              dataUrl: dataUrl,
+              filename: insurance.file.name,
+              mime: insurance.file.type
+            }
+          })
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          
+          // Показываем результат валидации
+          if (result.ok) {
+            showInsuranceValidationSuccess(result);
+          } else {
+            showInsuranceValidationIssues(result);
+          }
         } else {
-          showInsuranceRedFlagsResult();
+          throw new Error('Validation failed');
         }
-      }, 3000);
+      };
+      
+      reader.readAsDataURL(insurance.file);
+      
+    } catch (error) {
+      console.error('Validation error:', error);
+      // Fallback к старому поведению
+      if(!ENDPOINTS){
+        showInsuranceCompletionDate();
+        setTimeout(() => {
+          const isDocumentOk = Math.random() > 0.3;
+          if(isDocumentOk){
+            showInsuranceSuccessResult();
+          } else {
+            showInsuranceRedFlagsResult();
+          }
+        }, 3000);
+      }
     }
   }
 
   function insuranceBoost(){
     el('insurance_step2').style.display='none';
     el('insurance_step3').style.display='';
+  }
+
+  // Функции для отображения результатов валидации
+  function showInsuranceValidationSuccess(result) {
+    el('insurance_step1').style.display='none';
+    el('insurance_step2').style.display='none';
+    el('insurance_step3').style.display='none';
+    el('insurance_step4').style.display='block';
+    
+    el('insurance_result_title').innerText = 'Ура! Всё удалось 🎉';
+    el('insurance_result_box').className = 'status ok';
+    
+    let resultHtml = '<div>Все чётко. Замечаний нет.</div>';
+    
+    if (result.extracted) {
+      resultHtml += '<div style="margin-top: 16px; padding: 12px; background: rgba(16,185,129,0.1); border-radius: 8px;">';
+      resultHtml += '<h4 style="margin: 0 0 8px 0; color: var(--accent);">Извлеченные данные:</h4>';
+      resultHtml += '<div style="font-size: 14px;">';
+      if (result.extracted.insurer_name) resultHtml += `<div><strong>Страховая компания:</strong> ${result.extracted.insurer_name}</div>`;
+      if (result.extracted.policy_number) resultHtml += `<div><strong>Номер полиса:</strong> ${result.extracted.policy_number}</div>`;
+      if (result.extracted.insured_name) resultHtml += `<div><strong>Застрахованный:</strong> ${result.extracted.insured_name}</div>`;
+      if (result.extracted.valid_from) resultHtml += `<div><strong>Действует с:</strong> ${result.extracted.valid_from}</div>`;
+      if (result.extracted.valid_to) resultHtml += `<div><strong>Действует до:</strong> ${result.extracted.valid_to}</div>`;
+      resultHtml += '</div></div>';
+    }
+    
+    el('insurance_result_box').innerHTML = resultHtml;
+    
+    st.tasks = st.tasks.map(t=> t.id==='ins' ? {...t, status:'done'} : t);
+    localStorage.setItem('tasks', JSON.stringify(st.tasks));
+    localStorage.setItem('insuranceCheckedAt', String(Date.now()));
+    try { renderChecklist(); } catch(e) {}
+  }
+
+  function showInsuranceValidationIssues(result) {
+    el('insurance_step1').style.display='none';
+    el('insurance_step2').style.display='none';
+    el('insurance_step3').style.display='none';
+    el('insurance_step4').style.display='block';
+    
+    el('insurance_result_title').innerText = 'Мы заметили проблемы в твоей страховке';
+    el('insurance_result_box').className = 'status err';
+    
+    let resultHtml = '<div style="text-align:center;margin-bottom:16px">';
+    resultHtml += '<div style="font-size:24px;margin-bottom:8px">⚠️</div>';
+    resultHtml += '<div>Документ проверен AI. Найдены следующие проблемы:</div>';
+    resultHtml += '</div>';
+    
+    if (result.issues && result.issues.length > 0) {
+      resultHtml += '<div style="margin: 16px 0; padding: 12px; background: rgba(239,68,68,0.1); border-radius: 8px;">';
+      resultHtml += '<h4 style="margin: 0 0 8px 0; color: var(--danger);">Проблемы:</h4>';
+      resultHtml += '<ul style="margin: 0; padding-left: 20px;">';
+      result.issues.forEach(issue => {
+        resultHtml += `<li style="margin-bottom: 4px;">${issue}</li>`;
+      });
+      resultHtml += '</ul></div>';
+    }
+    
+    if (result.hints && result.hints.length > 0) {
+      resultHtml += '<div style="margin: 16px 0; padding: 12px; background: rgba(245,158,11,0.1); border-radius: 8px;">';
+      resultHtml += '<h4 style="margin: 0 0 8px 0; color: var(--warn);">Рекомендации:</h4>';
+      resultHtml += '<ul style="margin: 0; padding-left: 20px;">';
+      result.hints.forEach(hint => {
+        resultHtml += `<li style="margin-bottom: 4px;">${hint}</li>`;
+      });
+      resultHtml += '</ul></div>';
+    }
+    
+    if (result.extracted) {
+      resultHtml += '<div style="margin-top: 16px; padding: 12px; background: rgba(37,99,235,0.1); border-radius: 8px;">';
+      resultHtml += '<h4 style="margin: 0 0 8px 0; color: var(--accent);">Извлеченные данные:</h4>';
+      resultHtml += '<div style="font-size: 14px;">';
+      if (result.extracted.insurer_name) resultHtml += `<div><strong>Страховая компания:</strong> ${result.extracted.insurer_name}</div>`;
+      if (result.extracted.policy_number) resultHtml += `<div><strong>Номер полиса:</strong> ${result.extracted.policy_number}</div>`;
+      if (result.extracted.insured_name) resultHtml += `<div><strong>Застрахованный:</strong> ${result.extracted.insured_name}</div>`;
+      if (result.extracted.valid_from) resultHtml += `<div><strong>Действует с:</strong> ${result.extracted.valid_from}</div>`;
+      if (result.extracted.valid_to) resultHtml += `<div><strong>Действует до:</strong> ${result.extracted.valid_to}</div>`;
+      resultHtml += '</div></div>';
+    }
+    
+    resultHtml += '<div style="text-align:center;margin-top:20px">';
+    resultHtml += '<button class="primary" onclick="contactInsuranceSupport()" style="width:100%;margin-bottom:8px">Написать в поддержку</button>';
+    resultHtml += '</div>';
+    
+    el('insurance_result_box').innerHTML = resultHtml;
   }
 
   function insuranceProcessPayment(){

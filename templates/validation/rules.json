@@ -1,0 +1,28 @@
+{
+  "insurance": {
+    "displayName": "Ubezpieczenie medyczne",
+    "requiredFields": [
+      "insurer_name",
+      "policy_number",
+      "insured_name",
+      "id_number",
+      "valid_from",
+      "valid_to",
+      "coverage_summary",
+      "signatures_present"
+    ],
+    "patterns": {
+      "policy_number": "^[A-Za-z0-9\\-\\/]{4,}$",
+      "id_number": "^[A-Za-z0-9]{5,}$",
+      "valid_from": "^\\d{4}-\\d{2}-\\d{2}$",
+      "valid_to": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "redFlagHints": [
+      "Срок действия истёк или дата окончания раньше даты начала",
+      "Отсутствует номер полиса",
+      "Нет подписи страхователя/страховщика",
+      "Нет ФИО застрахованного или не совпадает с анкетою",
+      "Не указаны ключевые покрытия (например, неотложка/стационар)"
+    ]
+  }
+}
