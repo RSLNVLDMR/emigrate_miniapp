@@ -91,12 +91,12 @@
     
     /* Восстанавливаем правильное отображение для определенных элементов */
     #welcome .welcome-step {
-      display: block !important;
+      display: none !important; /* По умолчанию скрыты */
       margin-bottom: 20px !important;
     }
     
     #welcome .welcome-step.active {
-      display: block !important;
+      display: block !important; /* Только активный видим */
     }
     
     #welcome .step-dot {
@@ -5986,18 +5986,14 @@
       // Настраиваем приветственный экран
       const welcomeSteps = document.querySelectorAll('.welcome-step');
       if (welcomeSteps.length > 0) {
+        // Скрываем все шаги
         welcomeSteps.forEach(s => {
           s.classList.remove('active');
-          s.style.display = 'block';
-          s.style.opacity = '1';
-          s.style.visibility = 'visible';
         });
+        // Показываем только первый шаг
         const firstStep = document.getElementById('welcome-step-1');
         if (firstStep) {
           firstStep.classList.add('active');
-          firstStep.style.display = 'block';
-          firstStep.style.opacity = '1';
-          firstStep.style.visibility = 'visible';
         }
       }
       
@@ -6005,19 +6001,12 @@
       if (stepDots.length > 0) {
         stepDots.forEach((dot, index) => {
           dot.classList.toggle('active', index === 0);
-          dot.style.display = 'block';
-          dot.style.opacity = '1';
-          dot.style.visibility = 'visible';
         });
       }
       
       const titleEl = document.getElementById('title');
       if (titleEl) {
         titleEl.textContent = 'eMigrant · Добро пожаловать';
-        titleEl.style.display = 'block';
-        titleEl.style.opacity = '1';
-        titleEl.style.visibility = 'visible';
-        titleEl.style.color = '#000000';
       }
       
       console.log('✅ Приветственный экран принудительно показан');
